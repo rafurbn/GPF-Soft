@@ -42,6 +42,13 @@ export interface GpfApplication {
   reason: string;
 }
 
+export type GpfConditionCategory =
+  | 'আইবাস++ ও হিসাব'
+  | 'কর্তন ও মুনাফা'
+  | 'অগ্রিম ও যোগ্যতা'
+  | 'সনদ ও অডিট'
+  | 'শাস্তি ও দায়বদ্ধতা';
+
 export interface GpfCondition {
   id: number;
   number_bn: string;
@@ -50,7 +57,7 @@ export interface GpfCondition {
   details: string;
   ruleRef: string;
   severity: 'critical' | 'warning' | 'info' | 'regulatory';
-  category: 'আইবাস++ ও হিসাব' | 'কর্তন ও মুনাফা' | 'অগ্রিম ও যোগ্যতা' | 'সনদ ও অডিট' | 'শাস্তি ও দায়বদ্ধতা';
+  category: GpfConditionCategory;
   iconType: 'shield' | 'calculator' | 'alert' | 'file-check' | 'user' | 'scale' | 'stamp' | 'key' | 'clock' | 'book' | 'check' | 'award' | 'banknote' | 'lock';
 }
 

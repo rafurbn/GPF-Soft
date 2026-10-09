@@ -320,6 +320,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
             isDemoSession={isDemoSession}
             onNavigateToApp={onNavigateToApp}
             onOpenPasswordModal={onOpenPasswordModal}
+            onLogout={onLogout}
           />
         </div>
       ) : (

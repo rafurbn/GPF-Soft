@@ -313,17 +313,6 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
         - Logged out: two-column desktop split (rules readout | sign-in form)
         ========================================================================
       */}
-      {isLoggedIn && currentUser ? (
-        <div className="bg-slate-950/60 p-4 sm:p-6 lg:p-7 flex-1">
-          <Dashboard14
-            currentUser={currentUser}
-            isDemoSession={isDemoSession}
-            onNavigateToApp={onNavigateToApp}
-            onOpenPasswordModal={onOpenPasswordModal}
-            onLogout={onLogout}
-          />
-        </div>
-      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 items-stretch">
         {/* 
           ----------------------------------------------------------------------

@@ -141,7 +141,8 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
           <div className="mb-5 text-left font-normal">
             <div>বরাবর</div>
             <div className="whitespace-pre-line mt-1 font-normal">
-              <div>বরাবর</div>\n${data.district_name || 'সিলেট'}।`}
+              <div>উপজেলা হিসাব রক্ষন কর্মকর্</div>
+              {data.receiver_info || `উপজেলা হিসাব রক্ষন কর্মকর্তা\n${data.district_name || 'সিলেট'}।`}
             </div>
           </div>
 

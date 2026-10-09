@@ -29,6 +29,7 @@ import { UserSession, ActiveAppTab } from '../types';
 import portalLogo from '../assets/images/logo RF.svg';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { ForgotPasswordOtpModal } from './ForgotPasswordOtpModal';
+import { Dashboard14 } from './Dashboard14';
 
 interface PortalDesktopSignInViewProps {
   currentUser: UserSession | null;
@@ -307,9 +308,21 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 
       {/* 
         ========================================================================
-        2. MAIN BODY (Desktop Split View)
+        2. MAIN BODY
+        - Logged in : full-width modern 14-condition analytics dashboard
+        - Logged out: two-column desktop split (rules readout | sign-in form)
         ========================================================================
       */}
+      {isLoggedIn && currentUser ? (
+        <div className="bg-slate-950/60 p-4 sm:p-6 lg:p-7 flex-1">
+          <Dashboard14
+            currentUser={currentUser}
+            isDemoSession={isDemoSession}
+            onNavigateToApp={onNavigateToApp}
+            onOpenPasswordModal={onOpenPasswordModal}
+          />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 items-stretch">
         {/* 
           ----------------------------------------------------------------------
@@ -427,172 +440,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/40 via-slate-700 to-emerald-500/40"></div>
 
           <div>
-            {/* 
-              ------------------------------------------------------------------
-              STATE A: USER IS LOGGED IN (Post-Login Dashboard)
-              ------------------------------------------------------------------
-            */}
-            {isLoggedIn && currentUser ? (
-              <div className="space-y-5 animate-fadeIn">
-                {/* 1. Dynamic User Card */}
-                <div className="relative overflow-hidden rounded-2xl bg-slate-900/90 text-white p-5 shadow-lg border border-slate-800">
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
-                        isDemoSession
-                          ? 'bg-amber-950/60 text-amber-300 border-amber-800/50'
-                          : 'bg-emerald-950/60 text-emerald-400 border-emerald-800/50'
-                      }`}
-                    >
-                      <span className={`w-2 h-2 rounded-full animate-pulse ${isDemoSession ? 'bg-amber-400' : 'bg-emerald-400'}`}></span>
-                      {isDemoSession ? 'ডেমো (অফলাইন) সেশন' : 'সক্রিয় সাইন-ইন সেশন'}
-                    </span>
-                    <span className="text-xs font-mono font-bold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
-                      কোড: {currentUser.upazila_code}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                    <span>{currentUser.upazila_name_bn}</span>
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    উপজেলা প্রাথমিক শিক্ষা অফিসারের কার্যালয়, {currentUser.district_name_bn} জেলা
-                  </p>
-                  <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-                    <span>ইউজার রোল:</span>
-                    <strong className="text-emerald-400 font-medium">
-                      {currentUser.role === 'super_admin' ? 'প্রধান এডমিন' : 'অনুমোদিত ইউজার'}
-                    </strong>
-                  </div>
-                </div>
-
-                {/* 2. Cohesive, Professional GPF App Boxes */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-slate-200 flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-emerald-400" />
-                      <span>জিপিএফ ফাইল প্রসেসিং এ্যাপসমূহ:</span>
-                    </h4>
-                    <span className="text-[11px] font-bold text-slate-400 bg-slate-900 px-2.5 py-0.5 rounded-full border border-slate-800">
-                      ৩টি এ্যাপ প্রস্তুত
-                    </span>
-                  </div>
-
-                  {/* App 1: ফেরতযোগ্য অগ্রিম উত্তোলন (Emerald Theme) */}
-                  <button
-                    type="button"
-                    onClick={() => onNavigateToApp('gpf_refundable')}
-                    className="w-full text-left p-3.5 sm:p-4 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 hover:border-emerald-500/50 hover:shadow-lg transition-all duration-200 cursor-pointer group relative overflow-hidden"
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-lg bg-emerald-950/70 text-emerald-400 border border-emerald-800/60 flex items-center justify-center font-bold text-lg font-mono shrink-0 group-hover:scale-105 group-hover:bg-emerald-900/60 transition-all">
-                        ১
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <h5 className="font-bold text-sm sm:text-base text-white group-hover:text-emerald-300 transition leading-snug">
-                            ফেরতযোগ্য অগ্রিম উত্তোলন
-                          </h5>
-                          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/70 px-2 py-0.5 rounded-md border border-emerald-800/50 shrink-0">
-                            ১২-৪৮ কিস্তি
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-1 leading-normal">
-                          স্বয়ংক্রিয় কিস্তি হিসাব, অগ্রিম মঞ্জুরি ও আইবাস++ শিডিউল ফরম
-                        </p>
-                      </div>
-
-                      <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition shrink-0" />
-                    </div>
-                  </button>
-
-                  {/* App 2: অফেরতযোগ্য অগ্রিম উত্তোলন */}
-                  <button
-                    type="button"
-                    onClick={() => onNavigateToApp('gpf_non_refundable')}
-                    className="w-full text-left p-3.5 sm:p-4 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 hover:border-emerald-800/60 hover:shadow-lg transition-all duration-200 cursor-pointer group relative overflow-hidden"
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-lg bg-emerald-950/50 text-emerald-300 border border-emerald-900/60 flex items-center justify-center font-bold text-lg font-mono shrink-0 group-hover:scale-105 group-hover:bg-emerald-900/60 transition-all">
-                        ২
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <h5 className="font-bold text-sm sm:text-base text-white group-hover:text-emerald-200 transition leading-snug">
-                            অফেরতযোগ্য অগ্রিম উত্তোলন
-                          </h5>
-                          <span className="text-[10px] font-bold text-emerald-300 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900/50 shrink-0">
-                            বয়স ৫২ / ২৫ বছর
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-1 leading-normal">
-                          বয়স ৫২ বছর বা ২৫ বছর চাকরিকালীন অফেরতযোগ্য স্থায়ী মঞ্জুরি
-                        </p>
-                      </div>
-
-                      <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-emerald-300 group-hover:translate-x-0.5 transition shrink-0" />
-                    </div>
-                  </button>
-
-                  {/* App 3: চূড়ান্ত উত্তোলন ও নো-ডিমান্ড (Sky Blue Theme - replacing harsh magenta) */}
-                  <button
-                    type="button"
-                    onClick={() => onNavigateToApp('gpf_final')}
-                    className="w-full text-left p-3.5 sm:p-4 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-slate-800 hover:border-sky-500/50 hover:shadow-lg transition-all duration-200 cursor-pointer group relative overflow-hidden"
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-lg bg-sky-950/70 text-sky-400 border border-sky-800/60 flex items-center justify-center font-bold text-lg font-mono shrink-0 group-hover:scale-105 group-hover:bg-sky-900/60 transition-all">
-                        ৩
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <h5 className="font-bold text-sm sm:text-base text-white group-hover:text-sky-300 transition leading-snug">
-                            চূড়ান্ত উত্তোলন ও নো-ডিমান্ড
-                          </h5>
-                          <span className="text-[10px] font-bold text-sky-400 bg-sky-950/70 px-2 py-0.5 rounded-md border border-sky-800/50 shrink-0">
-                            PRL ও দায়মুক্তি
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-1 leading-normal">
-                          অবসরকালীন (PRL) চূড়ান্ত স্থিতি নিষ্পত্তি ও নো-ডিমান্ড প্রত্যয়ন
-                        </p>
-                      </div>
-
-                      <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-sky-400 group-hover:translate-x-0.5 transition shrink-0" />
-                    </div>
-                  </button>
-                </div>
-
-                {/* 3. Account Controls */}
-                <div className="pt-2 flex flex-col gap-2.5">
-                  <button
-                    type="button"
-                    onClick={onOpenPasswordModal}
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 hover:border-slate-700 font-medium text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
-                  >
-                    <KeyRound className="w-4 h-4 text-amber-400" />
-                    <span>পাসওয়ার্ড পরিবর্তন করুন</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={onLogout}
-                    className="w-full py-2.5 px-4 rounded-xl bg-rose-950/30 hover:bg-rose-900/50 text-rose-300 hover:text-rose-200 border border-rose-900/50 hover:border-rose-700/60 font-semibold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>লগআউট করুন</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* 
-                ------------------------------------------------------------------
-                STATE B: USER IS LOGGED OUT (Clean, Modern Sign-In Form)
-                ------------------------------------------------------------------
-              */
+            {isLoggedIn && currentUser ? null : (
               <div className="space-y-4">
                 {/* Header Welcome Box */}
                 <div className="p-4 rounded-xl bg-slate-900 text-white shadow-md border border-slate-800 relative overflow-hidden">
@@ -758,6 +606,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
           </div>
         </div>
       </div>
+      )}
 
       {/* 
         ========================================================================

@@ -1,0 +1,36 @@
+# ---------------------------------------------------------------------------
+# Secrets — NEVER commit these.
+# `.env.local` holds the Supabase project URL + publishable key for this
+# machine. `.env.example` is the safe, placeholder-only template and IS
+# committed. A service_role / secret key must never appear in any file here.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+.env.local
+!.env.example
+
+# Supabase CLI working state: these files expose the linked project ref,
+# project name and organisation id, and are regenerated locally by
+# `supabase link`. Machine-local — must never be committed. Both patterns are
+# listed so it matches at any depth under the project folder.
+**/supabase/.temp/
+supabase/.temp/
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+tmp/
+
+# Logs and local QA artefacts
+*.log
+verify-server.log
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/

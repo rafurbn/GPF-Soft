@@ -317,9 +317,11 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
         </div>
 
         {/* Footer Note — two columns with top border (matches provided image) */}
-        <div className="mt-auto grid grid-cols-2 gap-12 text-[12px] leading-relaxed text-justify pt-3">          
+        <div className="mt-auto grid grid-cols-2 gap-12 text-[12px] leading-relaxed text-justify pt-3">
+          <div className="border-top border-black pt-2">
             নন-গেজেটেড চাঁদা দাতার ক্ষেত্রে অফিস প্রধানের স্বাক্ষর অথবা গেজেটেড অফিসারের ক্ষেত্রে চাঁদা দাতার নিজের স্বাক্ষর।
-          </div>          
+          </div>
+        <div className="border-top border-black pt-2">
             গেজেটেড চাঁদা দাতার ক্ষেত্রে একটি সনদপত্র উপরোক্ত ৩ ও ৭ অনুযায়ী যে কর্তৃপক্ষ চাঁদা দাতাকে অগ্রিম মঞ্জুরী করিতে যোগ্য তাহার দ্বারা প্রেরণ করিতে হইবে।
           </div>
         </div>

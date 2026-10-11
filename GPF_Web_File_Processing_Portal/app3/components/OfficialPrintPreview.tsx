@@ -598,7 +598,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
               <div className="col-span-2 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>ক্র:নং</div>
               <div className="col-span-7 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>আবেদনকারীর বিবরণ</div>
               <div className="col-span-3 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>অগ্রিমের ধরন</div>
-              <div className="col-span-3 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>টাকার পরিমাণ</div>
+              <div className="col-span-3 p-1.5 font-normal">টাকার পরিমাণ</div>
             </div>
             <div className="grid grid-cols-15 font-normal min-h-[90px]">
               <div className="col-span-2 p-2 text-center align-top font-normal" style={{ borderRight: '1px solid #000000' }}>০১</div>
@@ -610,8 +610,8 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
                     {data.upazila_name || '...............'}, {data.district_name || '...............'}
                   </div>
               </div>
-              <div className="col-span-3 p-2 text-center flex items-center justify-center font-normal">
-                চুড়ান্ত উত্তোলন
+              <div className="col-span-3 p-2 text-center flex items-center justify-center font-normal" style={{ borderRight: '1px solid #000000' }}
+                >চুড়ান্ত উত্তোলন
               </div>              
                 <div className="col-span-3 p-2 text-center flex items-center justify-center font-normal">{formattedRequestedAmount || '.........'}
                   </div>

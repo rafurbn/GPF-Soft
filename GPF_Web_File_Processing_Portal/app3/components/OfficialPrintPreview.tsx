@@ -386,7 +386,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
                     এর সাধারণ ভবিষ্যৎ তহবিল-এ জমাকৃত সমূদয় টাকা চুড়ান্ত উত্তোলন এর বিল।
                   </div>
                   <div className="mt-1 font-normal whitespace-nowrap">
-                    মঞ্জুরী নং- ..................... তারিখ: .....................
+                    মঞ্জুরী নং- .................. তারিখ: ..................
                   </div>
               </div>
               <div className="col-span-2 p-2 text-center align-top font-normal" style={{ borderRight: '1px solid #000000' }}>

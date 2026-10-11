@@ -1,0 +1,6 @@
+{
+  "name": "জিপিএফ চূড়ান্ত উত্তোলন - ডেথ ক্লেইম ইনপুট ড্যাশবোর্ড",
+  "description": "সরকারি কর্মচারী জিপিএফ চূড়ান্ত উত্তোলন (ডেথ ক্লেইম) ইনপুট ড্যাশবোর্ড, স্বয়ংক্রিয় টাকা কথায় রূপান্তর, ডাটা টেবিল ও ফাইলিং সিস্টেম",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

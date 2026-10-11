@@ -238,9 +238,9 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
           </div>
 
           {/* ঊর্ধ্বতন অফিসারের সুপারিশ */}
-<div className="font-normal" style={{ marginTop: '-0.15in' }}>
+<div className="font-normal" style={{ marginTop: '2in' }}>
   <div className="grid grid-cols-12 items-start text-xs font-normal">
-        <div className="col-span-8 pr-3 space-y-4 text-left text-sm font-normal">
+        <div className="col-span-8 pr-3 space-y-1 text-left text-sm font-normal">
         <div className="mb-2 text-left font-bold text-sm">
         ঊর্ধ্বতন অফিসারের সুপারিশ
       </div>

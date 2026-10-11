@@ -240,18 +240,18 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
           {/* ঊর্ধ্বতন অফিসারের সুপারিশ */}
 <div className="font-normal" style={{ marginTop: '-0.15in' }}>
   <div className="grid grid-cols-12 items-start text-xs font-normal">
-        <div className="col-span-8 pr-3 space-y-1 text-left text-sm font-normal">
+        <div className="col-span-8 pr-3 space-y-4 text-left text-sm font-normal">
         <div className="mb-2 text-left font-bold text-sm">
         ঊর্ধ্বতন অফিসারের সুপারিশ
       </div>
       <p className="text-xs text-gray-700">নং স(বাঃ বাঃ কো)ভেটিং/ফ-১৩৩/৭৫-৩৬৭৬, তাং ৬-১২-৮৫</p>
       <p className="text-xs text-gray-700">বাঃসঃমুঃ-৯৩/৯৪-১০১০১জে--৫ লক্ষ কপি, ১৯৯৪</p>
-      <p className="text-sm font-normal pt-6">
+      <p className="text-sm font-normal pt-2">
         {installmentNo} অগ্রিম মঞ্জুরীর সুপারিশ করা হলো।
       </p>
     </div>
 
-              <div className="col-span-4 pl-4 text-left space-y-1 text-sm font-normal pt-6"> 
+              <div className="col-span-4 pl-4 text-left space-y-1 text-sm font-normal pt-0"> 
       {/* বামের শিরোনামের সাথে ব্যালেন্স করতে pt-7 (Padding Top) দেওয়া হয়েছে */}
       <p>স্বাক্ষর ......................................</p>
       <p>পদবী: {designation}</p>

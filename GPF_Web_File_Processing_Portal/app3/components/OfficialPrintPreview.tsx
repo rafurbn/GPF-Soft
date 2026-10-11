@@ -594,13 +594,13 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
 
           {/* Applicant Summary Table */}
           <div className="w-full mb-4 text-[13.5px] font-normal" style={{ border: '1px solid #000000' }}>
-            <div className="grid grid-cols-12 font-normal text-center" style={{ borderBottom: '1px solid #000000' }}>
+            <div className="grid grid-cols-15 font-normal text-center" style={{ borderBottom: '1px solid #000000' }}>
               <div className="col-span-2 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>ক্র:নং</div>
               <div className="col-span-7 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>আবেদনকারীর বিবরণ</div>
               <div className="col-span-3 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>অগ্রিমের ধরন</div>
               <div className="col-span-3 p-1.5 font-normal">টাকার পরিমাণ</div>
             </div>
-            <div className="grid grid-cols-12 font-normal min-h-[90px]">
+            <div className="grid grid-cols-15 font-normal min-h-[90px]">
               <div className="col-span-2 p-2 text-center align-top font-normal" style={{ borderRight: '1px solid #000000' }}>০১</div>
               <div className="col-span-7 p-2 align-top font-normal leading-relaxed" style={{ borderRight: '1px solid #000000' }}>
                   <div>{data.applicant_name || '................................................'}</div>

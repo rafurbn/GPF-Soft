@@ -209,7 +209,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
           </div>
 
           {/* ঊর্ধ্বতন অফিসারের সুপারিশ */}
-          <div className="font-normal" style={{ marginTop: '-0.15in' }}>
+          <div className="font-normal" style={{ marginTop: '-0.05in' }}>
             <div className="grid grid-cols-12 items-start text-xs font-normal">
               <div className="col-span-8 pr-3 space-y-1 text-left text-sm font-normal">
                 <div className="mb-2 text-left font-bold text-sm">
@@ -224,7 +224,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
 
               <div className="col-span-4 pl-4 text-left space-y-1 text-sm font-normal pt-0"> 
                 {/* বামের শিরোনামের সাথে ব্যালেন্স করতে pt-7 (Padding Top) দেওয়া হয়েছে */}
-                <p>স্বাক্ষর .........................................</p>
+                <p>স্বাক্ষর ......................................</p>
                 <p>পদবী: {data.designation || 'সহকারী শিক্ষক'}</p>
                 <p>{data.school_name || anyData.schoolName || '................................'}</p>
                 <p>{data.upazila_name || anyData.upazilaName || 'বিয়ানীবাজার'}, {data.district_name || anyData.districtName || 'সিলেট'}।</p>
@@ -286,7 +286,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
     </div>
     <div className="mt-3 flex justify-between text-[11px] items-center whitespace-nowrap">
       <span className="whitespace-nowrap">মঞ্জুরী নং- {data?.custom_memo_no || '............'}</span>
-      <span className="whitespace-nowrap">তারিখ: {data?.apply_date || '০৬/১০/২০২৬'}</span>
+      <span className="whitespace-nowrap">তারিখ: {data?.apply_date || '.............'}</span>
     </div>
   </div>
 

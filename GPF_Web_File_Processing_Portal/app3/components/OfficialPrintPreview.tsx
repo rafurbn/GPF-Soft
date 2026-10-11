@@ -597,7 +597,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
             <div className="grid grid-cols-12 font-normal text-center" style={{ borderBottom: '1px solid #000000' }}>
               <div className="col-span-2 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>ক্র:নং</div>
               <div className="col-span-7 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>আবেদনকারীর বিবরণ</div>
-              <div className="col-span-3 p-1.5 font-normal">অগ্রিমের ধরন</div>
+              <div className="col-span-3 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>অগ্রিমের ধরন</div>
               <div className="col-span-3 p-1.5 font-normal">টাকার পরিমাণ</div>
             </div>
             <div className="grid grid-cols-12 font-normal min-h-[90px]">
@@ -614,7 +614,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
                 চুড়ান্ত উত্তোলন
               </div>
               <div>
-                    {formattedRequestedAmount || '.........'}
+                <div className="col-span-3 p-2 text-center flex items-center justify-center font-normal">{formattedRequestedAmount || '.........'}
                   </div>
             </div>
           </div>

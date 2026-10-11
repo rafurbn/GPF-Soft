@@ -141,8 +141,8 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
           <div className="mb-5 text-left font-normal">
             <div>বরাবর</div>
             <div className="mt-1 font-normal">
-              <div>উপজেলা হিসাব রক্ষন কর্মকর্তা</div>
-              <div>{data.district_name || 'সিলেট'}।</div>
+              <div>উপজেলা হিসাব রক্ষন কর্মকর্তা</div>              
+              <div>{(data.upazila_name || '...............')}, {data.district_name || 'সিলেট'}।</div>
             </div>
           </div>
 
@@ -317,12 +317,12 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
         </div>
 
         {/* Footer Note — two columns with top border (matches provided image) */}
-        <div className="mt-auto grid grid-cols-2 gap-6 text-[12px] leading-relaxed text-justify pt-3">
-          <div style={{ borderTop: '1px solid #000000' }} className="pt-2">
-            গেজেটেড চাঁদা দাতার ক্ষেত্রে একটি সনদপত্র উপরোক্ত ৩ ও ৭ অনুযায়ী যে কর্তৃপক্ষ চাঁদা দাতাকে অগ্রিম মঞ্জুরী করিতে যোগ্য তাহার দ্বারা প্রেরণ করিতে হইবে।
-          </div>
+        <div className="mt-auto mt-12 grid grid-cols-2 gap-6 text-[12px] leading-relaxed text-justify pt-3">
           <div style={{ borderTop: '1px solid #000000' }} className="pt-2">
             নন-গেজেটেড চাঁদা দাতার ক্ষেত্রে অফিস প্রধানের স্বাক্ষর অথবা গেজেটেড অফিসারের ক্ষেত্রে চাঁদা দাতার নিজের স্বাক্ষর।
+          </div>
+          <div style={{ borderTop: '1px solid #000000' }} className="pt-2">
+            গেজেটেড চাঁদা দাতার ক্ষেত্রে একটি সনদপত্র উপরোক্ত ৩ ও ৭ অনুযায়ী যে কর্তৃপক্ষ চাঁদা দাতাকে অগ্রিম মঞ্জুরী করিতে যোগ্য তাহার দ্বারা প্রেরণ করিতে হইবে।
           </div>
         </div>
       </div>
@@ -395,7 +395,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
               <div className="col-span-3 font-normal" style={{ borderRight: '1px solid #000000' }}>
                 <div className="grid grid-cols-4 h-full font-normal">
                   <div className="col-span-3 p-2 text-right align-top font-normal whitespace-nowrap" style={{ borderRight: '1px solid #000000' }}>
-                    ={formattedRequestedAmount || '.........'}/-
+                    {formattedRequestedAmount || '.........'}
                   </div>
                   <div className="col-span-1 p-2 text-center align-top font-normal">০০</div>
                 </div>
@@ -598,6 +598,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
               <div className="col-span-2 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>ক্র:নং</div>
               <div className="col-span-7 p-1.5 font-normal" style={{ borderRight: '1px solid #000000' }}>আবেদনকারীর বিবরণ</div>
               <div className="col-span-3 p-1.5 font-normal">অগ্রিমের ধরন</div>
+              <div className="col-span-3 p-1.5 font-normal">টাকার পরিমাণ</div>
             </div>
             <div className="grid grid-cols-12 font-normal min-h-[90px]">
               <div className="col-span-2 p-2 text-center align-top font-normal" style={{ borderRight: '1px solid #000000' }}>০১</div>
@@ -612,6 +613,9 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
               <div className="col-span-3 p-2 text-center flex items-center justify-center font-normal">
                 চুড়ান্ত উত্তোলন
               </div>
+              <div>
+                    {formattedRequestedAmount || '.........'}
+                  </div>
             </div>
           </div>
 

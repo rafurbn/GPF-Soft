@@ -285,8 +285,8 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
       </p>
     </div>
     <div className="mt-3 flex justify-between text-[11px] items-center whitespace-nowrap">
-      <span className="whitespace-nowrap">মঞ্জুরী নং- {data?.custom_memo_no || '............'}</span>
-      <span className="whitespace-nowrap">তারিখ: {data?.apply_date || '.............'}</span>
+      <span className="whitespace-nowrap">মঞ্জুরী নং-...............</span>
+      <span className="whitespace-nowrap">তারিখ:................</span>      
     </div>
   </div>
 

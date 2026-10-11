@@ -76,7 +76,7 @@ export const FormTable: React.FC<FormTableProps> = ({
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden" id="input-dashboard-section">
+    <div className="mx-auto w-full max-w-[210mm] bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden" id="input-dashboard-section">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 p-4 border-b border-emerald-800/40">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

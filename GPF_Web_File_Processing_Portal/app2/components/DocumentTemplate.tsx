@@ -72,7 +72,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
           <div className="text-left text-[14px] leading-normal font-normal">
             <div>বিনীত</div>
             <div>নিবেদক</div>
-            <div className="mb-6">আপনার বিশ্বস্ত</div>
+            <div className="mb-14">আপনার বিশ্বস্ত</div>
             <div>{data.applicant_name || '................................................'}</div>
             <div>{data.designation || '................................'}</div>
             <div>{data.school_name || '................................................'}</div>
@@ -86,7 +86,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
       {shouldRender(2) && (
         <section 
           id="doc-page-2"
-          className="print-page a4-page relative mx-auto bg-white p-12 sm:p-16 max-w-[210mm] min-h-[297mm] shadow-lg print:shadow-none print:m-0 print:p-[18mm] print:max-w-none print:w-full break-after-page mt-8 print:mt-0 font-normal space-y-5 border border-slate-200 print:border-none"
+          className="print-page a4-page relative mx-auto bg-white p-12 sm:p-16 max-w-[210mm] min-h-[297mm] shadow-lg print:shadow-none print:m-0 print:p-[18mm] print:max-w-none print:w-full break-after-page mt-8 print:mt-0 font-normal space-y-3 border border-slate-200 print:border-none"
           style={{ minHeight: '297mm' }}
         >
           {/* বাংলাদেশ ফরম নং ২৬৩৯ */}
@@ -100,7 +100,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
           </div>
 
           {/* প্রাপক */}
-          <div 
+          <div
             className="flex items-baseline mb-4 text-xl font-normal"
             style={{ paddingLeft: '1in' }}
           >
@@ -111,7 +111,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
           </div>
 
           {/* মূল বক্তব্য */}
-          <div className="text-justify text-sm leading-relaxed mb-4 font-normal" style={{ textAlign: 'justify' }}>
+          <div className="text-justify text-sm leading-relaxed mb-3 font-normal" style={{ textAlign: 'justify' }}>
             <p className="mb-2 text-left">মহোদয়,</p>
             <p className="indent-10">
               সবিনয় নিবেদন এই যে, আমার ভবিষ্য তহবিলে জমাকৃত টাকা হইতে অগ্রিম টাকা{' '}
@@ -120,7 +120,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
             </p>
           </div>
 
-          <div className="flex justify-between items-start mb-6 text-sm font-normal">
+          <div className="flex justify-between items-start mb-4 text-sm font-normal">
             <div>
               <p>তারিখ: {formattedDate || data.apply_date || anyData.applyDate || '........................'}</p>
               <p>স্থান: {data.upazila_name || anyData.upazilaName || 'বিয়ানীবাজার'}, {data.district_name || anyData.districtName || 'সিলেট'}।</p>
@@ -135,7 +135,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
           </div>
 
           {/* প্রশ্নাবলী ও উত্তর অংশ */}
-          <div className="mb-6 text-sm font-normal space-y-4">
+          <div className="mb-3 text-sm font-normal space-y-3">
             <div className="grid grid-cols-12 text-sm font-normal pb-1">
               <div className="col-span-8 text-left font-normal">প্রশ্নাবলী</div>
               <div className="col-span-4 text-left font-normal pl-4">উত্তর</div>
@@ -209,7 +209,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
           </div>
 
           {/* ঊর্ধ্বতন অফিসারের সুপারিশ */}
-          <div className="pt-1 font-normal">
+          <div className="font-normal" style={{ marginTop: '-0.15in' }}>
             <div className="grid grid-cols-12 items-start text-xs font-normal">
               <div className="col-span-8 pr-3 space-y-1 text-left text-sm font-normal">
                 <div className="mb-2 text-left font-bold text-sm">
@@ -284,9 +284,9 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
         {data?.upazila_name || '....................'}, {data?.district_name || '....................'}। এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
       </p>
     </div>
-    <div className="mt-3 flex justify-between text-[11px] items-center">
-      <span>মঞ্জুরী নং- {data?.custom_memo_no || '...........................'}</span>
-      <span>তারিখ: {data?.apply_date || '০৬/১০/২০২৬'}</span>
+    <div className="mt-3 flex justify-between text-[11px] items-center whitespace-nowrap">
+      <span className="whitespace-nowrap">মঞ্জুরী নং- {data?.custom_memo_no || '............'}</span>
+      <span className="whitespace-nowrap">তারিখ: {data?.apply_date || '০৬/১০/২০২৬'}</span>
     </div>
   </div>
 
@@ -350,21 +350,21 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
             <div className="mb-5 text-center leading-relaxed font-normal">
               টাকা .......................... (কথায়) ................................................................ প্রদানের জন্য পাস করা হইল।
             </div>
-            <div className="flex justify-between text-center pt-3 font-normal">
-              <div>
+            <div className="grid grid-cols-3 gap-6 text-left pt-3 font-normal">
+              <div className="text-left">
                 <div>অডিটর</div>
-                <div className="mt-2.5">নাম ...................................</div>
-                <div className="mt-2.5">তারিখ ................................</div>
+                <div className="mt-2.5 whitespace-nowrap">নাম ...........................</div>
+                <div className="whitespace-nowrap">তারিখ ..........................</div>
               </div>
-              <div>
+              <div className="text-left">
                 <div>সুপার</div>
-                <div className="mt-2.5">নাম ...................................</div>
-                <div className="mt-2.5">তারিখ ................................</div>
+                <div className="mt-2.5 whitespace-nowrap">নাম ...........................</div>
+                <div className="whitespace-nowrap">তারিখ ..........................</div>
               </div>
-              <div>
+              <div className="text-left">
                 <div>হিসাব রক্ষণ কর্মকর্তা</div>
-                <div className="mt-2.5">নাম ......................................</div>
-                <div className="mt-2.5">তারিখ ...................................</div>
+                <div className="mt-2.5 whitespace-nowrap">নাম ...........................</div>
+                <div className="whitespace-nowrap">তারিখ ..........................</div>
               </div>
             </div>
           </div>

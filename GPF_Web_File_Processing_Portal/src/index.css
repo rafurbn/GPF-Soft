@@ -1,6 +1,14 @@
 @import "tailwindcss";
 
 @theme {
+  /* Bengali-capable font stacks for `font-sans` / `font-mono`.
+     Bengali digits (০-৯) do not exist in a Latin-only monospace font, so the
+     browser used to substitute a fallback face mid-number — which made the
+     first digit render at a smaller size. Putting 'Noto Sans Bengali' first
+     keeps every digit on the same metric. */
+  --font-sans: 'Noto Sans Bengali', 'Hind Siliguri', 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Noto Sans Bengali', 'Hind Siliguri', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
   --color-amber-50: #fcfaf4;
   --color-amber-100: #f5f1e4;
   --color-amber-200: #e9dfc4;
@@ -17,6 +25,17 @@
 @layer base {
   body {
     font-family: 'Noto Sans Bengali', 'Hind Siliguri', 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* Bengali digits must never fall back to a Latin-only monospace face.
+     `font-mono` elements still keep their character (tabular alignment) but
+     the first glyph in the stack is a Bengali font, so ০-৯ render at one
+     consistent size instead of the tiny substituted first digit. */
+  input,
+  textarea,
+  select,
+  .font-mono {
+    font-family: 'Noto Sans Bengali', 'Hind Siliguri', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   }
 }
 

@@ -140,8 +140,9 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
           {/* প্রাপক */}
           <div className="mb-5 text-left font-normal">
             <div>বরাবর</div>
-            <div className="whitespace-pre-line mt-1 font-normal">
-            {data.receiver_info || `উপজেলা হিসাব রক্ষন কর্মকর্তা\n${data.district_name || 'সিলেট'}।`}
+            <div className="mt-1 font-normal">
+              <div>উপজেলা হিসাব রক্ষন কর্মকর্তা</div>
+              <div>{data.district_name || 'সিলেট'}।</div>
             </div>
           </div>
 
@@ -193,7 +194,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
         </div>
 
         {/* Numbered items (plain list, no table lines — matches provided layout) */}
-        <div className="space-y-5 text-[15px] leading-[2.2]">
+        <div className="space-y-3 text-[14.5px] leading-[1.85]">
           {/* Item 1 */}
           <div className="flex items-start">
             <span className="w-8 font-semibold shrink-0">১ ।</span>
@@ -316,7 +317,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
         </div>
 
         {/* Footer Note — two columns with top border (matches provided image) */}
-        <div className="mt-auto grid grid-cols-2 gap-6 text-[12.5px] leading-relaxed text-justify pt-4">
+        <div className="mt-auto grid grid-cols-2 gap-6 text-[12px] leading-relaxed text-justify pt-3">
           <div style={{ borderTop: '1px solid #000000' }} className="pt-2">
             গেজেটেড চাঁদা দাতার ক্ষেত্রে একটি সনদপত্র উপরোক্ত ৩ ও ৭ অনুযায়ী যে কর্তৃপক্ষ চাঁদা দাতাকে অগ্রিম মঞ্জুরী করিতে যোগ্য তাহার দ্বারা প্রেরণ করিতে হইবে।
           </div>
@@ -384,8 +385,8 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
                   <div className="mt-1 text-justify font-normal">
                     এর সাধারণ ভবিষ্যৎ তহবিল-এ জমাকৃত সমূদয় টাকা চুড়ান্ত উত্তোলন এর বিল।
                   </div>
-                  <div className="mt-1 font-normal">
-                    মঞ্জুরী নং- .......................... তারিখ: .........................
+                  <div className="mt-1 font-normal whitespace-nowrap">
+                    মঞ্জুরী নং- ..................... তারিখ: .....................
                   </div>
               </div>
               <div className="col-span-2 p-2 text-center align-top font-normal" style={{ borderRight: '1px solid #000000' }}>
@@ -443,21 +444,21 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
             <div className="mb-5 text-center leading-relaxed font-normal">
               টাকা .......................... (কথায়) ................................................................ প্রদানের জন্য পাস করা হইল।
             </div>
-            <div className="flex justify-between text-center pt-3 font-normal">
-              <div>
+            <div className="grid grid-cols-3 gap-6 text-left pt-3 font-normal">
+              <div className="text-left">
                 <div>অডিটর</div>
-                <div className="mt-2.5">নাম ...................................</div>
-                <div className="mt-2.5">তারিখ ................................</div>
+                <div className="mt-2.5 whitespace-nowrap">নাম ...........................</div>
+                <div className="whitespace-nowrap">তারিখ ..........................</div>
               </div>
-              <div>
+              <div className="text-left">
                 <div>সুপার</div>
-                <div className="mt-2.5">নাম ...................................</div>
-                <div className="mt-2.5">তারিখ ................................</div>
+                <div className="mt-2.5 whitespace-nowrap">নাম ...........................</div>
+                <div className="whitespace-nowrap">তারিখ ..........................</div>
               </div>
-              <div>
+              <div className="text-left">
                 <div>হিসাব রক্ষণ কর্মকর্তা</div>
-                <div className="mt-2.5">নাম ......................................</div>
-                <div className="mt-2.5">তারিখ ...................................</div>
+                <div className="mt-2.5 whitespace-nowrap">নাম ...........................</div>
+                <div className="whitespace-nowrap">তারিখ ..........................</div>
               </div>
             </div>
           </div>

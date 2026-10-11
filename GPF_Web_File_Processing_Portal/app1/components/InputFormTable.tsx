@@ -189,7 +189,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
   );
 
   return (
-    <div className="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-xl overflow-hidden mb-8">
+    <div className="mx-auto w-full max-w-[210mm] bg-slate-900 border border-slate-700/80 rounded-2xl shadow-xl overflow-hidden mb-8">
       {/* Top Action & Navigation Bar */}
       <div className="bg-slate-850 px-4 sm:px-6 py-3.5 border-b border-slate-700 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-2.5">

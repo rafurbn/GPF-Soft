@@ -95,7 +95,20 @@ export const numberToBengaliWords = (num: number | string | undefined | null): s
     words += convertTwoDigits(numInt) + ' ';
   }
 
-  return words.trim() + ' টাকা মাত্র';
+  // পয়সা (Paisa): honour the fractional part of the amount.
+  const paisa = Math.round((n - Math.floor(n)) * 100);
+  let result = words.trim();
+  if (result) {
+    result += ' টাকা';
+    if (paisa > 0) {
+      result += ' ' + convertTwoDigits(paisa) + ' পয়সা';
+    }
+    return result + ' মাত্র';
+  }
+  if (paisa > 0) {
+    return convertTwoDigits(paisa) + ' পয়সা মাত্র';
+  }
+  return '';
 };
 
 export const formatBengaliDate = (dateStr: string, separator: string = '/'): string => {

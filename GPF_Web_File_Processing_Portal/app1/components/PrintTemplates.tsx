@@ -116,7 +116,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
       {(pageFilter === 'all' || pageFilter === 2) && (
         <section 
           id="print-page-2"
-          className="print-page relative mx-auto bg-white p-12 sm:p-16 max-w-[210mm] min-h-[297mm] shadow-lg print:shadow-none print:m-0 print:p-[18mm] print:max-w-none print:w-full break-after-page mt-8 print:mt-0 font-normal space-y-5 border border-slate-200 print:border-none"
+          className="print-page relative mx-auto bg-white p-12 sm:p-16 max-w-[210mm] min-h-[297mm] shadow-lg print:shadow-none print:m-0 print:p-[18mm] print:max-w-none print:w-full break-after-page mt-8 print:mt-0 font-normal space-y-3 border border-slate-200 print:border-none"
           style={{ minHeight: '297mm' }}
         >
           {/* বাংলাদেশ ফরম নং ২৬৩৯ */}
@@ -130,7 +130,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
           </div>
 
           {/* প্রাপক */}
-          <div 
+          <div
             className="flex items-baseline mb-4 text-xl font-normal"
             style={{ paddingLeft: '1in' }}
           >
@@ -141,7 +141,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
           </div>
 
           {/* মূল বক্তব্য */}
-          <div className="text-justify text-sm leading-relaxed mb-4 font-normal" style={{ textAlign: 'justify' }}>
+          <div className="text-justify text-sm leading-relaxed mb-3 font-normal" style={{ textAlign: 'justify' }}>
             <p className="mb-2 text-left">মহোদয়,</p>
            <p className="indent-10">
             সবিনয় নিবেদন এই যে, আমার ভবিষ্য তহবিলে জমাকৃত টাকা হইতে অগ্রিম টাকা{' '}
@@ -149,7 +149,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
             </p>
           </div>
 
-          <div className="flex justify-between items-start mb-6 text-sm font-normal">
+          <div className="flex justify-between items-start mb-4 text-sm font-normal">
             <div>
               <p>তারিখ: {applyDate}</p>
               <p>স্থান: {upazilaName}, {districtName}।</p>
@@ -164,7 +164,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
           </div>
 
           {/* প্রশ্নাবলী ও উত্তর অংশ */}
-          <div className="mb-6 text-sm font-normal space-y-4">
+          <div className="mb-3 text-sm font-normal space-y-3">
             <div className="grid grid-cols-12 text-sm font-normal pb-1">
               <div className="col-span-8 text-left font-normal">প্রশ্নাবলী</div>
               <div className="col-span-4 text-left font-normal pl-4">উত্তর</div>
@@ -238,7 +238,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
           </div>
 
           {/* ঊর্ধ্বতন অফিসারের সুপারিশ */}
-<div className="pt-1 font-normal">
+<div className="font-normal" style={{ marginTop: '-0.15in' }}>
   <div className="grid grid-cols-12 items-start text-xs font-normal">
         <div className="col-span-8 pr-3 space-y-1 text-left text-sm font-normal">
         <div className="mb-2 text-left font-bold text-sm">
@@ -313,7 +313,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
                 <p>{applicantName}, {designation}</p>
                 <p>{schoolName}</p>
                 <p>{upazilaName}, {districtName} এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অগ্রিম উত্তোলন এর বিল।</p>
-                <p className="mt-1">মঞ্জুরী নং- {cleanMemoNo} তারিখ: {applyDate}</p>
+                <p className="mt-1 whitespace-nowrap">মঞ্জুরী নং- {cleanMemoNo} তারিখ: {applyDate}</p>
               </div>
               <div className="col-span-3 border-r border-black p-2 text-center font-normal flex items-center justify-center font-serif text-sm">
                 {gpfAccNo}
@@ -377,18 +377,18 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
             <div className="grid grid-cols-3 gap-6 text-left text-xs font-normal pt-2">
               <div className="space-y-3 font-normal">
                 <p>অডিটর</p>
-                <p className="pt-2">নাম .....................................................</p>
-                <p>তারিখ ...................................................</p>
+                <p className="pt-2 whitespace-nowrap">নাম ...................................</p>
+                <p className="whitespace-nowrap">তারিখ ................................</p>
               </div>
               <div className="space-y-3 font-normal">
                 <p>সুপার</p>
-                <p className="pt-2">নাম .....................................................</p>
-                <p>তারিখ ...................................................</p>
+                <p className="pt-2 whitespace-nowrap">নাম ...................................</p>
+                <p className="whitespace-nowrap">তারিখ ................................</p>
               </div>
               <div className="space-y-3 font-normal">
                 <p>হিসাব রক্ষণ কর্মকর্তা</p>
-                <p className="pt-2">নাম .....................................................</p>
-                <p>তারিখ ...................................................</p>
+                <p className="pt-2 whitespace-nowrap">নাম ...................................</p>
+                <p className="whitespace-nowrap">তারিখ ................................</p>
               </div>
             </div>
           </div>
@@ -483,7 +483,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
           </div>
 
           {/* মঞ্জুরিকারী অফিসারের স্বাক্ষর */}
-          <div className="flex justify-between items-end mb-6 text-xs font-normal">
+          <div className="flex justify-between items-end mb-6 text-xs font-normal" style={{ marginTop: '0.5in' }}>
             <div></div>
             <div className="text-center space-y-0.5 font-normal">
               <p>({ddoName})</p>

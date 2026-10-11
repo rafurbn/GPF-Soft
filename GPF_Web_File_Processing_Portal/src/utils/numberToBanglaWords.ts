@@ -58,39 +58,60 @@ export const numberToBanglaWords = (num: number | string | undefined | null): st
     return ones[val] || '';
   };
 
-  let crore = Math.floor(n / 10000000);
-  let remainder = n % 10000000;
+  // Split the amount into the integer part (taka) and the fractional part
+  // (paisa). 100 paisa = 1 taka, so the two-decimal fraction is paisa.
+  const wholeTaka = Math.floor(n);
+  const paisa = Math.round((n - wholeTaka) * 100);
 
-  let lakh = Math.floor(remainder / 100000);
-  remainder = remainder % 100000;
+  const integerToWords = (value: number): string => {
+    let crore = Math.floor(value / 10000000);
+    let remainder = value % 10000000;
 
-  let thousand = Math.floor(remainder / 1000);
-  remainder = remainder % 1000;
+    let lakh = Math.floor(remainder / 100000);
+    remainder = remainder % 100000;
 
-  let hundred = Math.floor(remainder / 100);
-  let lastTwo = Math.floor(remainder % 100);
+    let thousand = Math.floor(remainder / 1000);
+    remainder = remainder % 1000;
 
-  let words = '';
+    let hundred = Math.floor(remainder / 100);
+    let lastTwo = Math.floor(remainder % 100);
 
-  if (crore > 0) {
-    words += (crore > 99 ? numberToBanglaWords(crore).replace(' টাকা মাত্র', '') : convertTwoDigits(crore)) + ' কোটি ';
-  }
-  if (lakh > 0) {
-    words += convertTwoDigits(lakh) + ' লক্ষ ';
-  }
-  if (thousand > 0) {
-    words += convertTwoDigits(thousand) + ' হাজার ';
-  }
-  if (hundred > 0) {
-    words += convertTwoDigits(hundred) + ' শত ';
-  }
-  if (lastTwo > 0) {
-    words += convertTwoDigits(lastTwo) + ' ';
-  }
+    let words = '';
 
-  words = words.trim();
+    if (crore > 0) {
+      words += (crore > 99 ? integerToWords(crore) : convertTwoDigits(crore)) + ' কোটি ';
+    }
+    if (lakh > 0) {
+      words += convertTwoDigits(lakh) + ' লক্ষ ';
+    }
+    if (thousand > 0) {
+      words += convertTwoDigits(thousand) + ' হাজার ';
+    }
+    if (hundred > 0) {
+      words += convertTwoDigits(hundred) + ' শত ';
+    }
+    if (lastTwo > 0) {
+      words += convertTwoDigits(lastTwo) + ' ';
+    }
+
+    return words.trim();
+  };
+
+  let words = wholeTaka > 0 ? integerToWords(wholeTaka) : '';
+
   if (words) {
-    return words + ' টাকা মাত্র';
+    words += ' টাকা';
+    // Include paisa only when the amount actually has a fraction.
+    if (paisa > 0) {
+      words += ' ' + convertTwoDigits(paisa) + ' পয়সা';
+    }
+    return words + ' মাত্র';
   }
+
+  // Amount is between 0 and 1 taka — it is paisa only.
+  if (paisa > 0) {
+    return convertTwoDigits(paisa) + ' পয়সা মাত্র';
+  }
+
   return '';
 };

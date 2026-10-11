@@ -317,7 +317,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
         </div>
 
         {/* Footer Note — two columns with top border (matches provided image) */}
-        <div className="mt-auto mt-12 grid grid-cols-2 gap-6 text-[12px] leading-relaxed text-justify pt-3">
+        <div className="mt-auto mt-30 grid grid-cols-2 gap-12 text-[12px] leading-relaxed text-justify pt-3">
           <div style={{ borderTop: '1px solid #000000' }} className="pt-2">
             নন-গেজেটেড চাঁদা দাতার ক্ষেত্রে অফিস প্রধানের স্বাক্ষর অথবা গেজেটেড অফিসারের ক্ষেত্রে চাঁদা দাতার নিজের স্বাক্ষর।
           </div>
@@ -642,7 +642,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
           </div>
 
           {/* DDO & Recipient */}
-          <div className="mt-10 mb-8 text-[13.5px] font-normal">
+          <div className="mt-30 mb-8 text-[13.5px] font-normal">
             <div className="flex justify-end font-normal">
               <div className="text-center leading-normal space-y-0.5 font-normal">
                 <div>({data.ddo_name || 'নৃপেন্দ্র নাথ সরকার'})</div>

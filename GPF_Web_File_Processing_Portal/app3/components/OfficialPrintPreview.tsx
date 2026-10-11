@@ -317,7 +317,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
         </div>
 
         {/* Footer Note — two columns with top border (matches provided image) */}
-        <div className="mt-auto mt-32 grid grid-cols-2 gap-12 text-[12px] leading-relaxed text-justify pt-3">
+        <div className="mt-32 grid grid-cols-2 gap-12 text-[12px] leading-relaxed text-justify pt-3">
           <div style={{ borderTop: '1px solid #000000' }} className="pt-2">
             নন-গেজেটেড চাঁদা দাতার ক্ষেত্রে অফিস প্রধানের স্বাক্ষর অথবা গেজেটেড অফিসারের ক্ষেত্রে চাঁদা দাতার নিজের স্বাক্ষর।
           </div>

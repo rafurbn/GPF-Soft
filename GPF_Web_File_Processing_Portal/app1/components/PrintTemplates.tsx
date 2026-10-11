@@ -246,14 +246,14 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
       </div>
       <p className="text-xs text-gray-700">নং স(বাঃ বাঃ কো)ভেটিং/ফ-১৩৩/৭৫-৩৬৭৬, তাং ৬-১২-৮৫</p>
       <p className="text-xs text-gray-700">বাঃসঃমুঃ-৯৩/৯৪-১০১০১জে--৫ লক্ষ কপি, ১৯৯৪</p>
-      <p className="text-sm font-normal pt-2">
+      <p className="text-sm font-normal pt-6">
         {installmentNo} অগ্রিম মঞ্জুরীর সুপারিশ করা হলো।
       </p>
     </div>
 
-              <div className="col-span-4 pl-4 text-left space-y-1 text-sm font-normal pt-0"> 
+              <div className="col-span-4 pl-4 text-left space-y-1 text-sm font-normal pt-6"> 
       {/* বামের শিরোনামের সাথে ব্যালেন্স করতে pt-7 (Padding Top) দেওয়া হয়েছে */}
-      <p>স্বাক্ষর .........................................</p>
+      <p>স্বাক্ষর ......................................</p>
       <p>পদবী: {designation}</p>
       <p>{schoolName}</p>
       <p>{upazilaName}, {districtName}।</p>

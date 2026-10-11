@@ -313,7 +313,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
                 <p>{applicantName}, {designation}</p>
                 <p>{schoolName}</p>
                 <p>{upazilaName}, {districtName} এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অগ্রিম উত্তোলন এর বিল।</p>
-                <p className="mt-1 whitespace-nowrap">মঞ্জুরী নং-............  তারিখ:..........</p>
+                <p className="mt-1 whitespace-nowrap">মঞ্জুরী নং-.................  তারিখ:...............</p>
               </div>
               <div className="col-span-3 border-r border-black p-2 text-center font-normal flex items-center justify-center font-serif text-sm">
                 {gpfAccNo}
@@ -358,9 +358,8 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
               </div>
               <div className="text-left space-y-1 font-normal">
                 <p>আয়ন কর্মকর্তার স্বাক্ষর: .....................................</p>
-                <p>নাম: {ddoName}</p>
-                <p>পদবী: {ddoDesignation}</p>
-                <p>{upazilaName}, {districtName}।</p>
+                <p>নাম: ....................................................</p>
+                <p>পদবী: ..................................................</p>                
               </div>
             </div>
 

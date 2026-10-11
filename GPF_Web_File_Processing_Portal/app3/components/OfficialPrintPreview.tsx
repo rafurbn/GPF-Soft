@@ -612,8 +612,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
               </div>
               <div className="col-span-3 p-2 text-center flex items-center justify-center font-normal">
                 চুড়ান্ত উত্তোলন
-              </div>
-              <div>
+              </div>              
                 <div className="col-span-3 p-2 text-center flex items-center justify-center font-normal">{formattedRequestedAmount || '.........'}
                   </div>
             </div>

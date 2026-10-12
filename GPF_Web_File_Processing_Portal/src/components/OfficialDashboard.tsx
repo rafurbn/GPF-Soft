@@ -103,10 +103,15 @@ interface OfficialDashboardProps {
   /** The signed-in account; the user statistics panel is shown to the admin only. */
   currentUser?: UserSession | null;
   /** Accounts included in the admin statistics (super admin accounts are excluded). */
-  users?: UserSession[];
+ users?: UserSession[];
 }
 
-const handleAppClick = (tab?: ActiveAppTab) => {
+export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
+  onNavigateToApp,
+  currentUser,
+  users = [],
+}) => {
+  const handleAppClick = (tab?: ActiveAppTab) => {
     if (tab === 'gpf_DeathClaim') {
       window.location.href = '/app4/index.html';
       return;

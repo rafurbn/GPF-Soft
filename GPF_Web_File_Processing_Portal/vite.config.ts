@@ -22,6 +22,7 @@ export default defineConfig(() => {
       //   2. app1/index.html     - GPF Refundable advance withdrawal
       //   3. app2/index.html     - GPF Non-Refundable advance withdrawal
       //   4. app3/index.html     - GPF Final withdrawal & No-Demand
+      //   5. app4/index.html     - GPF DeathClaim
       //
       // Each sub-app reads the selected Upazila from localStorage, published by
       // the root dashboard via `src/lib/upazilaSession.ts`.
@@ -31,6 +32,7 @@ export default defineConfig(() => {
           app1: path.resolve(__dirname, 'app1/index.html'),
           app2: path.resolve(__dirname, 'app2/index.html'),
           app3: path.resolve(__dirname, 'app3/index.html'),
+          app4: path.resolve(__dirname, 'app4/index.html'),
         },
       },
     },

@@ -48,7 +48,11 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             /* Top 30mm, Left 25mm, Right 25mm, Bottom decreased by 3/4 inch (11mm) */
             margin: 30mm 25mm 11mm 25mm;
           }
-          body {
+          html, body {
+            height: auto !important;
+            min-height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
             background: #ffffff !important;
             color: #000000 !important;
             font-weight: 400 !important;
@@ -58,7 +62,11 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           .print-page {
             page-break-after: always;
             break-after: page;
-            min-height: 100vh;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            height: auto !important;
+            min-height: auto !important;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -68,8 +76,8 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             font-weight: 400 !important;
           }
           .print-page:last-child {
-            page-break-after: avoid;
-            break-after: avoid;
+            page-break-after: auto;
+            break-after: auto;
           }
           .app-left-aligned {
             text-align: left;

@@ -25,6 +25,7 @@ const SUB_APP_URLS: Record<'gpf_refundable' | 'gpf_non_refundable' | 'gpf_final'
   gpf_refundable: '/app1/index.html',
   gpf_non_refundable: '/app2/index.html',
   gpf_final: '/app3/index.html',
+  gpf_DeathClaim: '/app4/index.html',
 };
 
 // Turns edge-function failures into a short Bangla message for the sign-in form
@@ -96,7 +97,7 @@ export default function App() {
   }, [currentUser]);
 
   // Open a sub-app as a real page navigation (MPA), not an in-tab React switch.
-  const openSubApp = (tab: 'gpf_refundable' | 'gpf_non_refundable' | 'gpf_final') => {
+  const openSubApp = (tab: 'gpf_refundable' | 'gpf_non_refundable' | 'gpf_final' | 'gpf_DeathClaim') => {
     if (currentUser) persistUpazilaContext(currentUser);
     window.location.href = SUB_APP_URLS[tab];
   };
@@ -390,9 +391,9 @@ export default function App() {
           // itself no longer renders them.
           onOpenConditionNotice={() => setActiveTab('architecture_guide')}
           onNavigateToApp={(tab) => {
-            // The three GPF apps are separate MPA pages now: open them as a full
+            // The four GPF apps are separate MPA pages now: open them as a full
             // page navigation. Local views (admin / architecture) stay in-tab.
-            if (tab === 'gpf_refundable' || tab === 'gpf_non_refundable' || tab === 'gpf_final') {
+            if (tab === 'gpf_refundable' || tab === 'gpf_non_refundable' || tab === 'gpf_final' || tab === 'gpf_DeathClaim') {
               openSubApp(tab);
               return;
             }

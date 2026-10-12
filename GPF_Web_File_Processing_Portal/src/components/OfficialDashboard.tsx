@@ -77,9 +77,24 @@ const APPS: LauncherApp[] = [
       hoverTitle: 'group-hover:text-rose-300',
       hoverIcon: 'group-hover:text-rose-400',
     },
+  },  
+  { 
+    id: 'app4',
+    no: '৪',
+    isActive: true,
+    title: 'GpfDeathClaim',
+    badge: 'gpf_DeathClaim',
+    desc: 'জিপিএফ মৃত্যুদাবী নিষ্পত্তি',
+    tab: 'gpf_DeathClaim',
+    accent: {
+      badge: 'bg-rose-950/70 border-rose-700/60 text-rose-400 group-hover:border-rose-400',
+      tag: 'bg-rose-950/80 text-rose-300 border-rose-800/60',
+      hoverBorder: 'hover:border-rose-600/70',
+      hoverTitle: 'group-hover:text-rose-300',
+      hoverIcon: 'group-hover:text-rose-400',
+    },
   },
   // খালি স্লট — পরে এখানে নতুন এ্যাপ যোগ করা হবে।
-  { id: 'app4', no: '৪', isActive: false },
   { id: 'app5', no: '৫', isActive: false },
 ];
 

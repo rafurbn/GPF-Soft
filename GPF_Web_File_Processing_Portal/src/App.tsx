@@ -391,9 +391,12 @@ export default function App() {
           // itself no longer renders them.
           onOpenConditionNotice={() => setActiveTab('architecture_guide')}
           onNavigateToApp={(tab) => {
-            // The four GPF apps are separate MPA pages now: open them as a full
-            // page navigation. Local views (admin / architecture) stay in-tab.
-            if (tab === 'gpf_refundable' || tab === 'gpf_non_refundable' || tab === 'gpf_final' || tab === 'gpf_DeathClaim') {
+            if (tab === 'gpf_DeathClaim') {
+              if (currentUser) persistUpazilaContext(currentUser);
+              window.location.href = '/app4/index.html';
+              return;
+            }
+            if (tab === 'gpf_refundable' || tab === 'gpf_non_refundable' || tab === 'gpf_final') {
               openSubApp(tab);
               return;
             }

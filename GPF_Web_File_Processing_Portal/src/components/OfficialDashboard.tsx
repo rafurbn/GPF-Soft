@@ -88,10 +88,10 @@ const APPS: LauncherApp[] = [
     tab: 'gpf_DeathClaim',
     accent: {
       badge: 'bg-rose-950/70 border-rose-700/60 text-rose-400 group-hover:border-rose-400',
-      tag: 'bg-rose-950/80 text-rose-300 border-rose-800/60',
-      hoverBorder: 'hover:border-rose-600/70',
-      hoverTitle: 'group-hover:text-rose-300',
-      hoverIcon: 'group-hover:text-rose-400',
+      tag: 'bg-rose-950/80 text-emerald-300 border-rose-800/60',
+      hoverBorder: 'hover:border-emerald-600/70',
+      hoverTitle: 'group-hover:text-emerald-300',
+      hoverIcon: 'group-hover:text-emerald-400',
     },
   },
   // খালি স্লট — পরে এখানে নতুন এ্যাপ যোগ করা হবে।

@@ -106,12 +106,11 @@ interface OfficialDashboardProps {
   users?: UserSession[];
 }
 
-export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
-  onNavigateToApp,
-  currentUser,
-  users = [],
-}) => {
-  const handleAppClick = (tab?: ActiveAppTab) => {
+const handleAppClick = (tab?: ActiveAppTab) => {
+    if (tab === 'gpf_DeathClaim') {
+      window.location.href = '/app4/index.html';
+      return;
+    }
     if (tab && onNavigateToApp) onNavigateToApp(tab);
   };
 

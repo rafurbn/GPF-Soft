@@ -29,91 +29,94 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           }
         }
         @media print {
-          #gpf-print-document {
-            display: block !important;
-            visibility: visible !important;
-            width: 100% !important;
-            background: #ffffff !important;
-            color: #000000 !important;
-          }
-          #gpf-print-document * {
-            font-weight: 400 !important;
-          }
-          header, main, footer, .print-hidden {
-            display: none !important;
-            visibility: hidden !important;
-          }
-          @page {
-            size: A4 portrait;
-            /* Top 30mm, Left 25mm, Right 25mm, Bottom decreased by 3/4 inch (11mm) */
-            margin: 30mm 25mm 11mm 25mm;
-          }
-          html, body {
-            height: auto !important;
-            min-height: auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: #ffffff !important;
-            color: #000000 !important;
-            font-weight: 400 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .print-page {
-            page-break-after: always;
-            break-after: page;
-            page-break-inside: avoid;
-            break-inside: avoid;
-            height: auto !important;
-            min-height: auto !important;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            padding: 0 !important;
-            margin: 0 !important;
-            background: #ffffff !important;
-            font-weight: 400 !important;
-          }
-          .print-page:last-child {
-            page-break-after: auto;
-            break-after: auto;
-          }
-          .app-left-aligned {
-            text-align: left;
-          }
-          .app-body-justified {
-            text-align: justify !important;
-            text-justify: inter-word !important;
-          }
-          .code-box-group {
-            display: flex;
-            border: 1px solid #000000;
-          }
-          .code-box-group span {
-            width: 22px;
-            height: 22px;
-            border-right: 1px solid #000000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 400 !important;
-          }
-          .code-box-group span:last-child {
-            border-right: none;
-          }
-          .bordered-table th, .bordered-table td {
-            border: 1px solid #000000;
-            padding: 6px 8px;
-            font-weight: 400 !important;
-          }
-          .borderless-table th, .borderless-table td {
-            border: none !important;
-            padding: 6px 8px;
-            font-weight: 400 !important;
-          }
-        }
+  #gpf-print-document {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    /* ফন্ট সাইজ ফিক্সড করে দেওয়া হলো যাতে লাইভে বড় না হয় */
+    font-size: 13px !important; 
+    line-height: 1.4 !important;
+  }
+  #gpf-print-document * {
+    font-weight: 400 !important;
+  }
+  header, main, footer, .print-hidden {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 20mm 20mm 15mm 20mm; /* মার্জিন কিছুটা কমিয়ে পাতা নিয়ন্ত্রণে আনা হলো */
+  }
+  html, body {
+    height: auto !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-weight: 400 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print-page {
+    page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    height: auto !important;
+    min-height: auto !important;
+    box-sizing: border-box;
+    /* flex এবং flex-direction বাদ দেওয়া হয়েছে প্রিন্ট ট্র্যাপ এড়াতে */
+    display: block !important; 
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    font-weight: 400 !important;
+  }
+  .print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+  .app-left-aligned {
+    text-align: left;
+  }
+  .app-body-justified {
+    text-align: justify !important;
+    text-justify: inter-word !important;
+  }
+  .code-box-group {
+    display: flex;
+    border: 1px solid #000000;
+  }
+  .code-box-group span {
+    width: 22px;
+    height: 22px;
+    border-right: 1px solid #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 400 !important;
+  }
+  .code-box-group span:last-child {
+    border-right: none;
+  }
+  .bordered-table th, .bordered-table td {
+    border: 1px solid #000000;
+    padding: 4px 6px; /* প্যাডিং সামান্য কমানো হলো */
+    font-size: 12px !important; /* টেবিলের লেখা একটু ছোট করা হলো */
+    font-weight: 400 !important;
+  }
+  .borderless-table th, .borderless-table td {
+    border: none !important;
+    padding: 4px 6px; /* প্যাডিং সামান্য কমানো হলো */
+    font-size: 12px !important;
+    font-weight: 400 !important;
+  }
+}
       `}</style>
 
       {/* ================= PAGE 1 ================= */}

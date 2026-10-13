@@ -645,29 +645,31 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </p>
 
         {/* ছক (৩য় টেবিল - কলাম ও রো সঠিক বিন্যাস) */}
-       <table className="w-full bordered-table my-2 text-xs font-normal" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+        <table className="w-full bordered-table text-xs font-normal mb-3" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
           <thead>
             <tr className="text-center font-normal">
-    <tr style="background-color: #f2f2f2;">
-      <th style="border: 1px solid #000000; padding: 8px; text-align: center; font-weight: bold;">ক্র: নং</th>
-      <th style="border: 1px solid #000000; padding: 8px; text-align: center; font-weight: bold;">আবেদনকারীর বিবরণ</th>
-      <th style="border: 1px solid #000000; padding: 8px; text-align: center; font-weight: bold;">চুড়ান্ত উত্তোলনের কারণ</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <!-- এই ঘরটিতে আপনার দেওয়া হুবহু স্টাইলটি ব্যবহার করা হয়েছে -->
-      <td style="border: 1px solid #000000; padding: 5px 4px; text-align: center; vertical-align: middle; font-weight: 400;">১</td>
-      <td style="border: 1px solid #000000; padding: 5px 4px; text-align: center; vertical-align: middle; font-weight: 400;"> জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
+              <th style={{ width: '12%', border: '1px solid #000000', padding: '5px 4px', fontWeight: 400 }}>ক্র:নং</th>
+              <th style={{ width: '58%', border: '1px solid #000000', padding: '5px 8px', fontWeight: 400 }}>আবেদনকারীর বিবরণ</th>
+              <th style={{ width: '30%', border: '1px solid #000000', padding: '5px 4px', fontWeight: 400 }}>চূড়ান্ত উত্তোলনের কারণ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ border: '1px solid #000000', padding: '5px 4px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+                ০১
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '5px 8px', textAlign: 'left', verticalAlign: 'top', lineHeight: 1.5, fontWeight: 400 }}>
+                জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
                 <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
                 <Value>{claim.schoolName}</Value>) <Value>{claim.upazilaName}</Value>,{' '}
-                <Value>{claim.districtName}</Value>।</td>
-      <td style="border: 1px solid #000000; padding: 5px 4px; text-align: center; vertical-align: middle; font-weight: 400;">মৃত্যুজনিত কারণে</td>
-    </tr>
-    <tr>
-          
-  </tbody>
-</table>
+                <Value>{claim.districtName}</Value>।
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '5px 4px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+                মৃত্যুজনিত কারণে
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
         <div className="mb-3 text-xs space-y-1">
           <div className="underline mb-1">সংযুক্তি:</div>

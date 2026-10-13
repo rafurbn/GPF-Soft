@@ -60,9 +60,11 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             break-after: page;
             page-break-inside: avoid;
             break-inside: avoid;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
+            display: block;
+            height: 250mm;
+            max-height: 250mm;
+            overflow: hidden;
+            box-sizing: border-box;
             padding: 0 !important;
             margin: 0 !important;
             background: #ffffff !important;
@@ -71,6 +73,8 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           .print-page:last-child {
             page-break-after: avoid;
             break-after: avoid;
+            height: auto;
+            max-height: none;
           }
           .app-left-aligned {
             text-align: left;
@@ -118,6 +122,15 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             border: none !important;
             padding: 6px 8px;
             font-weight: 400 !important;
+          }
+          /* Grid technique — explicit so borders/columns always print */
+          .print-grid {
+            display: grid !important;
+            grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+            width: 100% !important;
+          }
+          .print-grid > * {
+            min-width: 0;
           }
           /* Table column widths for fixed layout */
           .col-w12 { width: 12mm !important; }
@@ -284,39 +297,50 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           <div>ভাউচার নং .................................... তারিখ ....................................</div>
         </div>
 
-        <table className="w-full border-collapse bordered-table text-xs mb-3">
-          <thead>
-            <tr className="text-center">
-              <th className="w-12 col-w12">ক্রমি<br />ক নং</th>
-              <th>চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</th>
-              <th className="w-28 col-w28">ভবিষ্যৎ তহবিলের হিসাব নং</th>
-              <th className="w-28 col-w28">অগ্রিম/উত্তোলন</th>
-              <th className="w-20 col-w20">প্রাপ্তির রশীদ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="text-center align-top">১</td>
-              <td className="text-justify align-top leading-relaxed">
-                জনাব <Value>{claim.applicantName}</Value> (<Value>{claim.relationship}</Value> মৃত{' '}
-                <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
-                <Value>{claim.schoolName}</Value>) {claim.upazilaName}, {claim.districtName} এর
-                সাধারণ ভবিষ্যৎ তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
-                <div className="mt-1.5">
-                  মঞ্জুরী নং- <Value>{claim.sanctionMemoNo || '৪৭০/১(০৪)'}</Value> তারিখ:{' '}
-                  <Value>{claim.sanctionDate || '24/09/2026'}</Value>
-                </div>
-              </td>
-              <td className="text-center align-top">
-                <Value>{claim.gpfAccountNo}</Value>
-              </td>
-              <td className="text-center align-top">
-                <Value>{formattedAmount}/-</Value>
-              </td>
-              <td className="text-center align-top"></td>
-            </tr>
-          </tbody>
-        </table>
+        {/* বিল টেবিল — grid technique (borders always print) */}
+        <div className="border border-black my-2 text-xs font-normal" style={{ border: '1px solid #000000' }}>
+          {/* header row */}
+          <div className="print-grid grid grid-cols-12 font-normal border-b border-black text-center min-h-[46px]" style={{ borderBottom: '1px solid #000000' }}>
+            <div className="col-span-1 border-r border-black font-normal flex items-center justify-center p-1">ক্রমিক নং</div>
+            <div className="col-span-5 border-r border-black font-normal flex items-center justify-center p-1">চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</div>
+            <div className="col-span-3 border-r border-black font-normal flex items-center justify-center p-1">ভবিষ্য তহবিলের হিসাব নং</div>
+            <div className="col-span-2 border-r border-black font-normal flex items-center justify-center p-1">অগ্রিম/উত্তোলন</div>
+            <div className="col-span-1 font-normal flex items-center justify-center p-1">প্রাপ্তির রশিদ</div>
+          </div>
+          {/* body row */}
+          <div className="print-grid grid grid-cols-12 min-h-[120px] text-xs font-normal items-stretch">
+            {/* ক্রমিক নং */}
+            <div className="col-span-1 border-r border-black p-2 text-center flex items-center justify-center font-normal">
+              ০১
+            </div>
+            {/* চাঁদা প্রদানকারীর নাম ও বিবরণ */}
+            <div className="col-span-5 border-r border-black p-2 text-left font-normal leading-relaxed flex flex-col justify-between">
+              <div>
+                <p className="font-semibold">{claim.applicantName || '..............................................'}</p>
+                <p>{claim.deceasedDesignation || '..............................................'}</p>
+                <p>{claim.schoolName || '..............................................'}</p>
+                <p>
+                  {claim.upazilaName || '....................'}, {claim.districtName || '....................'}। এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
+                </p>
+              </div>
+              <div className="mt-3 flex justify-between text-[11px] items-center whitespace-nowrap">
+                <span className="whitespace-nowrap">মঞ্জুরী নং-...............</span>
+                <span className="whitespace-nowrap">তারিখ:................</span>
+              </div>
+            </div>
+            {/* ভবিষ্যৎ তহবিলের হিসাব নং */}
+            <div className="col-span-3 border-r border-black p-2 text-center flex items-center justify-center font-normal">
+              <Value>{claim.gpfAccountNo}</Value>
+            </div>
+            {/* অগ্রিম/উত্তোলন */}
+            <div className="col-span-2 border-r border-black p-2 text-center flex items-center justify-center font-normal">
+              <Value>{formattedAmount}/-</Value>
+            </div>
+            {/* প্রাপ্তির রশীদ */}
+            <div className="col-span-1 p-2 text-center flex items-center justify-center font-normal">
+            </div>
+          </div>
+        </div>
 
         <div className="mb-3 text-xs">
           প্রয়োজনীয় প্রদেয় টাকা = <Value>{formattedAmount}/-</Value> (কথায়:{' '}
@@ -533,39 +557,31 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </div>
 
         <div className="mb-3.5">
-          বিষয়ঃ সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের জন্য ক্ষমতাপত্র প্রদান প্রসঙ্গে।
+          বিষয়ঃ সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের জন্য ক্ষমতাপত্র প্রদান প্রসঙ্গে।
         </div>
 
         <p className="text-justify mb-4 leading-loose indent-8">
-          উপর্যুক্ত বিষয়ের আলোকে জানানো যাচ্ছে যে, নিম্নোক্ত শিক্ষক <Value>{claim.deathDate}</Value> তারিখ চাকুরীরত অবস্থায় মৃত্যুবরণ করেন। শিক্ষকের <Value>{claim.relationship}</Value> তাঁর সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের ক্ষমতাপত্র চেয়ে আবেদন করেছেন। এ বিষয়ে প্রয়োজনীয় ব্যবস্থা গ্রহণের জন্য অনুরোধ করা হলো।
+          উপর্যুক্ত বিষয়ের আলোকে জানানো যাচ্ছে যে, নিম্নোক্ত শিক্ষক <Value>{claim.deathDate}</Value> তারিখ চাকুরীরত অবস্থায় মৃত্যুবরণ করেন। শিক্ষকের <Value>{claim.relationship}</Value> তাঁর সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের ক্ষমতাপত্র চেয়ে আবেদন করেছেন। এ বিষয়ে প্রয়োজনীয় ব্যবস্থা গ্রহণের জন্য অনুরোধ করা হলো।
         </p>
 
-        {/* ছক */}
-        <table className="w-full border-collapse bordered-table text-xs mb-5">
-          <thead>
-            <tr className="text-center">
-              <th className="w-14 col-w14">ক্র:নং</th>
-              <th>আবেদনকারীর বিবরণ</th>
-              <th className="w-44 col-w44">চূড়ান্ত উত্তোলনের কারণ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="text-center align-top">
-                ০১
-              </td>
-              <td className="p-2 leading-relaxed">
-                জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
-                <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
-                <Value>{claim.schoolName}</Value>) <Value>{claim.upazilaName}</Value>,{' '}
-                <Value>{claim.districtName}</Value>।
-              </td>
-              <td className="text-center align-middle">
-                মৃত্যুজনিত কারণে
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* ছক — grid technique (borders always print) */}
+        <div className="border border-black text-xs font-normal mb-5" style={{ border: '1px solid #000000' }}>
+          <div className="print-grid grid grid-cols-12 font-normal border-b border-black text-center min-h-[40px]" style={{ borderBottom: '1px solid #000000' }}>
+            <div className="col-span-2 border-r border-black font-normal flex items-center justify-center p-1">ক্র:নং</div>
+            <div className="col-span-6 border-r border-black font-normal flex items-center justify-center p-1">আবেদনকারীর বিবরণ</div>
+            <div className="col-span-4 font-normal flex items-center justify-center p-1">চূড়ান্ত উত্তোলনের কারণ</div>
+          </div>
+          <div className="print-grid grid grid-cols-12 text-xs font-normal items-stretch">
+            <div className="col-span-2 border-r border-black p-2 text-center flex items-center justify-center font-normal">০১</div>
+            <div className="col-span-6 border-r border-black p-2 text-left leading-relaxed font-normal">
+              জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
+              <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
+              <Value>{claim.schoolName}</Value>) <Value>{claim.upazilaName}</Value>,{' '}
+              <Value>{claim.districtName}</Value>।
+            </div>
+            <div className="col-span-4 p-2 text-center flex items-center justify-center font-normal">মৃত্যুজনিত কারণে</div>
+          </div>
+        </div>
 
         <div className="mb-6 text-xs space-y-1">
           <div className="underline mb-1">সংযুক্তি:</div>
@@ -639,35 +655,27 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </div>
 
         <p className="text-justify mb-4 leading-loose indent-8">
-          উপর্যুক্ত বিষয়ের আলোকে জানানো যাচ্ছে যে, নিম্নোক্ত শিক্ষক <Value>{claim.deathDate}</Value> তারিখ চাকুরীরত অবস্থায় মৃত্যুবরণ করেন। শিক্ষকের <Value>{claim.relationship}</Value> তাঁর সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের জন্য অনুমতি চেয়ে আবেদন করেছেন। এ বিষয়ে প্রয়োজনীয় ব্যবস্থা গ্রহণের জন্য অনুরোধ করা হলো।
+          উপর্যুক্ত বিষয়ের আলোকে জানানো যাচ্ছে যে, নিম্নোক্ত শিক্ষক <Value>{claim.deathDate}</Value> তারিখ চাকুরীরত অবস্থায় মৃত্যুবরণ করেন। শিক্ষকের <Value>{claim.relationship}</Value> তাঁর সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের জন্য অনুমতি চেয়ে আবেদন করেছেন। এ বিষয়ে প্রয়োজনীয় ব্যবস্থা গ্রহণের জন্য অনুরোধ করা হলো।
         </p>
 
-        {/* ছক */}
-        <table className="w-full border-collapse bordered-table text-xs mb-5">
-          <thead>
-            <tr className="text-center">
-              <th className="w-14 col-w14">ক্র:নং</th>
-              <th>আবেদনকারীর বিবরণ</th>
-              <th className="w-44 col-w44">চূড়ান্ত উত্তোলনের কারণ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="text-center align-top">
-                ০১
-              </td>
-              <td className="p-2 leading-relaxed">
-                জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
-                <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
-                <Value>{claim.schoolName}</Value>) <Value>{claim.upazilaName}</Value>,{' '}
-                <Value>{claim.districtName}</Value>।
-              </td>
-              <td className="text-center align-middle">
-                মৃত্যুজনিত কারণে
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* ছক — grid technique (borders always print) */}
+        <div className="border border-black text-xs font-normal mb-5" style={{ border: '1px solid #000000' }}>
+          <div className="print-grid grid grid-cols-12 font-normal border-b border-black text-center min-h-[40px]" style={{ borderBottom: '1px solid #000000' }}>
+            <div className="col-span-2 border-r border-black font-normal flex items-center justify-center p-1">ক্র:নং</div>
+            <div className="col-span-6 border-r border-black font-normal flex items-center justify-center p-1">আবেদনকারীর বিবরণ</div>
+            <div className="col-span-4 font-normal flex items-center justify-center p-1">চূড়ান্ত উত্তোলনের কারণ</div>
+          </div>
+          <div className="print-grid grid grid-cols-12 text-xs font-normal items-stretch">
+            <div className="col-span-2 border-r border-black p-2 text-center flex items-center justify-center font-normal">০১</div>
+            <div className="col-span-6 border-r border-black p-2 text-left leading-relaxed font-normal">
+              জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
+              <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
+              <Value>{claim.schoolName}</Value>) <Value>{claim.upazilaName}</Value>,{' '}
+              <Value>{claim.districtName}</Value>।
+            </div>
+            <div className="col-span-4 p-2 text-center flex items-center justify-center font-normal">মৃত্যুজনিত কারণে</div>
+          </div>
+        </div>
 
         <div className="mb-6 text-xs space-y-1">
           <div className="underline mb-1">সংযুক্তি:</div>

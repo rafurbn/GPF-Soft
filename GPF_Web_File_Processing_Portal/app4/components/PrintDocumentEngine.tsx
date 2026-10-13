@@ -29,52 +29,57 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           }
         }
         @media print {
+          @page {
+            size: A4 portrait;
+            /* Top 30mm, Left 25mm, Right 25mm, Bottom 11mm */
+            margin: 30mm 25mm 11mm 25mm;
+          }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-weight: 400 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           #gpf-print-document {
             display: block !important;
             visibility: visible !important;
             width: 100% !important;
             background: #ffffff !important;
             color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
           #gpf-print-document * {
             font-weight: 400 !important;
+            box-sizing: border-box !important;
           }
-          header, main, footer, .print-hidden {
+          header, main, footer, .print-hidden, nav {
             display: none !important;
             visibility: hidden !important;
           }
-          @page {
-            size: A4 portrait;
-            /* Top 30mm, Left 25mm, Right 25mm, Bottom decreased by 3/4 inch (11mm) */
-            margin: 30mm 25mm 11mm 25mm;
-          }
-          body {
-            background: #ffffff !important;
-            color: #000000 !important;
-            font-weight: 400 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
           .print-page {
-            page-break-after: always;
-            break-after: page;
-            page-break-inside: avoid;
-            break-inside: avoid;
-            display: block;
-            height: 250mm;
-            max-height: 250mm;
-            overflow: hidden;
-            box-sizing: border-box;
+            display: block !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            page-break-after: always !important;
+            break-after: page !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
             padding: 0 !important;
             margin: 0 !important;
             background: #ffffff !important;
             font-weight: 400 !important;
+            height: auto !important;
+            min-height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
           }
           .print-page:last-child {
-            page-break-after: avoid;
-            break-after: avoid;
-            height: auto;
-            max-height: none;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
           }
           .app-left-aligned {
             text-align: left;
@@ -104,51 +109,35 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             border-collapse: collapse !important;
             border-spacing: 0 !important;
             width: 100% !important;
-            table-layout: fixed;
+            table-layout: fixed !important;
           }
           .bordered-table th, .bordered-table td {
             border: 1px solid #000000 !important;
-            padding: 6px 8px;
             font-weight: 400 !important;
-            vertical-align: top;
+            box-sizing: border-box !important;
           }
           .borderless-table {
             border-collapse: collapse !important;
             border-spacing: 0 !important;
             width: 100% !important;
-            table-layout: fixed;
+            table-layout: fixed !important;
           }
           .borderless-table th, .borderless-table td {
             border: none !important;
-            padding: 6px 8px;
             font-weight: 400 !important;
+            box-sizing: border-box !important;
           }
-          /* Grid technique — explicit so borders/columns always print */
-          .print-grid {
-            display: grid !important;
-            grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
-            width: 100% !important;
-          }
-          .print-grid > * {
-            min-width: 0;
-          }
-          /* Table column widths for fixed layout */
-          .col-w12 { width: 12mm !important; }
-          .col-w20 { width: 20mm !important; }
-          .col-w28 { width: 28mm !important; }
-          .col-w44 { width: 44mm !important; }
-          .col-w14 { width: 14mm !important; }
         }
       `}</style>
 
       {/* ================= PAGE 1 ================= */}
-      <div className="print-page text-[15px] leading-[2.0] text-left app-left-aligned">
-        <div className="mb-5 text-left">
+      <div className="print-page text-[14.5px] leading-[1.75] text-left app-left-aligned">
+        <div className="mb-4 text-left">
           তারিখ: <Value>{claim.applicationDate}</Value>
         </div>
 
         {/* বরাবর অংশ (লাইন স্পেস কম) */}
-        <div className="mb-5 text-left space-y-0.5 leading-[1.35]">
+        <div className="mb-4 text-left space-y-0.5 leading-[1.35]">
           <div>বরাবর</div>
           <div>উপজেলা হিসাবরক্ষণ কর্মকর্তা</div>
           <div>
@@ -156,33 +145,32 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        <div className="mb-5 text-left">
+        <div className="mb-4 text-left">
           মাধ্যম: যথাযথ কর্তৃপক্ষ।
         </div>
 
-        <div className="mb-5 text-left">
+        <div className="mb-4 text-left leading-[1.5]">
           বিষয়ঃ সাধারণ ভবিষ্যৎ তহবিল হিসাব নং <Value>{claim.gpfAccountNo}</Value> এ জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের ক্ষমতাপত্র প্রদান প্রসঙ্গে।
         </div>
 
-        <div className="mb-3 text-left">জনাব,</div>
+        <div className="mb-2 text-left">জনাব,</div>
 
         {/* আবেদন বডি - জাস্টিফাই */}
-        <div className="mb-5 text-justify app-body-justified leading-relaxed">
+        <div className="mb-4 text-justify app-body-justified leading-relaxed">
           সবিনয় নিবেদন এই যে, <Value>{claim.schoolName}</Value>, <Value>{claim.upazilaName}</Value>, <Value>{claim.districtName}</Value> এর <Value>{claim.deceasedDesignation}</Value> জনাব <Value>{claim.deceasedEmployeeName}</Value> আমার <Value>{claim.relationship}</Value> ছিলেন। তিনি বিগত <Value>{claim.deathDate}</Value> তারিখ মৃত্যুবরণ করেন। এমতাবস্থায় তাঁর সমগ্র চাকুরীকলে সাধারণ ভবিষ্যৎ তহবিল হিসাব নং <Value>{claim.gpfAccountNo}</Value> এ জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের ক্ষমতাপত্র প্রদানের জন্য মহোদয়ের নিকট বিনীত আবেদন করছি।
         </div>
 
         {/* আবেদন বডি - জাস্টিফাই */}
-        <div className="mb-8 text-justify app-body-justified leading-relaxed">
+        <div className="mb-6 text-justify app-body-justified leading-relaxed">
           অতএব, মহোদয় নিকট সবিনয় নিবেদন এই যে, আমার <Value>{claim.relationship}</Value>র সাধারণ ভবিষ্যৎ তহবিল হিসাব নং <Value>{claim.gpfAccountNo}</Value> এ জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের ক্ষমতাপত্র প্রদানে আপনার সদয় মর্জি হয়।
         </div>
 
-        {/* নিবেদন অংশ (লাইন স্পেস কম এবং আবেদনকারীর নামের উপর পর্যাপ্ত স্বাক্ষর স্পেস) */}
-        <div className="pt-3 text-left leading-[1.35] space-y-0.5">
+        {/* নিবেদন অংশ */}
+        <div className="pt-2 text-left leading-[1.35] space-y-0.5">
           <div>বিনীত</div>
           <div>নিবেদক</div>
           <div>আপনার বিশ্বস্ত</div>
-          {/* আবেদনকারীর স্বাক্ষরের জন্য পর্যাপ্ত ফাঁকা জায়গা */}
-          <div className="h-16 w-48"></div>
+          <div className="h-14 w-48"></div>
           <div>
             <Value>{claim.applicantName}</Value>
           </div>
@@ -202,13 +190,13 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
       </div>
 
       {/* ================= PAGE 2 ================= */}
-      <div className="print-page text-[15px] leading-[2.0] text-left app-left-aligned">
-        <div className="mb-5 text-left">
+      <div className="print-page text-[14.5px] leading-[1.75] text-left app-left-aligned">
+        <div className="mb-4 text-left">
           তারিখ: <Value>{claim.applicationDate}</Value>
         </div>
 
-        {/* বরাবর অংশ (লাইন স্পেস কম) */}
-        <div className="mb-5 text-left space-y-0.5 leading-[1.35]">
+        {/* বরাবর অংশ */}
+        <div className="mb-4 text-left space-y-0.5 leading-[1.35]">
           <div>বরাবর</div>
           <div>জেলা প্রাথমিক শিক্ষা অফিসার</div>
           <div>
@@ -216,33 +204,32 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        <div className="mb-5 text-left">
+        <div className="mb-4 text-left">
           মাধ্যম: যথাযথ কর্তৃপক্ষ।
         </div>
 
-        <div className="mb-5 text-left">
+        <div className="mb-4 text-left leading-[1.5]">
           বিষয়ঃ সাধারণ ভবিষ্যৎ তহবিল হিসাব নং <Value>{claim.gpfAccountNo}</Value> এ জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলন প্রসঙ্গে।
         </div>
 
-        <div className="mb-3 text-left">জনাব,</div>
+        <div className="mb-2 text-left">জনাব,</div>
 
         {/* আবেদন বডি - জাস্টিফাই */}
-        <div className="mb-5 text-justify app-body-justified leading-relaxed">
+        <div className="mb-4 text-justify app-body-justified leading-relaxed">
           সবিনয় নিবেদন এই যে, <Value>{claim.schoolName}</Value>, <Value>{claim.upazilaName}</Value>, <Value>{claim.districtName}</Value> এর <Value>{claim.deceasedDesignation}</Value> জনাব <Value>{claim.deceasedEmployeeName}</Value> আমার <Value>{claim.relationship}</Value> ছিলেন। তিনি বিগত <Value>{claim.deathDate}</Value> তারিখ মৃত্যুবরণ করেন। এমতাবস্থায় তাঁর সমগ্র চাকুরীকলে সাধারণ ভবিষ্যৎ তহবিল হিসাব নং <Value>{claim.gpfAccountNo}</Value> এ জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের অনুমতির জন্য মহোদয়ের নিকট বিনীত আবেদন করছি।
         </div>
 
         {/* আবেদন বডি - জাস্টিফাই */}
-        <div className="mb-8 text-justify app-body-justified leading-relaxed">
+        <div className="mb-6 text-justify app-body-justified leading-relaxed">
           অতএব, মহোদয় নিকট সবিনয় নিবেদন এই যে, আমার সাধারণ ভবিষ্যৎ তহবিল হিসাব নং <Value>{claim.gpfAccountNo}</Value> এ জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের অনুমতি প্রদানে আপনার সদয় মর্জি হয়।
         </div>
 
-        {/* নিবেদন অংশ (লাইন স্পেস কম এবং আবেদনকারীর নামের উপর পর্যাপ্ত স্বাক্ষর স্পেস) */}
-        <div className="pt-3 text-left leading-[1.35] space-y-0.5">
+        {/* নিবেদন অংশ */}
+        <div className="pt-2 text-left leading-[1.35] space-y-0.5">
           <div>বিনীত</div>
           <div>নিবেদক</div>
           <div>আপনার বিশ্বস্ত</div>
-          {/* আবেদনকারীর স্বাক্ষরের জন্য পর্যাপ্ত ফাঁকা জায়গা */}
-          <div className="h-16 w-48"></div>
+          <div className="h-14 w-48"></div>
           <div>
             <Value>{claim.applicantName}</Value>
           </div>
@@ -261,22 +248,22 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </div>
       </div>
 
-      {/* ================= PAGE 3: টি, আর ফরম নং ৩৭ (প্রথম ও দ্বিতীয় ছবির নিখুঁত ডিজাইন) ================= */}
-      <div className="print-page text-[13px] leading-normal">
-        {/* উপরের অংশ - প্রথম ছবির মত */}
-        <div className="text-left text-xs mb-3 leading-tight">
+      {/* ================= PAGE 3: টি, আর ফরম নং ৩৭ ================= */}
+      <div className="print-page text-[12.5px] leading-normal">
+        {/* উপরের অংশ */}
+        <div className="text-left text-xs mb-2 leading-tight">
           <div>টি, আর ফরম নং ৩৭</div>
           <div>[এস, আর ৩২৪ (১) দ্রষ্টব্য]</div>
         </div>
 
-        <div className="text-center text-sm mb-4">
+        <div className="text-center text-sm mb-3">
           কর্মচারীদের ভবিষ্যৎ তহবিল হইতে উত্তোলন/অগ্রিম গ্রহণের বিল
         </div>
 
         {/* শ্রেণী বিন্যাস কোড বক্স গ্রুপসমূহ */}
-        <div className="flex items-center justify-between text-xs mb-3">
+        <div className="flex items-center justify-between text-xs mb-2.5">
           <div>ভবিষ্যৎ তহবিলের শ্রেণী বিন্যাস কোড</div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="code-box-group">
               <span>৭</span>
             </div>
@@ -292,62 +279,57 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        <div className="flex justify-between text-xs mb-3">
+        <div className="flex justify-between text-xs mb-2">
           <div>টোকেন নং.................................... তারিখ....................................</div>
           <div>ভাউচার নং .................................... তারিখ ....................................</div>
         </div>
 
-        {/* বিল টেবিল — grid technique (borders always print) */}
-        <div className="border border-black my-2 text-xs font-normal" style={{ border: '1px solid #000000' }}>
-          {/* header row */}
-          <div className="print-grid grid grid-cols-12 font-normal border-b border-black text-center min-h-[46px]" style={{ borderBottom: '1px solid #000000' }}>
-            <div className="col-span-1 border-r border-black font-normal flex items-center justify-center p-1">ক্রমিক নং</div>
-            <div className="col-span-5 border-r border-black font-normal flex items-center justify-center p-1">চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</div>
-            <div className="col-span-3 border-r border-black font-normal flex items-center justify-center p-1">ভবিষ্য তহবিলের হিসাব নং</div>
-            <div className="col-span-2 border-r border-black font-normal flex items-center justify-center p-1">অগ্রিম/উত্তোলন</div>
-            <div className="col-span-1 font-normal flex items-center justify-center p-1">প্রাপ্তির রশিদ</div>
-          </div>
-          {/* body row */}
-          <div className="print-grid grid grid-cols-12 min-h-[120px] text-xs font-normal items-stretch">
-            {/* ক্রমিক নং */}
-            <div className="col-span-1 border-r border-black p-2 text-center flex items-center justify-center font-normal">
-              ০১
-            </div>
-            {/* চাঁদা প্রদানকারীর নাম ও বিবরণ */}
-            <div className="col-span-5 border-r border-black p-2 text-left font-normal leading-relaxed flex flex-col justify-between">
-              <div>
+        {/* বিল টেবিল (১ম টেবিল - কলাম ও রো সঠিক বিন্যাস) */}
+        <table className="w-full bordered-table my-2 text-xs font-normal" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <thead>
+            <tr className="text-center font-normal">
+              <th style={{ width: '10%', border: '1px solid #000000', padding: '5px 3px', fontWeight: 400 }}>ক্রমিক নং</th>
+              <th style={{ width: '44%', border: '1px solid #000000', padding: '5px 4px', fontWeight: 400 }}>চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</th>
+              <th style={{ width: '22%', border: '1px solid #000000', padding: '5px 3px', fontWeight: 400 }}>ভবিষ্য তহবিলের হিসাব নং</th>
+              <th style={{ width: '14%', border: '1px solid #000000', padding: '5px 3px', fontWeight: 400 }}>অগ্রিম/উত্তোলন</th>
+              <th style={{ width: '10%', border: '1px solid #000000', padding: '5px 3px', fontWeight: 400 }}>প্রাপ্তির রশিদ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ border: '1px solid #000000', padding: '5px 3px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+                ০১
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '6px 6px', textAlign: 'left', verticalAlign: 'top', fontWeight: 400, lineHeight: 1.45 }}>
                 <p className="font-semibold">{claim.applicantName || '..............................................'}</p>
                 <p>{claim.deceasedDesignation || '..............................................'}</p>
                 <p>{claim.schoolName || '..............................................'}</p>
                 <p>
                   {claim.upazilaName || '....................'}, {claim.districtName || '....................'}। এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
                 </p>
-              </div>
-              <div className="mt-3 flex justify-between text-[11px] items-center whitespace-nowrap">
-                <span className="whitespace-nowrap">মঞ্জুরী নং-...............</span>
-                <span className="whitespace-nowrap">তারিখ:................</span>
-              </div>
-            </div>
-            {/* ভবিষ্যৎ তহবিলের হিসাব নং */}
-            <div className="col-span-3 border-r border-black p-2 text-center flex items-center justify-center font-normal">
-              <Value>{claim.gpfAccountNo}</Value>
-            </div>
-            {/* অগ্রিম/উত্তোলন */}
-            <div className="col-span-2 border-r border-black p-2 text-center flex items-center justify-center font-normal">
-              <Value>{formattedAmount}/-</Value>
-            </div>
-            {/* প্রাপ্তির রশীদ */}
-            <div className="col-span-1 p-2 text-center flex items-center justify-center font-normal">
-            </div>
-          </div>
-        </div>
+                <div className="mt-2 flex justify-between text-[11px] items-center whitespace-nowrap">
+                  <span className="whitespace-nowrap">মঞ্জুরী নং-...............</span>
+                  <span className="whitespace-nowrap">তারিখ:................</span>
+                </div>
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '5px 3px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+                <Value>{claim.gpfAccountNo}</Value>
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '5px 3px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+                <Value>{formattedAmount}/-</Value>
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '5px 3px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-        <div className="mb-3 text-xs">
+        <div className="mb-2 text-xs">
           প্রয়োজনীয় প্রদেয় টাকা = <Value>{formattedAmount}/-</Value> (কথায়:{' '}
           <Value>{amountInWords}</Value>) টাকা বুঝিয়া পাইলাম।
         </div>
 
-        <div className="mb-3 text-xs space-y-1.5 text-justify leading-relaxed">
+        <div className="mb-2 text-xs space-y-1 text-justify leading-relaxed">
           <div className="underline">প্রত্যায়নসমূহ</div>
           <p>
             ১। প্রত্যায়ন করা যাইতেছে যে এই বিলে গৃহীত টাকা প্রকৃত প্রাপকদের মধ্যে বিলি করা হইয়াছে এবং প্রত্যেক ২০০ টাকার উপর প্রদানের ক্ষেত্রে রেভিনিউ স্ট্যাম্প লাগাইয়া সেগুলি যথাযথভাবে বাতিলপূর্বক আমার অফিসে রক্ষিত প্রাপ্তি বহিতে প্রাপ্তির রশিদ গ্রহণ করা হইয়াছে।
@@ -357,12 +339,12 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </p>
         </div>
 
-        {/* নিচের অংশ - দ্বিতীয় ছবির মত */}
-        <div className="flex justify-between text-xs mb-2 pt-1 leading-loose">
+        {/* নিচের অংশ */}
+        <div className="flex justify-between text-xs mb-2 pt-1 leading-snug">
           <div>
             <div>স্থান....................................</div>
             <div>তারিখ ....................................</div>
-            <div className="mt-3">সীল</div>
+            <div className="mt-2">সীল</div>
           </div>
           <div>
             <div>আয়ন কর্মকর্তার স্বাক্ষর ....................................</div>
@@ -371,15 +353,15 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        <hr className="border-t border-black my-2.5" />
+        <hr className="border-t border-black my-2" />
 
-        <div className="text-center text-xs mb-1.5">হিসাব রক্ষণ অফিসে ব্যবহারের জন্য</div>
+        <div className="text-center text-xs mb-1">হিসাব রক্ষণ অফিসে ব্যবহারের জন্য</div>
 
-        <div className="text-xs mb-3">
+        <div className="text-xs mb-2">
           টাকা .................................... (কথায়) .................................................................... প্রদানের জন্য পাস করা হইল।
         </div>
 
-        <div className="flex justify-between text-left text-xs leading-loose mb-3">
+        <div className="flex justify-between text-left text-xs leading-snug mb-2">
           <div>
             <div>অডিটর</div>
             <div className="mt-1">নাম ....................................</div>
@@ -402,21 +384,21 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </div>
       </div>
 
-      {/* ================= PAGE 4: বেঙ্গল অডিট ম্যানুয়েল ৬৬৩ (তৃতীয় ছবির মত নিখুঁত ও নিচের অংশদুটি জাস্টিফাইড) ================= */}
-      <div className="print-page text-[16px] leading-[1.85]">
-        <div className="text-center text-sm mb-6 leading-normal">
+      {/* ================= PAGE 4: বেঙ্গল অডিট ম্যানুয়েল ৬৬৩ ================= */}
+      <div className="print-page text-[13.5px] leading-[1.6]">
+        <div className="text-center text-sm mb-4 leading-normal">
           <div>অডিট অফিসে প্রোভিডেন্ট ফান্ড চূড়ান্ত অর্থ প্রদানের কেস নিষ্পত্তিকরণের জন্য</div>
           <div className="underline">বেঙ্গল অডিট ম্যানুয়েলের অনুচ্ছেদ ৬৬৩ অনুযায়ী প্রয়োজনীয় বিবরণ।</div>
         </div>
 
-        <div className="space-y-2 text-justify">
+        <div className="space-y-1.5 text-justify">
           <div>
             ১। চাঁদা দাতার নাম: জনাব <Value>{claim.deceasedEmployeeName}</Value>
           </div>
 
           <div>
             ২। অবসর গ্রহণ/পদত্যাগ/কর্মচ্যুতি/কর্মখারিজ/অবসর গ্রহণের পূর্বে প্রস্তুতিমূলক ছুটি/চাকুরি হইতে বিতাড়িত এর প্রকৃত তারিখ-<Value>{claim.deathDate}</Value>
-            <div className="pl-4 text-[12px] space-y-0.5 mt-0.5">
+            <div className="pl-4 text-[11.5px] space-y-0.5 mt-0.5">
               <div>(ক) কর্ম খারিজের ক্ষেত্রে উহার কারণ বলিতে হইবে।</div>
               <div>(খ) পদচ্যুতির ক্ষেত্রে কর্মচারী আপীল করিয়াছে কি বা করিতে ইচ্ছা করিয়াছে কি ?</div>
               <div>(গ) পদত্যাগের ক্ষেত্রে বলিতে হইবে যে তাহার পদত্যাগপত্র গ্রহণ করা হইয়াছে কি ?</div>
@@ -460,8 +442,8 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-       {/* নিচের অংশদুটি আলাদাভাবে জাস্টিফাই ও উপরে পর্যাপ্ত ফাঁকা স্পেস */}
-        <div className="flex justify-between items-start mt-20 pt-10 text-xs leading-relaxed gap-10">
+        {/* নিচের অংশদুটি আলাদাভাবে জাস্টিফাই */}
+        <div className="flex justify-between items-start mt-8 pt-4 text-xs leading-relaxed gap-8">
           <div className="w-[48%] text-left">
             নন-গেজেটেড চাঁদা দাতার ক্ষেত্রে অফিস প্রধানের স্বাক্ষর অথবা গেজেটেড অফিসারের ক্ষেত্রে চাঁদা দাতা নিজের স্বাক্ষর
           </div>
@@ -472,74 +454,71 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </div>
       </div>
 
-      {/* ================= PAGE 5: সংযোজনী-৬ (টেবিলের দাগ হাইড, ৫ আঙ্গুলের উপর-নীচ স্পেস বৃদ্ধি, শেষের লাইন সেন্টার) ================= */}
-      <div className="print-page text-[14px] leading-relaxed">
+      {/* ================= PAGE 5: সংযোজনী-৬ ================= */}
+      <div className="print-page text-[13.5px] leading-relaxed">
         <div className="text-right text-sm mb-2">সংযোজনী-৬</div>
 
-        <div className="text-center text-base mb-5 underline">
+        <div className="text-center text-base mb-4 underline">
           নমুনা স্বাক্ষর ও হাতের পাঁচ আঙ্গুলের ছাপ
         </div>
 
-        <div className="mb-5">
-          <p className="text-justify mb-2.5">
+        <div className="mb-4">
+          <p className="text-justify mb-2">
             ১। নিম্নে সাধারণ ভবিষ্যৎ তহবিলে জমাকৃত সমুদয় অর্থ উত্তোলনের জন্য আবেদনকারী জনাব/বেগম <Value>{claim.applicantName}</Value> (<Value>{claim.relationship}</Value> মৃত <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>, <Value>{claim.schoolName}</Value>) {claim.upazilaName}, {claim.districtName} এর তিনটি নমুনা স্বাক্ষর সত্যায়িত করা হইল।
           </p>
 
-          {/* টেবিলের দাগসমূহ হাইড (Border removed) */}
-          <table className="w-full borderless-table text-xs text-left mb-4">
+          <table className="w-full borderless-table text-xs text-left mb-3" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr>
-                <th className="w-24">ক্রমিক নং</th>
-                <th className="w-64">পূর্ণ স্বাক্ষর</th>
-                <th>সংক্ষিপ্ত স্বাক্ষর</th>
+                <th style={{ width: '18%', padding: '4px 6px', fontWeight: 400, border: 'none' }}>ক্রমিক নং</th>
+                <th style={{ width: '48%', padding: '4px 6px', fontWeight: 400, border: 'none' }}>পূর্ণ স্বাক্ষর</th>
+                <th style={{ width: '34%', padding: '4px 6px', fontWeight: 400, border: 'none' }}>সংক্ষিপ্ত স্বাক্ষর</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="h-9"><td>(১)</td><td></td><td></td></tr>
-              <tr className="h-9"><td>(২)</td><td></td><td></td></tr>
-              <tr className="h-9"><td>(৩)</td><td></td><td></td></tr>
+              <tr style={{ height: '32px' }}><td style={{ padding: '4px 6px', border: 'none' }}>(১)</td><td></td><td></td></tr>
+              <tr style={{ height: '32px' }}><td style={{ padding: '4px 6px', border: 'none' }}>(২)</td><td></td><td></td></tr>
+              <tr style={{ height: '32px' }}><td style={{ padding: '4px 6px', border: 'none' }}>(৩)</td><td></td><td></td></tr>
             </tbody>
           </table>
         </div>
 
-        <div className="mb-5">
-          <p className="text-justify mb-2.5">
+        <div className="mb-4">
+          <p className="text-justify mb-2">
             ২। নিম্নে সাধারণ ভবিষ্যৎ তহবিলে জমাকৃত সমুদয় অর্থ উত্তোলনের জন্য আবেদনকারী জনাব/বেগম <Value>{claim.applicantName}</Value> (<Value>{claim.relationship}</Value> মৃত <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>, <Value>{claim.schoolName}</Value>) {claim.upazilaName}, {claim.districtName} এর হাতের পাঁচ আঙ্গুলের ছাপ সত্যায়িত করা হইল।
           </p>
 
-          {/* টেবিলের দাগসমূহ হাইড ও ৫টি রো এর উপর-নীচ স্পেস বৃদ্ধি (h-14) */}
-          <table className="w-full borderless-table text-xs text-left mb-4">
+          <table className="w-full borderless-table text-xs text-left mb-3" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
             <thead>
               <tr>
-                <th className="w-24">ক্রমিক নং</th>
-                <th className="w-64">আঙ্গুলের নাম</th>
-                <th>ছাপ</th>
+                <th style={{ width: '18%', padding: '4px 6px', fontWeight: 400, border: 'none' }}>ক্রমিক নং</th>
+                <th style={{ width: '48%', padding: '4px 6px', fontWeight: 400, border: 'none' }}>আঙ্গুলের নাম</th>
+                <th style={{ width: '34%', padding: '4px 6px', fontWeight: 400, border: 'none' }}>ছাপ</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="h-14 align-middle"><td>(১)</td><td>বাম/ডান কনিষ্ঠ</td><td></td></tr>
-              <tr className="h-14 align-middle"><td>(২)</td><td>বাম/ডান অনামিকা</td><td></td></tr>
-              <tr className="h-14 align-middle"><td>(৩)</td><td>বাম/ডান মধ্যমা</td><td></td></tr>
-              <tr className="h-14 align-middle"><td>(৪)</td><td>বাম/ডান তর্জনী</td><td></td></tr>
-              <tr className="h-14 align-middle"><td>(৫)</td><td>বাম/ডান বৃদ্ধাঙ্গুলি</td><td></td></tr>
+              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '4px 6px', border: 'none' }}>(১)</td><td>বাম/ডান কনিষ্ঠ</td><td></td></tr>
+              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '4px 6px', border: 'none' }}>(২)</td><td>বাম/ডান অনামিকা</td><td></td></tr>
+              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '4px 6px', border: 'none' }}>(৩)</td><td>বাম/ডান মধ্যমা</td><td></td></tr>
+              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '4px 6px', border: 'none' }}>(৪)</td><td>বাম/ডান তর্জনী</td><td></td></tr>
+              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '4px 6px', border: 'none' }}>(৫)</td><td>বাম/ডান বৃদ্ধাঙ্গুলি</td><td></td></tr>
             </tbody>
           </table>
         </div>
 
-        <div className="mb-6 text-xs">
+        <div className="mb-3 text-xs">
           ৩। উপর্যুক্ত নমুনা স্বাক্ষর ও হাতের পাঁচ আঙ্গুলের ছাপ আমার সম্মুখে প্রদান করা হইয়াছে।
         </div>
 
-        {/* সব শেষের লাইন দুটি যেখানে আছে এখানেই রাইট এলাইন বাদ দিয়ে সেন্টার */}
-        <div className="w-80 ml-auto text-center text-xs pt-4 leading-normal">
+        <div className="w-80 ml-auto text-center text-xs pt-2 leading-normal">
           <div>সত্যায়নকারী প্রথম শ্রেণির গেজেটেড কর্মকর্তার তারিখসহ স্বাক্ষর</div>
           <div>সীলমোহর (নামযুক্ত)</div>
         </div>
       </div>
 
       {/* ================= PAGE 6: ফরোয়ার্ডিং পত্র (ইউএও বরাবরে) ================= */}
-      <div className="print-page text-[14px] leading-relaxed">
-        <div className="text-center mb-5">
+      <div className="print-page text-[13.5px] leading-relaxed">
+        <div className="text-center mb-4">
           <div>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
           <div>উপজেলা শিক্ষা অফিসারের কার্যালয়</div>
           <div>
@@ -547,7 +526,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        <div className="flex justify-between items-center text-xs mb-4">
+        <div className="flex justify-between items-center text-xs mb-3">
           <div>
             স্মারক নং- <Value>{claim.forwardingMemoNo || `উশিঅ/বিবা/সিল/${claim.year}/`}</Value>
           </div>
@@ -556,34 +535,42 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        <div className="mb-3.5">
+        <div className="mb-3">
           বিষয়ঃ সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের জন্য ক্ষমতাপত্র প্রদান প্রসঙ্গে।
         </div>
 
-        <p className="text-justify mb-4 leading-loose indent-8">
+        <p className="text-justify mb-3 leading-relaxed indent-8">
           উপর্যুক্ত বিষয়ের আলোকে জানানো যাচ্ছে যে, নিম্নোক্ত শিক্ষক <Value>{claim.deathDate}</Value> তারিখ চাকুরীরত অবস্থায় মৃত্যুবরণ করেন। শিক্ষকের <Value>{claim.relationship}</Value> তাঁর সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের ক্ষমতাপত্র চেয়ে আবেদন করেছেন। এ বিষয়ে প্রয়োজনীয় ব্যবস্থা গ্রহণের জন্য অনুরোধ করা হলো।
         </p>
 
-        {/* ছক — grid technique (borders always print) */}
-        <div className="border border-black text-xs font-normal mb-5" style={{ border: '1px solid #000000' }}>
-          <div className="print-grid grid grid-cols-12 font-normal border-b border-black text-center min-h-[40px]" style={{ borderBottom: '1px solid #000000' }}>
-            <div className="col-span-2 border-r border-black font-normal flex items-center justify-center p-1">ক্র:নং</div>
-            <div className="col-span-6 border-r border-black font-normal flex items-center justify-center p-1">আবেদনকারীর বিবরণ</div>
-            <div className="col-span-4 font-normal flex items-center justify-center p-1">চূড়ান্ত উত্তোলনের কারণ</div>
-          </div>
-          <div className="print-grid grid grid-cols-12 text-xs font-normal items-stretch">
-            <div className="col-span-2 border-r border-black p-2 text-center flex items-center justify-center font-normal">০১</div>
-            <div className="col-span-6 border-r border-black p-2 text-left leading-relaxed font-normal">
-              জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
-              <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
-              <Value>{claim.schoolName}</Value>) <Value>{claim.upazilaName}</Value>,{' '}
-              <Value>{claim.districtName}</Value>।
-            </div>
-            <div className="col-span-4 p-2 text-center flex items-center justify-center font-normal">মৃত্যুজনিত কারণে</div>
-          </div>
-        </div>
+        {/* ছক (২য় টেবিল - কলাম ও রো সঠিক বিন্যাস) */}
+        <table className="w-full bordered-table text-xs font-normal mb-3" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <thead>
+            <tr className="text-center font-normal">
+              <th style={{ width: '12%', border: '1px solid #000000', padding: '5px 4px', fontWeight: 400 }}>ক্র:নং</th>
+              <th style={{ width: '58%', border: '1px solid #000000', padding: '5px 8px', fontWeight: 400 }}>আবেদনকারীর বিবরণ</th>
+              <th style={{ width: '30%', border: '1px solid #000000', padding: '5px 4px', fontWeight: 400 }}>চূড়ান্ত উত্তোলনের কারণ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ border: '1px solid #000000', padding: '5px 4px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+                ০১
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '5px 8px', textAlign: 'left', verticalAlign: 'top', lineHeight: 1.5, fontWeight: 400 }}>
+                জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
+                <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
+                <Value>{claim.schoolName}</Value>) <Value>{claim.upazilaName}</Value>,{' '}
+                <Value>{claim.districtName}</Value>।
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '5px 4px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+                মৃত্যুজনিত কারণে
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-        <div className="mb-6 text-xs space-y-1">
+        <div className="mb-3 text-xs space-y-1">
           <div className="underline mb-1">সংযুক্তি:</div>
           <div className="flex justify-between">
             <span>১। আবেদনপত্র-----------------------------------------------------</span>
@@ -607,10 +594,9 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        {/* ডিডিও অংশ যেখানে আছে সেখানেই রাইট এলাইন বাদ দিয়ে সেন্টার ও ১ ইঞ্চির অধিক স্বাক্ষর স্পেস */}
-        <div className="w-72 ml-auto text-center text-xs leading-normal mb-4">
-          {/* ডিডিও স্বাক্ষরের জন্য এক ইঞ্চির উপরে (১.২৫ ইঞ্চি / ৩২ মিমি) পর্যাপ্ত ফাঁকা জায়গা */}
-          <div className="h-28 w-full"></div>
+        {/* ডিডিও অংশ */}
+        <div className="w-72 ml-auto text-center text-xs leading-normal mb-2">
+          <div className="h-16 w-full"></div>
           <div>
             (<Value>{claim.ddoName}</Value>)
           </div>
@@ -622,7 +608,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        {/* ডিডিও অংশ যে রো-তে শেষ হয়েছে তার পরবর্তী রোতে প্রাপক শব্দ বাদ দিয়ে প্রাপক অংশ */}
+        {/* প্রাপক অংশ */}
         <div className="text-left text-xs leading-snug">
           <div>উপজেলা হিসাব রক্ষণ কর্মকর্তা,</div>
           <div>
@@ -632,8 +618,8 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
       </div>
 
       {/* ================= PAGE 7: ফরোয়ার্ডিং পত্র (ডিপিইও বরাবরে) ================= */}
-      <div className="print-page text-[14px] leading-relaxed">
-        <div className="text-center mb-5">
+      <div className="print-page text-[13.5px] leading-relaxed">
+        <div className="text-center mb-4">
           <div>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
           <div>উপজেলা শিক্ষা অফিসারের কার্যালয়</div>
           <div>
@@ -641,7 +627,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        <div className="flex justify-between items-center text-xs mb-4">
+        <div className="flex justify-between items-center text-xs mb-3">
           <div>
             স্মারক নং- <Value>{claim.forwardingMemoNo || `উশিঅ/বিবা/সিল/${claim.year}/`}</Value>
           </div>
@@ -650,34 +636,42 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        <div className="mb-3.5">
+        <div className="mb-3">
           বিষয়ঃ সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলন প্রসঙ্গে।
         </div>
 
-        <p className="text-justify mb-4 leading-loose indent-8">
+        <p className="text-justify mb-3 leading-relaxed indent-8">
           উপর্যুক্ত বিষয়ের আলোকে জানানো যাচ্ছে যে, নিম্নোক্ত শিক্ষক <Value>{claim.deathDate}</Value> তারিখ চাকুরীরত অবস্থায় মৃত্যুবরণ করেন। শিক্ষকের <Value>{claim.relationship}</Value> তাঁর সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের জন্য অনুমতি চেয়ে আবেদন করেছেন। এ বিষয়ে প্রয়োজনীয় ব্যবস্থা গ্রহণের জন্য অনুরোধ করা হলো।
         </p>
 
-        {/* ছক — grid technique (borders always print) */}
-        <div className="border border-black text-xs font-normal mb-5" style={{ border: '1px solid #000000' }}>
-          <div className="print-grid grid grid-cols-12 font-normal border-b border-black text-center min-h-[40px]" style={{ borderBottom: '1px solid #000000' }}>
-            <div className="col-span-2 border-r border-black font-normal flex items-center justify-center p-1">ক্র:নং</div>
-            <div className="col-span-6 border-r border-black font-normal flex items-center justify-center p-1">আবেদনকারীর বিবরণ</div>
-            <div className="col-span-4 font-normal flex items-center justify-center p-1">চূড়ান্ত উত্তোলনের কারণ</div>
-          </div>
-          <div className="print-grid grid grid-cols-12 text-xs font-normal items-stretch">
-            <div className="col-span-2 border-r border-black p-2 text-center flex items-center justify-center font-normal">০১</div>
-            <div className="col-span-6 border-r border-black p-2 text-left leading-relaxed font-normal">
-              জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
-              <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
-              <Value>{claim.schoolName}</Value>) <Value>{claim.upazilaName}</Value>,{' '}
-              <Value>{claim.districtName}</Value>।
-            </div>
-            <div className="col-span-4 p-2 text-center flex items-center justify-center font-normal">মৃত্যুজনিত কারণে</div>
-          </div>
-        </div>
+        {/* ছক (৩য় টেবিল - কলাম ও রো সঠিক বিন্যাস) */}
+        <table className="w-full bordered-table text-xs font-normal mb-3" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <thead>
+            <tr className="text-center font-normal">
+              <th style={{ width: '12%', border: '1px solid #000000', padding: '5px 4px', fontWeight: 400 }}>ক্র:নং</th>
+              <th style={{ width: '58%', border: '1px solid #000000', padding: '5px 8px', fontWeight: 400 }}>আবেদনকারীর বিবরণ</th>
+              <th style={{ width: '30%', border: '1px solid #000000', padding: '5px 4px', fontWeight: 400 }}>চূড়ান্ত উত্তোলনের কারণ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ border: '1px solid #000000', padding: '5px 4px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+                ০১
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '5px 8px', textAlign: 'left', verticalAlign: 'top', lineHeight: 1.5, fontWeight: 400 }}>
+                জনাব <Value>{claim.applicantName}</Value>, (<Value>{claim.relationship}</Value> মৃত{' '}
+                <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
+                <Value>{claim.schoolName}</Value>) <Value>{claim.upazilaName}</Value>,{' '}
+                <Value>{claim.districtName}</Value>।
+              </td>
+              <td style={{ border: '1px solid #000000', padding: '5px 4px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 400 }}>
+                মৃত্যুজনিত কারণে
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-        <div className="mb-6 text-xs space-y-1">
+        <div className="mb-3 text-xs space-y-1">
           <div className="underline mb-1">সংযুক্তি:</div>
           <div className="flex justify-between">
             <span>১। আবেদনপত্র-----------------------------------------------------</span>
@@ -701,10 +695,9 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        {/* ডিডিও অংশ যেখানে আছে সেখানেই রাইট এলাইন বাদ দিয়ে সেন্টার ও ১ ইঞ্চির অধিক স্বাক্ষর স্পেস */}
-        <div className="w-72 ml-auto text-center text-xs leading-normal mb-4">
-          {/* ডিডিও স্বাক্ষরের জন্য এক ইঞ্চির উপরে (১.২৫ ইঞ্চি / ৩২ মিমি) পর্যাপ্ত ফাঁকা জায়গা */}
-          <div className="h-28 w-full"></div>
+        {/* ডিডিও অংশ */}
+        <div className="w-72 ml-auto text-center text-xs leading-normal mb-2">
+          <div className="h-16 w-full"></div>
           <div>
             (<Value>{claim.ddoName}</Value>)
           </div>
@@ -716,7 +709,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
         </div>
 
-        {/* ডিডিও অংশ যে রো-তে শেষ হয়েছে তার পরবর্তী রোতে প্রাপক শব্দ বাদ দিয়ে প্রাপক অংশ */}
+        {/* প্রাপক অংশ */}
         <div className="text-left text-xs leading-snug">
           <div>জেলা প্রাথমিক শিক্ষা অফিসার,</div>
           <div>

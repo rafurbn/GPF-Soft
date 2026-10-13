@@ -272,40 +272,40 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           <div>ভাউচার নং .................................... তারিখ ....................................</div>
         </div>
 
-        {/* বিল টেবিল — grid technique (matches App 1, borders always print) */}
-         <thead>
-     <div className="border border-black my-2 text-xs font-normal" style={{ border: '1px solid #000000' }}>
-  {/* header row */}
-  <div className="grid grid-cols-12 font-normal border-b border-black text-center min-h-[46px]" style={{ borderBottom: '1px solid #000000' }}>
-    <div className="col-span-1 border-r border-black font-normal flex items-center justify-center p-1">ক্রমিক নং</div>
-    <div className="col-span-5 border-r border-black font-normal flex items-center justify-center p-1">চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</div>
-    <div className="col-span-3 border-r border-black font-normal flex items-center justify-center p-1">ভবিষ্য তহবিলের হিসাব নং</div>
-    <div className="col-span-2 border-r border-black font-normal flex items-center justify-center p-1">অগ্রিম/উত্তোলন</div>
-    <div className="col-span-1 font-normal flex items-center justify-center p-1">প্রাপ্তির রশিদ</div>
-  </div>
-  {/* body row */}
-  <div className="grid grid-cols-12 min-h-[120px] text-xs font-normal items-stretch">
-  {/* ক্রমিক নং */}
-  <div className="col-span-1 border-r border-black p-2 text-center flex items-center justify-center font-normal">
-    ০১
-  </div>
-  {/* চাঁদা প্রদানকারীর নাম ও বিবরণ */}
-  <div className="col-span-5 border-r border-black p-2 text-left font-normal leading-relaxed flex flex-col justify-between">
-    <div>
-      <p className="font-semibold">{data?.applicant_name || '..............................................'}</p>
-      <p>{data?.designation || '..............................................'}</p>
-      <p>{data?.school_name || '..............................................'}</p>
-      <p>
-        {data?.upazila_name || '....................'}, {data?.district_name || '....................'}। এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
-      </p>
-    </div>
-    <div className="mt-3 flex justify-between text-[11px] items-center whitespace-nowrap">
-      <span className="whitespace-nowrap">মঞ্জুরী নং-...............</span>
-      <span className="whitespace-nowrap">তারিখ:................</span>      
-    </div>
-  </div>
-    </tbody>
+        <table className="w-full border-collapse bordered-table text-xs mb-3">
+          <thead>
+            <tr className="text-center">
+              <th className="w-12">ক্রমি<br />ক নং</th>
+              <th>চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</th>
+              <th className="w-28">ভবিষ্যৎ তহবিলের হিসাব নং</th>
+              <th className="w-28">অগ্রিম/উত্তোলন</th>
+              <th className="w-20">প্রাপ্তির রশীদ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="text-center align-top">১</td>
+              <td className="text-justify align-top leading-relaxed">
+                জনাব <Value>{claim.applicantName}</Value> (<Value>{claim.relationship}</Value> মৃত{' '}
+                <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
+                <Value>{claim.schoolName}</Value>) {claim.upazilaName}, {claim.districtName} এর
+                সাধারণ ভবিষ্যৎ তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
+                <div className="mt-1.5">
+                  মঞ্জুরী নং- <Value>{claim.sanctionMemoNo || '৪৭০/১(০৪)'}</Value> তারিখ:{' '}
+                  <Value>{claim.sanctionDate || '24/09/2026'}</Value>
+                </div>
+              </td>
+              <td className="text-center align-top">
+                <Value>{claim.gpfAccountNo}</Value>
+              </td>
+              <td className="text-center align-top">
+                <Value>{formattedAmount}/-</Value>
+              </td>
+              <td className="text-center align-top"></td>
+            </tr>
+          </tbody>
         </table>
+        
         <div className="mb-3 text-xs">
           প্রয়োজনীয় প্রদেয় টাকা = <Value>{formattedAmount}/-</Value> (কথায়:{' '}
           <Value>{amountInWords}</Value>) টাকা বুঝিয়া পাইলাম।

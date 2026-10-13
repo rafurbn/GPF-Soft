@@ -284,31 +284,26 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
   </div>
   {/* body row */}
   <div className="grid grid-cols-12 min-h-[120px] text-xs font-normal items-stretch">
-  
-    <tbody>
-            <tr>
-              <td className="text-center align-top">১</td>
-              <td className="text-justify align-top leading-relaxed">
-                জনাব <Value>{claim.applicantName}</Value> (<Value>{claim.relationship}</Value> মৃত{' '}
-                <Value>{claim.deceasedEmployeeName}</Value>, <Value>{claim.deceasedDesignation}</Value>,{' '}
-                <Value>{claim.schoolName}</Value>) {claim.upazilaName}, {claim.districtName} এর
-                সাধারণ ভবিষ্যৎ তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
-                <div className="mt-1.5">
-                  মঞ্জুরী নং- <Value>{claim.sanctionMemoNo || '৪৭০/১(০৪)'}</Value> তারিখ:{' '}
-                  <Value>{claim.sanctionDate || '24/09/2026'}</Value>
-                </div>
-              </td>
-              <td className="text-center align-top">
-                <Value>{claim.gpfAccountNo}</Value>
-              </td>
-              <td className="text-center align-top">
-                <Value>{formattedAmount}/-</Value>
-              </td>
-              <td className="text-center align-top"></td>
-            </tr>
-          </tbody>
-        </table>
-
+  {/* ক্রমিক নং */}
+  <div className="col-span-1 border-r border-black p-2 text-center flex items-center justify-center font-normal">
+    ০১
+  </div>
+  {/* চাঁদা প্রদানকারীর নাম ও বিবরণ */}
+  <div className="col-span-5 border-r border-black p-2 text-left font-normal leading-relaxed flex flex-col justify-between">
+    <div>
+      <p className="font-semibold">{data?.applicant_name || '..............................................'}</p>
+      <p>{data?.designation || '..............................................'}</p>
+      <p>{data?.school_name || '..............................................'}</p>
+      <p>
+        {data?.upazila_name || '....................'}, {data?.district_name || '....................'}। এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
+      </p>
+    </div>
+    <div className="mt-3 flex justify-between text-[11px] items-center whitespace-nowrap">
+      <span className="whitespace-nowrap">মঞ্জুরী নং-...............</span>
+      <span className="whitespace-nowrap">তারিখ:................</span>      
+    </div>
+  </div>
+    
         <div className="mb-3 text-xs">
           প্রয়োজনীয় প্রদেয় টাকা = <Value>{formattedAmount}/-</Value> (কথায়:{' '}
           <Value>{amountInWords}</Value>) টাকা বুঝিয়া পাইলাম।

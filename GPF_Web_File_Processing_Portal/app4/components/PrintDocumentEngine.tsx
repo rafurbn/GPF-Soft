@@ -29,94 +29,103 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           }
         }
         @media print {
-  #gpf-print-document {
-    display: block !important;
-    visibility: visible !important;
-    width: 100% !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    /* ফন্ট সাইজ ফিক্সড করে দেওয়া হলো যাতে লাইভে বড় না হয় */
-    font-size: 13px !important; 
-    line-height: 1.4 !important;
-  }
-  #gpf-print-document * {
-    font-weight: 400 !important;
-  }
-  header, main, footer, .print-hidden {
-    display: none !important;
-    visibility: hidden !important;
-  }
-  @page {
-    size: A4 portrait;
-    margin: 20mm 20mm 15mm 20mm; /* মার্জিন কিছুটা কমিয়ে পাতা নিয়ন্ত্রণে আনা হলো */
-  }
-  html, body {
-    height: auto !important;
-    min-height: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    font-weight: 400 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  .print-page {
-    page-break-after: always;
-    break-after: page;
-    page-break-inside: avoid;
-    break-inside: avoid;
-    height: auto !important;
-    min-height: auto !important;
-    box-sizing: border-box;
-    /* flex এবং flex-direction বাদ দেওয়া হয়েছে প্রিন্ট ট্র্যাপ এড়াতে */
-    display: block !important; 
-    padding: 0 !important;
-    margin: 0 !important;
-    background: #ffffff !important;
-    font-weight: 400 !important;
-  }
-  .print-page:last-child {
-    page-break-after: auto;
-    break-after: auto;
-  }
-  .app-left-aligned {
-    text-align: left;
-  }
-  .app-body-justified {
-    text-align: justify !important;
-    text-justify: inter-word !important;
-  }
-  .code-box-group {
-    display: flex;
-    border: 1px solid #000000;
-  }
-  .code-box-group span {
-    width: 22px;
-    height: 22px;
-    border-right: 1px solid #000000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 400 !important;
-  }
-  .code-box-group span:last-child {
-    border-right: none;
-  }
-  .bordered-table th, .bordered-table td {
-    border: 1px solid #000000;
-    padding: 4px 6px; /* প্যাডিং সামান্য কমানো হলো */
-    font-size: 12px !important; /* টেবিলের লেখা একটু ছোট করা হলো */
-    font-weight: 400 !important;
-  }
-  .borderless-table th, .borderless-table td {
-    border: none !important;
-    padding: 4px 6px; /* প্যাডিং সামান্য কমানো হলো */
-    font-size: 12px !important;
-    font-weight: 400 !important;
-  }
-}
+          #gpf-print-document {
+            display: block !important;
+            visibility: visible !important;
+            width: 100% !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+          }
+          #gpf-print-document * {
+            font-weight: 400 !important;
+          }
+          header, main, footer, .print-hidden {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          @page {
+            size: A4 portrait;
+            /* Top 30mm, Left 25mm, Right 25mm, Bottom decreased by 3/4 inch (11mm) */
+            margin: 30mm 25mm 11mm 25mm;
+          }
+          body {
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-weight: 400 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .print-page {
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: #ffffff !important;
+            font-weight: 400 !important;
+          }
+          .print-page:last-child {
+            page-break-after: avoid;
+            break-after: avoid;
+          }
+          .app-left-aligned {
+            text-align: left;
+          }
+          .app-body-justified {
+            text-align: justify !important;
+            text-justify: inter-word !important;
+          }
+          .code-box-group {
+            display: flex;
+            border: 1px solid #000000;
+          }
+          .code-box-group span {
+            width: 22px;
+            height: 22px;
+            border-right: 1px solid #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 400 !important;
+          }
+          .code-box-group span:last-child {
+            border-right: none;
+          }
+          .bordered-table {
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+            width: 100% !important;
+            table-layout: fixed;
+          }
+          .bordered-table th, .bordered-table td {
+            border: 1px solid #000000 !important;
+            padding: 6px 8px;
+            font-weight: 400 !important;
+            vertical-align: top;
+          }
+          .borderless-table {
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+            width: 100% !important;
+            table-layout: fixed;
+          }
+          .borderless-table th, .borderless-table td {
+            border: none !important;
+            padding: 6px 8px;
+            font-weight: 400 !important;
+          }
+          /* Table column widths for fixed layout */
+          .col-w12 { width: 12mm !important; }
+          .col-w20 { width: 20mm !important; }
+          .col-w28 { width: 28mm !important; }
+          .col-w44 { width: 44mm !important; }
+          .col-w14 { width: 14mm !important; }
+        }
       `}</style>
 
       {/* ================= PAGE 1 ================= */}
@@ -278,11 +287,11 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         <table className="w-full border-collapse bordered-table text-xs mb-3">
           <thead>
             <tr className="text-center">
-              <th className="w-12">ক্রমি<br />ক নং</th>
+              <th className="w-12 col-w12">ক্রমি<br />ক নং</th>
               <th>চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</th>
-              <th className="w-28">ভবিষ্যৎ তহবিলের হিসাব নং</th>
-              <th className="w-28">অগ্রিম/উত্তোলন</th>
-              <th className="w-20">প্রাপ্তির রশীদ</th>
+              <th className="w-28 col-w28">ভবিষ্যৎ তহবিলের হিসাব নং</th>
+              <th className="w-28 col-w28">অগ্রিম/উত্তোলন</th>
+              <th className="w-20 col-w20">প্রাপ্তির রশীদ</th>
             </tr>
           </thead>
           <tbody>
@@ -308,7 +317,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             </tr>
           </tbody>
         </table>
-        
+
         <div className="mb-3 text-xs">
           প্রয়োজনীয় প্রদেয় টাকা = <Value>{formattedAmount}/-</Value> (কথায়:{' '}
           <Value>{amountInWords}</Value>) টাকা বুঝিয়া পাইলাম।
@@ -532,12 +541,12 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </p>
 
         {/* ছক */}
-        <table className="w-full bordered-table text-xs mb-5">
+        <table className="w-full border-collapse bordered-table text-xs mb-5">
           <thead>
             <tr className="text-center">
-              <th className="w-14">ক্র:নং</th>
+              <th className="w-14 col-w14">ক্র:নং</th>
               <th>আবেদনকারীর বিবরণ</th>
-              <th className="w-44">চূড়ান্ত উত্তোলনের কারণ</th>
+              <th className="w-44 col-w44">চূড়ান্ত উত্তোলনের কারণ</th>
             </tr>
           </thead>
           <tbody>
@@ -634,12 +643,12 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </p>
 
         {/* ছক */}
-        <table className="w-full bordered-table text-xs mb-5">
+        <table className="w-full border-collapse bordered-table text-xs mb-5">
           <thead>
             <tr className="text-center">
-              <th className="w-14">ক্র:নং</th>
+              <th className="w-14 col-w14">ক্র:নং</th>
               <th>আবেদনকারীর বিবরণ</th>
-              <th className="w-44">চূড়ান্ত উত্তোলনের কারণ</th>
+              <th className="w-44 col-w44">চূড়ান্ত উত্তোলনের কারণ</th>
             </tr>
           </thead>
           <tbody>

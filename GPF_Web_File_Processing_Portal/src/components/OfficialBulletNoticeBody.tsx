@@ -150,7 +150,7 @@ export const OfficialBulletNoticeBody: React.FC<OfficialBulletNoticeBodyProps> =
               ১
             </div>
             <div>
-              <h3 className="font-bold text-sm text-slate-900 group-hover:text-emerald-800">
+              <h3 className="font-bold text-lg text-slate-900 group-hover:text-emerald-800">
                 ফেরতযোগ্য অগ্রিম উত্তোলন
               </h3>
               <p className="text-xs text-slate-500">
@@ -171,7 +171,7 @@ export const OfficialBulletNoticeBody: React.FC<OfficialBulletNoticeBodyProps> =
               ২
             </div>
             <div>
-              <h3 className="font-bold text-sm text-slate-900 group-hover:text-amber-800">
+              <h3 className="font-bold text-lg text-slate-900 group-hover:text-amber-800">
                 অফেরতযোগ্য অগ্রিম উত্তোলন
               </h3>
               <p className="text-xs text-slate-500">
@@ -192,7 +192,7 @@ export const OfficialBulletNoticeBody: React.FC<OfficialBulletNoticeBodyProps> =
               ৩
             </div>
             <div>
-              <h3 className="font-bold text-sm text-slate-900 group-hover:text-rose-800">
+              <h3 className="font-bold text-lg text-slate-900 group-hover:text-rose-800">
                 চূড়ান্ত উত্তোলন ও নো-ডিমান্ড
               </h3>
               <p className="text-xs text-slate-500">

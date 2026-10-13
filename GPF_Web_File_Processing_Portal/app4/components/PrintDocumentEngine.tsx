@@ -276,7 +276,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           <thead>
             <tr className="text-center">
               <th className="w-12">ক্রমি<br />ক নং</th>
-              <th>চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</th>
+              <div className="col-span-5 border-r border-black font-normal flex items-center justify-center p-1">চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</div>              
               <th className="w-28">ভবিষ্যৎ তহবিলের হিসাব নং</th>
               <th className="w-28">অগ্রিম/উত্তোলন</th>
               <th className="w-20">প্রাপ্তির রশীদ</th>

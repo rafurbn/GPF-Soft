@@ -645,8 +645,9 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </p>
 
         {/* ছক (৩য় টেবিল - কলাম ও রো সঠিক বিন্যাস) */}
-        <table style="border: 1px solid #000000; border-collapse: collapse; width: 100%; margin: 15px 0; font-family: Arial, sans-serif;">
-  <thead>
+       <table className="w-full bordered-table my-2 text-xs font-normal" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <thead>
+            <tr className="text-center font-normal">
     <tr style="background-color: #f2f2f2;">
       <th style="border: 1px solid #000000; padding: 8px; text-align: center; font-weight: bold;">ক্র: নং</th>
       <th style="border: 1px solid #000000; padding: 8px; text-align: center; font-weight: bold;">আবেদনকারীর বিবরণ</th>

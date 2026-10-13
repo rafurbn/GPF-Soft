@@ -273,6 +273,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </div>
 
         {/* বিল টেবিল — grid technique (matches App 1, borders always print) */}
+         <thead>
      <div className="border border-black my-2 text-xs font-normal" style={{ border: '1px solid #000000' }}>
   {/* header row */}
   <div className="grid grid-cols-12 font-normal border-b border-black text-center min-h-[46px]" style={{ borderBottom: '1px solid #000000' }}>
@@ -303,7 +304,8 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
       <span className="whitespace-nowrap">তারিখ:................</span>      
     </div>
   </div>
-    
+    </tbody>
+        </table>
         <div className="mb-3 text-xs">
           প্রয়োজনীয় প্রদেয় টাকা = <Value>{formattedAmount}/-</Value> (কথায়:{' '}
           <Value>{amountInWords}</Value>) টাকা বুঝিয়া পাইলাম।

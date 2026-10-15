@@ -19,6 +19,7 @@ export type ActiveAppTab =
   | 'gpf_refundable'
   | 'gpf_non_refundable'
   | 'gpf_final'
+  | 'gpf_DeathClaim'
   | 'admin_overview'
   | 'architecture_guide';
 

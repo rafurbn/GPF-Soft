@@ -35,8 +35,6 @@ import { OfficialDashboard } from './OfficialDashboard';
 interface PortalDesktopSignInViewProps {
   currentUser: UserSession | null;
   isLoggedIn: boolean;
-  /** True when the visitor is signed in through the built-in offline demo directory. */
-  isDemoSession?: boolean;
   onLogin: (loginId: string, password: string) => Promise<void>;
   onOpenRegistration: () => void;
   onLogout: () => void;
@@ -152,7 +150,6 @@ export const BULLET_POINTS_14 = [
 export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = ({
   currentUser,
   isLoggedIn,
-  isDemoSession = false,
   onLogin,
   onOpenRegistration,
   onLogout,
@@ -464,11 +461,6 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       <span className="text-sm sm:text-base font-bold text-white truncate">
                         {currentUser.upazila_name_bn} উপজেলা
                       </span>
-                      {isDemoSession && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/40">
-                          ডেমো সেশন
-                        </span>
-                      )}
                     </div>
                     <p className="text-[11px] text-slate-400 truncate mt-0.5">
                       {currentUser.upazila_code} • {currentUser.district_name_bn}

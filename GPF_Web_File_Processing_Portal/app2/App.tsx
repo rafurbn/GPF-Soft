@@ -15,10 +15,17 @@ import { getCurrentBengaliDate } from '../src/utils/dateUtils';
 import { numberToBanglaWords, cleanNumberString } from '../src/utils/numberToBanglaWords';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
+import { readScoped, writeScoped, scopedKey } from '../src/lib/scopedStorage';
 
-const STORAGE_KEY_RECORDS = 'gpf_nonrefundable_records_v2';
-const STORAGE_KEY_LOCKED_STATE = 'gpf_nonrefundable_locked_state_v3';
-const STORAGE_KEY_LOCKED_VALUES = 'gpf_nonrefundable_locked_values_v3';
+// Base keys; `scopedStorage` prefixes them with the upazila code at call time so
+// two upazilas on the same browser never share records or lock settings.
+const BASE_KEY_RECORDS = 'gpf_nonrefundable_records_v2';
+const BASE_KEY_LOCKED_STATE = 'gpf_nonrefundable_locked_state_v3';
+const BASE_KEY_LOCKED_VALUES = 'gpf_nonrefundable_locked_values_v3';
+
+const readRecords = (upazila: string) => readScoped(upazila, BASE_KEY_RECORDS);
+const readLockedState = (upazila: string) => readScoped(upazila, BASE_KEY_LOCKED_STATE);
+const readLockedValues = (upazila: string) => readScoped(upazila, BASE_KEY_LOCKED_VALUES);
 
 const DEFAULT_LOCKED_STATE: NonRefundableLockedState = {
   year: true,
@@ -75,7 +82,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   const [lockedState, setLockedState] = useState<NonRefundableLockedState>(() => {
     let stored = DEFAULT_LOCKED_STATE;
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_LOCKED_STATE);
+      const saved = readLockedState(currentUser.upazila_code);
       if (saved) stored = JSON.parse(saved);
     } catch {
       stored = DEFAULT_LOCKED_STATE;
@@ -86,7 +93,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
 
   const [lockedValues, setLockedValues] = useState<NonRefundableLockedValues>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_LOCKED_VALUES);
+      const saved = readLockedValues(currentUser.upazila_code);
       return saved
         ? JSON.parse(saved)
         : {
@@ -105,7 +112,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   // 2. Saved Records
   const [records, setRecords] = useState<GpfNonRefundableFormData[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_RECORDS);
+      const saved = readRecords(currentUser.upazila_code);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -128,9 +135,9 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
     let initialDistrict = defaultInitialData.district_name;
 
     try {
-      const savedState = localStorage.getItem(STORAGE_KEY_LOCKED_STATE);
+      const savedState = readLockedState(currentUser.upazila_code);
       const stateObj: NonRefundableLockedState = savedState ? JSON.parse(savedState) : DEFAULT_LOCKED_STATE;
-      const savedVals = localStorage.getItem(STORAGE_KEY_LOCKED_VALUES);
+      const savedVals = readLockedValues(currentUser.upazila_code);
       const valsObj: NonRefundableLockedValues = savedVals ? JSON.parse(savedVals) : {};
 
       if (stateObj.year && valsObj.year !== undefined) initialYear = valsObj.year;
@@ -170,21 +177,13 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
 
   // Sync lockedState to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY_LOCKED_STATE, JSON.stringify(lockedState));
-    } catch (e) {
-      console.error(e);
-    }
-  }, [lockedState]);
+    writeScoped(currentUser.upazila_code, BASE_KEY_LOCKED_STATE, JSON.stringify(lockedState));
+  }, [lockedState, currentUser.upazila_code]);
 
   // Sync lockedValues to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY_LOCKED_VALUES, JSON.stringify(lockedValues));
-    } catch (e) {
-      console.error(e);
-    }
-  }, [lockedValues]);
+    writeScoped(currentUser.upazila_code, BASE_KEY_LOCKED_VALUES, JSON.stringify(lockedValues));
+  }, [lockedValues, currentUser.upazila_code]);
 
   // Hydrate from the unlimited (IndexedDB) store once the page mounts. The
   // synchronous localStorage read in state init gives instant first paint; this
@@ -201,7 +200,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
 
   // Sync records to the unlimited (IndexedDB) store + localStorage mirror.
   useEffect(() => {
-    void saveUnlimitedRecords(records, STORAGE_KEY_RECORDS).then((result) => {
+    void saveUnlimitedRecords(records, scopedKey(currentUser.upazila_code, BASE_KEY_RECORDS)).then((result) => {
       if (!result.ok) {
         showToast('সংরক্ষণ করা যায়নি — ব্রাউজার স্টোরেজ পূর্ণ। পুরনো আবেদন মুছে আবার চেষ্টা করুন।');
       }
@@ -243,11 +242,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
 
     setLockedState((prev) => {
       const next = { ...prev, [field]: willBeLocked };
-      try {
-        localStorage.setItem(STORAGE_KEY_LOCKED_STATE, JSON.stringify(next));
-      } catch (e) {
-        console.error(e);
-      }
+      writeScoped(currentUser.upazila_code, BASE_KEY_LOCKED_STATE, JSON.stringify(next));
       return next;
     });
 
@@ -256,11 +251,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
       const currentValue = formData[field] || '';
       setLockedValues((prev) => {
         const next = { ...prev, [field]: currentValue };
-        try {
-          localStorage.setItem(STORAGE_KEY_LOCKED_VALUES, JSON.stringify(next));
-        } catch (e) {
-          console.error(e);
-        }
+        writeScoped(currentUser.upazila_code, BASE_KEY_LOCKED_VALUES, JSON.stringify(next));
         return next;
       });
       showToast(`'${fieldName}' স্থায়ীভাবে লক করা হয়েছে। আনলক না করা পর্যন্ত এটি আর কখনও পরিবর্তিত হবে না।`);

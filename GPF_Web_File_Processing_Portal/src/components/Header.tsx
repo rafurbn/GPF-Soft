@@ -9,11 +9,9 @@ import {
   AlertOctagon, 
   UserCheck, 
   Sparkles,
-  BookOpenCheck,
-  ChevronDown
+  BookOpenCheck
 } from 'lucide-react';
 import { UserSession, ActiveAppTab } from '../types';
-import { INITIAL_USERS } from '../data/mockData';
 
 interface HeaderProps {
   currentUser: UserSession;
@@ -21,7 +19,6 @@ interface HeaderProps {
   onTabChange: (tab: ActiveAppTab) => void;
   onOpenPasswordModal: () => void;
   onLogout: () => void;
-  onSwitchUser: (code: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,7 +27,6 @@ export const Header: React.FC<HeaderProps> = ({
   onTabChange,
   onOpenPasswordModal,
   onLogout,
-  onSwitchUser,
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 shadow-2xs sticky top-0 z-30">
@@ -75,24 +71,13 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* User Profile & Demo Switcher */}
+          {/* Signed-in account actions. The account is fixed by the Supabase
+              session, so there is no user/upazila switcher here. */}
           <div className="flex items-center flex-wrap gap-2 text-xs">
-            {/* Demo Switcher */}
-            <div className="relative inline-flex items-center">
-              <select
-                value={currentUser.upazila_code}
-                onChange={(e) => onSwitchUser(e.target.value)}
-                aria-label="ইউজার ও উপজেলা পরিবর্তন"
-                className="appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-1.5 pl-2.5 pr-7 rounded-lg text-xs font-medium hover:bg-slate-100 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                {INITIAL_USERS.map((u) => (
-                  <option key={u.id} value={u.upazila_code}>
-                    {u.role === 'super_admin' ? `এডমিন: ${u.upazila_name_bn}` : `উপজেলা: ${u.upazila_name_bn} (${u.upazila_code})`}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 pointer-events-none" />
-            </div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-mono text-[11px] font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              {currentUser.upazila_code}
+            </span>
 
             {/* Password Reset Modal Button */}
             <button

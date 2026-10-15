@@ -1,5 +1,6 @@
-import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
+import { mountSubApp } from '../app-shared/bootstrap';
 
-createRoot(document.getElementById('root')!).render(<App />);
+// App 4 - GPF Death Claim (final withdrawal for a deceased employee).
+// The Upazila selected on the root dashboard is read from localStorage here,
+// which is what supplies `currentUser` and the working `onBack` navigation.
+void mountSubApp(() => import('./App'), { loginUrl: '/' });

@@ -5,28 +5,45 @@ import { Header } from './components/Header';
 import { DeathClaimForm } from './components/DeathClaimForm';
 import { ClaimsDataTable } from './components/ClaimsDataTable';
 import { PrintDocumentEngine } from './components/PrintDocumentEngine';
+import { readScoped, writeScoped } from '../src/lib/scopedStorage';
+import type { SubAppProps } from '../app-shared/bootstrap';
 
-export default function App() {
-  // Claims state with localStorage persistence
+// Base keys; every read/write is scoped to the signed-in upazila so two upazilas
+// sharing one browser never see or overwrite each other's death-claim records.
+const BASE_KEY_CLAIMS = 'gpf_death_claims_data_v3';
+const BASE_KEY_LOCKS = 'gpf_death_locks_data_v3';
+
+export default function App({ currentUser, onBack }: SubAppProps) {
+  const upazilaCode = currentUser.upazila_code;
+
+  // Claims state with localStorage persistence (scoped per upazila)
   const [claims, setClaims] = useState<GpfDeathClaim[]>(() => {
     try {
-      const saved = localStorage.getItem('gpf_death_claims_data_v3');
-      if (saved) return JSON.parse(saved);
+      const saved = readScoped(upazilaCode, BASE_KEY_CLAIMS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // An empty saved array is a real state (the user deleted every claim);
+        // only fall back to the seed list when nothing was ever stored.
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {
       // fallback
     }
     return INITIAL_CLAIMS;
   });
 
-  // Lock settings with localStorage persistence
+  // Lock settings with localStorage persistence (scoped per upazila)
   const [lockSettings, setLockSettings] = useState<LockSettings>(() => {
+    let stored = INITIAL_LOCKS;
     try {
-      const saved = localStorage.getItem('gpf_death_locks_data_v3');
-      if (saved) return JSON.parse(saved);
+      const saved = readScoped(upazilaCode, BASE_KEY_LOCKS);
+      if (saved) stored = JSON.parse(saved);
     } catch {
       // fallback
     }
-    return INITIAL_LOCKS;
+    // উপজেলা ও জেলার নাম উপজেলা আইডি খোলার সময়েই স্থায়ীভাবে ফিক্সড হয়ে যায়,
+    // ঠিক যেমন app1/app2/app3 এ থাকে।
+    return { ...stored, upazilaName: true, districtName: true };
   });
 
   // Current claim being edited or filled
@@ -44,25 +61,23 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Sync to localStorage
+  // Sync claims to localStorage (upazila-scoped)
   useEffect(() => {
-    try {
-      localStorage.setItem('gpf_death_claims_data_v3', JSON.stringify(claims));
-    } catch {
-      // storage error
-    }
-  }, [claims]);
+    writeScoped(upazilaCode, BASE_KEY_CLAIMS, JSON.stringify(claims));
+  }, [claims, upazilaCode]);
 
+  // Sync lock settings to localStorage (upazila-scoped)
   useEffect(() => {
-    try {
-      localStorage.setItem('gpf_death_locks_data_v3', JSON.stringify(lockSettings));
-    } catch {
-      // storage error
-    }
-  }, [lockSettings]);
+    writeScoped(upazilaCode, BASE_KEY_LOCKS, JSON.stringify(lockSettings));
+  }, [lockSettings, upazilaCode]);
 
-  // Toggle lock handler
+  // Toggle lock handler. Upazila and district stay permanently fixed, exactly as
+  // in app1/app2/app3, because they come from the registered upazila account.
   const handleToggleLock = (field: LockableField) => {
+    if (field === 'upazilaName' || field === 'districtName') {
+      showToast('উপজেলা ও জেলার নাম স্থায়ীভাবে ফিক্সড করা আছে।');
+      return;
+    }
     setLockSettings((prev) => ({
       ...prev,
       [field]: !prev[field],
@@ -131,8 +146,8 @@ export default function App() {
       recipient: lockSettings.recipient ? currentClaim?.recipient || '' : '',
       ddoName: lockSettings.ddoName ? currentClaim?.ddoName || 'নৃপেন্দ্র নাথ সরকার' : '',
       ddoDesignation: lockSettings.ddoDesignation ? currentClaim?.ddoDesignation || 'উপজেলা প্রাথমিক শিক্ষা অফিসার (চ:দা:)' : '',
-      upazilaName: lockSettings.upazilaName ? currentClaim?.upazilaName || 'বিয়ানীবাজার' : '',
-      districtName: lockSettings.districtName ? currentClaim?.districtName || 'সিলেট' : '',
+      upazilaName: currentUser.upazila_name_bn || currentClaim?.upazilaName || 'বিয়ানীবাজার',
+      districtName: currentUser.district_name_bn || currentClaim?.districtName || 'সিলেট',
       attachmentsCount: lockSettings.attachmentsCount ? currentClaim?.attachmentsCount || '02(দুই) খানা' : '02(দুই) খানা',
       applicationDate: '16/03/2026',
       deceasedEmployeeName: '',
@@ -182,10 +197,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col font-['Hind_Siliguri',sans-serif]">
-      {/* App Header (Screen only) */}
+      {/* App Header (Screen only) — carries the working back-to-dashboard button */}
       <Header
+        onBack={onBack}
         onNewEntry={handleNewEntry}
         claimCount={claims.length}
+        upazilaName={currentUser.upazila_name_bn}
+        districtName={currentUser.district_name_bn}
       />
 
       {/* Toast Notification */}
@@ -233,7 +251,7 @@ export default function App() {
             জিপিএফ চূড়ান্ত উত্তোলন ফাইল প্রসেসিং সিস্টেম (ডেথ ক্লেইম ড্যাশবোর্ড)
           </p>
           <p>
-            উপজেলা শিক্ষা অফিসারের কার্যালয়, বিয়ানীবাজার, সিলেট · প্রাথমিক শিক্ষা অধিদপ্তর (ডিপিই)
+            উপজেলা শিক্ষা অফিসারের কার্যালয়, {currentUser.upazila_name_bn}, {currentUser.district_name_bn} · প্রাথমিক শিক্ষা অধিদপ্তর (ডিপিই)
           </p>
         </div>
       </footer>

@@ -1,62 +1,8 @@
-import { UserSession, GpfApplication, GpfCondition } from '../types';
+import { GpfApplication, GpfCondition } from '../types';
 
-export const INITIAL_USERS: UserSession[] = [
-  {
-    id: 'usr-Bea002',
-    email: 'rafurbn@gmail.com',
-    upazila_code: 'Bea002',
-    upazila_name_bn: 'বিয়ানীবাজার',
-    district_name_bn: 'সিলেট',
-    role: 'upazila_user',
-    is_first_login: false,
-    phone: '01732-679551',
-    last_login: '২০২৬-০৯-২৪',
-  },
-  {
-    id: 'usr-Syl001',
-    email: 'ueo.sylhetsadar@primary.gov.bd',
-    upazila_code: 'Syl001',
-    upazila_name_bn: 'সিলেট সদর',
-    district_name_bn: 'সিলেট',
-    role: 'upazila_user',
-    is_first_login: false,
-    phone: '01819-456789',
-    last_login: '২০২৬-০৯-২৪',
-  },
-  {
-    id: 'usr-Dha001',
-    email: 'ueo.dhamrai@primary.gov.bd',
-    upazila_code: 'Dha001',
-    upazila_name_bn: 'ধামরাই',
-    district_name_bn: 'ঢাকা',
-    role: 'upazila_user',
-    is_first_login: false,
-    phone: '01911-567890',
-    last_login: '২০২৬-০৯-২৪',
-  },
-  {
-    id: 'usr-10101',
-    email: 'rafurbn@gmail.com',
-    upazila_code: '10101',
-    upazila_name_bn: 'বিয়ানীবাজার',
-    district_name_bn: 'সিলেট',
-    role: 'upazila_user',
-    is_first_login: false,
-    phone: '01732-679551',
-    last_login: '২০২৬-০৯-২৪',
-  },
-  {
-    id: 'usr-admin-01',
-    email: 'rafiqul.islam@primary.gov.bd',
-    upazila_code: 'admin',
-    upazila_name_bn: 'কেন্দ্রীয় মনিটরিং সেল',
-    district_name_bn: 'ঢাকা',
-    role: 'super_admin',
-    is_first_login: false,
-    phone: '01732-679551',
-    last_login: '২০২৬-০৯-২৪',
-  }
-];
+// NOTE: the built-in account directory (INITIAL_USERS) and the plaintext demo
+// password that used to live here were removed on purpose. Accounts now exist
+// only in Supabase Auth, and the sign-in screen no longer ships any credential.
 
 export const INITIAL_GPF_APPLICATIONS: GpfApplication[] = [
   {

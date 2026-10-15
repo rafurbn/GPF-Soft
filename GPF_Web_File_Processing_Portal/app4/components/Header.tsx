@@ -2,12 +2,19 @@ import React from 'react';
 import { ArrowLeft, FileText, PlusCircle } from 'lucide-react';
 
 interface HeaderProps {
+  /** Returns to the root dashboard (real navigation, not just a scroll). */
+  onBack: () => void;
   onNewEntry: () => void;
   claimCount: number;
+  upazilaName?: string;
+  districtName?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
+  onBack,
   onNewEntry,
+  upazilaName,
+  districtName,
 }) => {
   return (
     <header className="border-b border-slate-800 bg-[#0c1427]/90 backdrop-blur sticky top-0 z-40 print:hidden">
@@ -16,12 +23,13 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Left: Navigation and App title */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 hover:bg-emerald-900/60 hover:border-emerald-600 transition-colors whitespace-nowrap"
-              title="ড্যাশবোর্ডে ফিরে যান"
+              type="button"
+              onClick={onBack}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 hover:bg-emerald-900/60 hover:border-emerald-600 transition-colors whitespace-nowrap cursor-pointer"
+              title="মূল ড্যাশবোর্ড বা ব্যাকপেইজে ফিরে যান"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>অ্যাপসের ড্যাশবোর্ডে ফিরুন</span>
+              <span>ড্যাশবোর্ডে ফিরুন</span>
             </button>
 
             <div className="h-4 w-px bg-slate-800 hidden sm:block" />
@@ -40,7 +48,9 @@ export const Header: React.FC<HeaderProps> = ({
                   </h1>
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  উপজেলা শিক্ষা অফিসারের কার্যালয়, বিয়ানীবাজার, সিলেট
+                  উপজেলা শিক্ষা অফিসারের কার্যালয়
+                  {upazilaName ? `, ${upazilaName}` : ''}
+                  {districtName ? `, ${districtName}` : ''}
                 </p>
               </div>
             </div>

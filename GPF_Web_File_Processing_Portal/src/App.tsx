@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  INITIAL_USERS
-} from './data/mockData';
-import { UserSession, ActiveAppTab } from './types';
+import {  UserSession, ActiveAppTab } from './types';
 import { PortalDesktopSignInView } from './components/PortalDesktopSignInView';
 import { AccountRegistrationModal } from './components/AccountRegistrationModal';
 import { FirstTimePasswordModal } from './components/FirstTimePasswordModal';
@@ -21,12 +18,16 @@ import type { User } from '@supabase/supabase-js';
 // it opens a sub-app as a full page navigation so the sub-app reads the
 // selected Upazila straight from localStorage.
 // ---------------------------------------------------------------------------
-const SUB_APP_URLS: Record<'gpf_refundable' | 'gpf_non_refundable' | 'gpf_final', string> = {
+type SubAppRoute = 'gpf_refundable' | 'gpf_non_refundable' | 'gpf_final' | 'gpf_DeathClaim';
+
+const SUB_APP_URLS: Record<SubAppRoute, string> = {
   gpf_refundable: '/app1/index.html',
   gpf_non_refundable: '/app2/index.html',
   gpf_final: '/app3/index.html',
   gpf_DeathClaim: '/app4/index.html',
 };
+
+const isSubAppRoute = (tab: string): tab is SubAppRoute => tab in SUB_APP_URLS;
 
 // Turns edge-function failures into a short Bangla message for the sign-in form
 // instead of exposing raw backend errors to the user.
@@ -52,42 +53,15 @@ const describeLoginError = async (
   return fallback || 'আইডি অথবা পাসওয়ার্ড সঠিক নয়।';
 };
 
-// ---------------------------------------------------------------------------
-// Offline (demo) sign-in
-//
-// Until the Supabase backend is provisioned (`npm run supabase:setup`) the
-// portal stays usable: an identifier that matches the built-in directory signs
-// in with a local demo session. Supabase is always tried first, so real
-// accounts take over automatically once the backend answers normally.
-// ---------------------------------------------------------------------------
-const OFFLINE_SESSION_KEY = 'gpf-offline-session';
-
-const findLocalUser = (identifier: string): UserSession | undefined => {
-  const value = identifier.trim().toLowerCase();
-  return INITIAL_USERS.find(
-    (user) => user.upazila_code.toLowerCase() === value || user.email.toLowerCase() === value,
-  );
-};
-
-const readOfflineUser = (): UserSession | null => {
-  try {
-    const raw = window.localStorage.getItem(OFFLINE_SESSION_KEY);
-    return raw ? (JSON.parse(raw) as UserSession) : null;
-  } catch {
-    return null;
-  }
-};
-
 export default function App() {
-  const [users, setUsers] = useState<UserSession[]>(INITIAL_USERS);
-  // Default to Beanibazar Upazila (10101)
+  // No built-in account directory: every sign-in is verified by Supabase Auth.
+  const [users, setUsers] = useState<UserSession[]>([]);
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveAppTab>('gpf_dashboard');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
-  const [isDemoSession, setIsDemoSession] = useState(false);
-  
+
   // Publish the selected Upazila to localStorage so the standalone sub-app
   // pages (app1/app2/app3) can read the same region without sharing React state.
   useEffect(() => {
@@ -97,49 +71,42 @@ export default function App() {
   }, [currentUser]);
 
   // Open a sub-app as a real page navigation (MPA), not an in-tab React switch.
-  const openSubApp = (tab: 'gpf_refundable' | 'gpf_non_refundable' | 'gpf_final' | 'gpf_DeathClaim') => {
+  const openSubApp = (tab: SubAppRoute) => {
     if (currentUser) persistUpazilaContext(currentUser);
-    window.location.href = SUB_APP_URLS[tab];
+    // `replace` keeps the sub-app out of the history stack so the browser Back
+    // button returns to the dashboard without re-opening the sub-app.
+    window.location.assign(SUB_APP_URLS[tab]);
   };
 
   useEffect(() => {
     const client = supabase;
     let active = true;
 
+    // Only a real Supabase session is ever restored. There is deliberately no
+    // local/demo fallback: a failed sign-in must never open the portal.
     const restoreSession = async () => {
-      if (client) {
-        const { data } = await client.auth.getSession();
+      if (!client) return;
+
+      const { data } = await client.auth.getSession();
+      if (!active) return;
+      if (!data.session?.user) return;
+
+      try {
+        const profile = await loadUserSession(data.session.user);
         if (!active) return;
-
-        if (data.session?.user) {
-          try {
-            const profile = await loadUserSession(data.session.user);
-            if (!active) return;
-            const accountUsers = profile.role === 'super_admin'
-              ? await loadAllUserSessions()
-              : [profile];
-            if (!active) return;
-            setCurrentUser(profile);
-            setIsLoggedIn(true);
-            setUsers(accountUsers);
-            setIsDemoSession(false);
-            if (profile.is_first_login) setShowPasswordModal(true);
-            return;
-          } catch {
-            // A stored session without an approved upazila profile is dropped quietly
-            // so the sign-in screen never reports a backend error to the visitor.
-            await client.auth.signOut();
-          }
-        }
+        const accountUsers = profile.role === 'super_admin'
+          ? await loadAllUserSessions()
+          : [profile];
+        if (!active) return;
+        setCurrentUser(profile);
+        setIsLoggedIn(true);
+        setUsers(accountUsers);
+        if (profile.is_first_login) setShowPasswordModal(true);
+      } catch {
+        // A stored session without an approved upazila profile is dropped quietly
+        // so the sign-in screen never reports a backend error to the visitor.
+        await client.auth.signOut();
       }
-
-      // Restore a demo session created by an earlier offline sign-in.
-      const offlineUser = readOfflineUser();
-      if (!active || !offlineUser) return;
-      setCurrentUser(offlineUser);
-      setIsLoggedIn(true);
-      setUsers([offlineUser]);
-      setIsDemoSession(true);
     };
 
     void restoreSession();
@@ -159,7 +126,6 @@ export default function App() {
     setUsers(accountUsers);
     setShowPasswordModal(profile.is_first_login);
     setShowRegistrationModal(false);
-    setIsDemoSession(false);
   };
 
   // Signs in through Supabase Auth: an email is verified by Supabase itself,
@@ -213,41 +179,13 @@ export default function App() {
     }
   };
 
-  const applyOfflineUser = (user: UserSession) => {
-    setCurrentUser(user);
-    setIsLoggedIn(true);
-    setUsers([user]);
-    setShowPasswordModal(false);
-    setShowRegistrationModal(false);
-    setIsDemoSession(true);
-    try {
-      window.localStorage.setItem(OFFLINE_SESSION_KEY, JSON.stringify(user));
-    } catch {
-      // Private browsing can block storage; the in-memory session still works.
-    }
-  };
-
-  // Supabase is attempted first; a known demo account keeps the portal usable
-  // while the backend is still being provisioned.
+  // Every sign-in goes through Supabase Auth. There is no local shortcut: when
+  // the backend is unreachable the user sees an error instead of a fake session.
   const handleLogin = async (loginId: string, password: string) => {
-    const identifier = loginId.trim();
-    const offlineUser = findLocalUser(identifier);
-
-    if (supabase && isSupabaseConfigured) {
-      try {
-        await signInWithSupabase(identifier, password);
-        return;
-      } catch (authError) {
-        if (!offlineUser) throw authError;
-        applyOfflineUser(offlineUser);
-        return;
-      }
-    }
-
-    if (!offlineUser) {
+    if (!supabase || !isSupabaseConfigured) {
       throw new Error('Supabase Auth সংযোগ প্রস্তুত নয়। আবার চেষ্টা করুন।');
     }
-    applyOfflineUser(offlineUser);
+    await signInWithSupabase(loginId.trim(), password);
   };
 
   const handleCreateAccount = async (
@@ -308,16 +246,11 @@ export default function App() {
   // Handle Logout
   const handleLogout = async () => {
     await supabase?.auth.signOut();
-    try {
-      window.localStorage.removeItem(OFFLINE_SESSION_KEY);
-    } catch {
-      // Storage can be unavailable in private browsing; state is cleared below.
-    }
     // Drop the shared Upazila context so the sub-app pages can no longer open.
     clearUpazilaContext();
-    setIsDemoSession(false);
     setIsLoggedIn(false);
     setCurrentUser(null);
+    setUsers([]);
     setActiveTab('gpf_dashboard');
   };
 
@@ -368,7 +301,7 @@ export default function App() {
 
   return (
     <div className="app-shell min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start p-2 sm:p-4 md:p-6 lg:p-8 font-sans selection:bg-emerald-500 selection:text-white">
-      {/* 
+      {/*
         MAIN DESKTOP SCREEN:
         - Layout based on Image 3
         - Pre-login: Clean sign-in with 14 bullet lines
@@ -377,9 +310,8 @@ export default function App() {
       */}
       {activeTab === 'gpf_dashboard' && (
         <PortalDesktopSignInView
-          currentUser={currentUser ?? INITIAL_USERS[0]}
+          currentUser={currentUser}
           isLoggedIn={isLoggedIn}
-          isDemoSession={isDemoSession}
           // A super-admin session receives every account; a upazila user only
           // receives its own, so the launcher statistics stay admin-only.
           visibleUsers={users}
@@ -391,12 +323,8 @@ export default function App() {
           // itself no longer renders them.
           onOpenConditionNotice={() => setActiveTab('architecture_guide')}
           onNavigateToApp={(tab) => {
-            if (tab === 'gpf_DeathClaim') {
-              if (currentUser) persistUpazilaContext(currentUser);
-              window.location.href = '/app4/index.html';
-              return;
-            }
-            if (tab === 'gpf_refundable' || tab === 'gpf_non_refundable' || tab === 'gpf_final') {
+            // Every GPF processing app (app1-app4) is its own MPA page.
+            if (isSubAppRoute(tab)) {
               openSubApp(tab);
               return;
             }

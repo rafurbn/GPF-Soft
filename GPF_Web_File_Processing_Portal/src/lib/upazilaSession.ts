@@ -59,6 +59,7 @@ export const persistUpazilaContext = (seed: UpazilaSeed): void => {
     window.localStorage.setItem(UPAZILA_CODE_KEY, context.upazila_code);
     window.localStorage.setItem(UPAZILA_NAME_KEY, context.upazila_name_bn);
     window.localStorage.setItem(UPAZILA_DISTRICT_KEY, context.district_name_bn);
+    window.localStorage.setItem('gpf-active-upazila-division', context.division_name_bn);
   } catch {
     // Private browsing can block storage; `window.name` still carries the value.
   }
@@ -91,7 +92,7 @@ export const readUpazilaContext = (): UpazilaContext | null => {
         upazila_code: code,
         upazila_name_bn: window.localStorage.getItem(UPAZILA_NAME_KEY) || '',
         district_name_bn: window.localStorage.getItem(UPAZILA_DISTRICT_KEY) || '',
-        division_name_bn: '',
+        division_name_bn: window.localStorage.getItem('gpf-active-upazila-division') || '',
       };
     }
     // Fall through to window.name when flat keys are absent.
@@ -132,6 +133,7 @@ export const clearUpazilaContext = (): void => {
     window.localStorage.removeItem(UPAZILA_CODE_KEY);
     window.localStorage.removeItem(UPAZILA_NAME_KEY);
     window.localStorage.removeItem(UPAZILA_DISTRICT_KEY);
+    window.localStorage.removeItem('gpf-active-upazila-division');
   } catch {
     // Nothing to do.
   }

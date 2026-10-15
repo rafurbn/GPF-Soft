@@ -46,12 +46,28 @@ export default function App({ currentUser, onBack }: SubAppProps) {
     return { ...stored, upazilaName: true, districtName: true };
   });
 
-  // Current claim being edited or filled
-  const [currentClaim, setCurrentClaim] = useState<GpfDeathClaim | null>(INITIAL_CLAIMS[0]);
+  // Current claim being edited or filled (linked to logged-in / active region)
+  const [currentClaim, setCurrentClaim] = useState<GpfDeathClaim | null>(() => {
+    const seed = INITIAL_CLAIMS[0];
+    if (!seed) return null;
+    return {
+      ...seed,
+      upazilaName: currentUser.upazila_name_bn || seed.upazilaName,
+      districtName: currentUser.district_name_bn || seed.districtName,
+    };
+  });
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   // Target claim for print engine
-  const [printTargetClaim, setPrintTargetClaim] = useState<GpfDeathClaim | null>(INITIAL_CLAIMS[0]);
+  const [printTargetClaim, setPrintTargetClaim] = useState<GpfDeathClaim | null>(() => {
+    const seed = INITIAL_CLAIMS[0];
+    if (!seed) return null;
+    return {
+      ...seed,
+      upazilaName: currentUser.upazila_name_bn || seed.upazilaName,
+      districtName: currentUser.district_name_bn || seed.districtName,
+    };
+  });
 
   // Notification toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);

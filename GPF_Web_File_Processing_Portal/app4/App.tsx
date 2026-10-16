@@ -22,8 +22,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
       const saved = readScoped(upazilaCode, BASE_KEY_CLAIMS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // An empty saved array is a real state (the user deleted every claim);
-        // only fall back to the seed list when nothing was ever stored.
         if (Array.isArray(parsed)) return parsed;
       }
     } catch {
@@ -41,12 +39,10 @@ export default function App({ currentUser, onBack }: SubAppProps) {
     } catch {
       // fallback
     }
-    // উপজেলা ও জেলার নাম উপজেলা আইডি খোলার সময়েই স্থায়ীভাবে ফিক্সড হয়ে যায়,
-    // ঠিক যেমন app1/app2/app3 এ থাকে।
     return { ...stored, upazilaName: true, districtName: true };
   });
 
-  // Current claim being edited or filled (linked to logged-in / active region)
+  // Current claim being edited or filled
   const [currentClaim, setCurrentClaim] = useState<GpfDeathClaim | null>(() => {
     const seed = INITIAL_CLAIMS[0];
     if (!seed) return null;
@@ -87,8 +83,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
     writeScoped(upazilaCode, BASE_KEY_LOCKS, JSON.stringify(lockSettings));
   }, [lockSettings, upazilaCode]);
 
-  // Toggle lock handler. Upazila and district stay permanently fixed, exactly as
-  // in app1/app2/app3, because they come from the registered upazila account.
   const handleToggleLock = (field: LockableField) => {
     if (field === 'upazilaName' || field === 'districtName') {
       showToast('উপজেলা ও জেলার নাম স্থায়ীভাবে ফিক্সড করা আছে।');
@@ -103,7 +97,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
   // Save Claim Handler
   const handleSaveClaim = (claimData: Omit<GpfDeathClaim, 'id' | 'serialNo' | 'createdAt' | 'updatedAt'>) => {
     if (isEditing && currentClaim) {
-      // Update existing
       const updatedList = claims.map((c) =>
         c.id === currentClaim.id
           ? {
@@ -118,7 +111,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
       setClaims(updatedList);
       showToast(`"${claimData.deceasedEmployeeName}" এর ডেথ ক্লেইম তথ্য সফলভাবে আপডেট করা হয়েছে।`);
     } else {
-      // Create new
       const newClaim: GpfDeathClaim = {
         ...claimData,
         id: `gpf-claim-${Date.now()}`,
@@ -129,7 +121,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
       setClaims([newClaim, ...claims]);
       showToast(`"${claimData.deceasedEmployeeName}" এর নতুন ডেথ ক্লেইম সফলভাবে সংরক্ষণ করা হয়েছে।`);
 
-      // Prepare form for next entry preserving locked fields
       const nextFormValues: Partial<GpfDeathClaim> = {
         year: lockSettings.year ? claimData.year : '2026',
         recipient: lockSettings.recipient ? claimData.recipient : '',
@@ -179,48 +170,48 @@ export default function App({ currentUser, onBack }: SubAppProps) {
     };
     setCurrentClaim(lockedReset as GpfDeathClaim);
     setIsEditing(false);
-    showToast('ফর্ম রিসেট করা হয়েছে (লক করা ফিল্ডের মান বজায় রাখা হয়েছে)।');
+    showToast('ফর্ম রিসেট করা হয়েছে।');
   };
 
-  // Start new entry
   const handleNewEntry = () => {
     handleResetForm();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Edit claim
   const handleEditClaim = (claim: GpfDeathClaim) => {
     setCurrentClaim(claim);
     setIsEditing(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    showToast(`"${claim.deceasedEmployeeName}" এর ফাইল সম্পাদনা মোডে লোড হয়েছে।`);
+    showToast(`"${claim.deceasedEmployeeName}" এর ফাইল লোড হয়েছে।`);
   };
 
-  // Delete claim
   const handleDeleteClaim = (id: string) => {
     setClaims(claims.filter((c) => c.id !== id));
-    showToast('ক্লেইম রেকর্ডটি তালিকা থেকে মুছে ফেলা হয়েছে।');
+    showToast('ক্লেইম রেকর্ডটি মুছে ফেলা হয়েছে।');
   };
 
-  // Import claims (unlimited save files support)
   const handleImportClaims = (importedClaims: GpfDeathClaim[]) => {
     const existingIds = new Set(claims.map((c) => c.id));
     const newItems = importedClaims.filter((c) => !existingIds.has(c.id));
     const merged = [...newItems, ...claims];
     setClaims(merged);
-    showToast(`${newItems.length}টি ক্লেইম ফাইল সফলভাবে ইমপোর্ট করা হয়েছে (মোট ${merged.length}টি)।`);
+    showToast(`${newItems.length}টি ক্লেইম ফাইল সফলভাবে ইমপোর্ট করা হয়েছে।`);
   };
 
   return (
-    <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col font-['Hind_Siliguri',sans-serif]">
-      {/* App Header (Screen only) — carries the working back-to-dashboard button */}
-      <Header
-        onBack={onBack}
-        onNewEntry={handleNewEntry}
-        claimCount={claims.length}
-        upazilaName={currentUser.upazila_name_bn}
-        districtName={currentUser.district_name_bn}
-      />
+    /* এখানে print:block এবং print:min-h-0 যুক্ত করায় ফায়ারফক্সে আর ১৪ পাতা হবে না */
+    <div className="min-h-screen bg-[
+                    #0b1120] text-slate-100 flex flex-col font-['Hind_Siliguri',sans-serif] print:block print:min-h-0 print:h-auto print:bg-white print:text-black print:p-0 print:m-0">
+      {/* App Header (Screen only) */}
+      <div className="print:hidden">
+        <Header
+          onBack={onBack}
+          onNewEntry={handleNewEntry}
+          claimCount={claims.length}
+          upazilaName={currentUser.upazila_name_bn}
+          districtName={currentUser.district_name_bn}
+        />
+      </div>
 
       {/* Toast Notification */}
       {toastMessage && (
@@ -230,9 +221,8 @@ export default function App({ currentUser, onBack }: SubAppProps) {
         </div>
       )}
 
-      {/* Main Content Area (Screen only - Graphical widgets removed as requested) */}
+      {/* Main Content Area (Screen only) */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6 print:hidden">
-        {/* Death Claim Input Dashboard Form (Zero print button inside form as requested) */}
         <section id="input-dashboard">
           <DeathClaimForm
             initialData={currentClaim}
@@ -244,7 +234,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
           />
         </section>
 
-        {/* Saved Claims Data Table Section (Row action has: [Print] [Edit] [Delete] [Download]) */}
         <section id="claims-table">
           <ClaimsDataTable
             claims={claims}
@@ -261,7 +250,8 @@ export default function App({ currentUser, onBack }: SubAppProps) {
       <PrintDocumentEngine claim={printTargetClaim} />
 
       {/* Footer (Screen only) */}
-      <footer className="border-t border-slate-800/80 bg-[#0a0f1d] py-6 text-center text-xs text-slate-500 print:hidden">
+      <footer className="border-t border-slate-800/80 bg-[
+                    #0a0f1d] py-6 text-center text-xs text-slate-500 print:hidden">
         <div className="max-w-7xl mx-auto px-4 space-y-1">
           <p className="font-medium text-slate-400">
             জিপিএফ চূড়ান্ত উত্তোলন ফাইল প্রসেসিং সিস্টেম (ডেথ ক্লেইম ড্যাশবোর্ড)

@@ -1,1 +1,9 @@
 @import "tailwindcss";
+@import "tailwindcss";
+
+input[type="number"], 
+input[type="date"],
+input[type="text"] {
+  font-variant-numeric: table-nums;
+  font-feature-settings: "tnum" 1;
+}

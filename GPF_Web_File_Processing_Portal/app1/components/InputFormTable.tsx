@@ -705,7 +705,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     />
                     {!lockedConfig.ddoDesignation && (
                       <div className="flex gap-1.5">
-                        {['উপজেলা প্রাথমিক শিক্ষা অফিসার', 'জেলা প্রাথমিক শিক্ষা অফিসার'].map((des) => (
+                        {['উপজেলা প্রাথমিক শিক্ষা অফিসার'].map((des) => (
                           <button
                             key={des}
                             type="button"

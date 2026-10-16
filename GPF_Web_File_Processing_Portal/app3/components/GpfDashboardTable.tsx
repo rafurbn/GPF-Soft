@@ -96,7 +96,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
   const calculatedAge = formData.birthDate ? calculateBengaliAge(formData.birthDate) : '';
 
   return (
-    <div className="mx-auto w-full max-w-[210mm] bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden font-['Hind_Siliguri',sans-serif]">
+    <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden font-['Hind_Siliguri',sans-serif] mb-8">
       
       {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
           Same title, "আনলিমিটেড সেইভ ফাইল" badge and subtitle so all four GPF
@@ -161,7 +161,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 <span className="block text-[11px] font-normal text-slate-400"></span>
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-lg flex items-center">
+                <div className="relative w-full max-w-xl flex items-center">
                   <input
                     type="text"
                     value={formData.yearSession}
@@ -201,7 +201,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 <span className="block text-[11px] font-normal text-slate-400">দিন/মাস/বছর</span>
               </td>
               <td className="py-3 px-4">
-                <div className="flex items-center gap-2 max-w-lg">
+                <div className="flex items-center gap-2 w-full max-w-xl">
                   <input
                     type="text"
                     value={formData.applicationDate}
@@ -235,7 +235,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 )}
               </td>
               <td className="py-3 px-4">
-                <div className="max-w-lg relative">
+                <div className="w-full max-w-xl relative">
                   <textarea
                     rows={2}
                     value={formData.recipient}
@@ -267,7 +267,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   value={formData.applicantName}
                   onChange={(e) => onChange('applicantName', e.target.value)}
                   placeholder=""
-                  className="w-full max-w-lg px-3 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
+                  className="w-full max-w-xl px-3 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
                 />
               </td>
               <td className="py-3 px-3 text-center text-slate-500 font-bold">—</td>
@@ -280,7 +280,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 পদবী
               </td>
               <td className="py-3 px-4">
-                <div className="flex items-center gap-2 max-w-lg relative">
+                <div className="flex items-center gap-2 w-full max-w-xl relative">
                   <input
                     type="text"
                     value={formData.designation}
@@ -331,7 +331,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   value={formData.schoolName}
                   onChange={(e) => onChange('schoolName', e.target.value)}
                   placeholder=""
-                  className="w-full max-w-lg px-3 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
+                  className="w-full max-w-xl px-3 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
                 />
               </td>
               <td className="py-3 px-3 text-center text-slate-500 font-bold">—</td>
@@ -345,7 +345,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 <span className="block text-[11px] font-normal text-slate-400">বয়স ও পিআরএল যোগ্যতা প্রদর্শিত</span>
               </td>
               <td className="py-3 px-4">
-                <div className="max-w-lg space-y-2">
+                <div className="w-full max-w-xl space-y-2">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <input
                       type="text"
@@ -399,7 +399,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   value={formData.gpfAccountNo}
                   onChange={(e) => onChange('gpfAccountNo', e.target.value)}
                   placeholder=""
-                  className="w-full max-w-lg px-3 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
+                  className="w-full max-w-xl px-3 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
                 />
               </td>
               <td className="py-3 px-3 text-center text-slate-500 font-bold">—</td>
@@ -412,7 +412,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 পূর্ববর্তী ৩০ শে জুনে জমাকৃত টাকার পরিমাণ
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-lg flex items-center">
+                <div className="relative w-full max-w-xl flex items-center">
                   <input
                     type="text"
                     value={formData.totalDepositedAmount}
@@ -437,7 +437,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 প্রার্থীত টাকা / চূড়ান্ত স্থিতি (অংকে)
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-lg flex items-center">
+                <div className="relative w-full max-w-xl flex items-center">
                   <input
                     type="text"
                     value={formData.requestedAmountNumber}
@@ -471,7 +471,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   value={formData.requestedAmountWords}
                   onChange={(e) => onChange('requestedAmountWords', e.target.value)}
                   placeholder="চৌদ্দ লক্ষ আশি হাজার টাকা মাত্র"
-                  className="w-full max-w-lg px-3 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-[#10b981] placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-semibold"
+                  className="w-full max-w-xl px-3 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-[#10b981] placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-semibold"
                 />
               </td>
               <td className="py-3 px-3 text-center text-slate-500 font-bold">—</td>
@@ -484,7 +484,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 বর্তমান / সর্বশেষ মূল বেতন
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-lg flex items-center">
+                <div className="relative w-full max-w-xl flex items-center">
                   <input
                     type="text"
                     value={formData.basicSalary}
@@ -510,7 +510,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 <span className="block text-[11px] font-normal text-slate-400">(ডিডিও নাম - সবসময়)</span>
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-lg flex items-center">
+                <div className="relative w-full max-w-xl flex items-center">
                   <input
                     type="text"
                     value={formData.ddoName}
@@ -543,7 +543,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 <span className="block text-[11px] font-normal text-slate-400">(সবসময়)</span>
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-lg flex items-center">
+                <div className="relative w-full max-w-xl flex items-center">
                   <input
                     type="text"
                     value={formData.ddoDesignation}
@@ -576,7 +576,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 <span className="block text-[11px] font-normal text-slate-400">(স্থায়ীভাবে ফিক্সড)</span>
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-lg flex items-center">
+                <div className="relative w-full max-w-xl flex items-center">
                   <input
                     type="text"
                     value={formData.upazila}
@@ -609,7 +609,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                 <span className="block text-[11px] font-normal text-slate-400">(স্থায়ীভাবে ফিক্সড)</span>
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-lg flex items-center">
+                <div className="relative w-full max-w-xl flex items-center">
                   <input
                     type="text"
                     value={formData.district}

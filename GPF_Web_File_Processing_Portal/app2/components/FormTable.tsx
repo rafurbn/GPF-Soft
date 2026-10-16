@@ -76,7 +76,7 @@ export const FormTable: React.FC<FormTableProps> = ({
   };
 
   return (
-    <div className="mx-auto w-full max-w-[210mm] bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden" id="input-dashboard-section">
+    <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8" id="input-dashboard-section">
       {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
           Same card shell, title, count badge and "আনলিমিটেড সেইভ ফাইল" badge so
           all four GPF apps present one identical input dashboard. */}
@@ -122,7 +122,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                 <span className="block text-[11px] text-slate-500">অর্থবছর বা আবেদনের বছর</span>
               </td>
               <td className="py-3 px-4">
-                <div className="flex items-center gap-2 max-w-xs">
+                <div className="flex items-center gap-2 w-full max-w-xl">
                   <div className="relative flex-1">
                     <input
                       type="text"
@@ -163,7 +163,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                 <span className="block text-[11px] text-slate-500">দিন/মাস/বছর</span>
               </td>
               <td className="py-3 px-4">
-                <div className="flex items-center gap-2 max-w-sm">
+                <div className="flex items-center gap-2 w-full max-w-xl">
                   <input
                     type="text"
                     id="input-apply-date"
@@ -326,7 +326,7 @@ export const FormTable: React.FC<FormTableProps> = ({
               </td>
               <td className="py-3 px-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <div className="relative max-w-xs w-full">
+                  <div className="relative max-w-xl w-full">
                     <input
                       type="text"
                       id="input-dob"
@@ -378,7 +378,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                 পূর্ববর্তী ৩০ শে জুনে জমাকৃত টাকার পরিমাণ
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-sm">
+                <div className="relative w-full max-w-xl">
                   <input
                     type="text"
                     id="input-gpf-total-balance"
@@ -404,7 +404,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                 প্রার্থীত টাকা (অংকে)
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-sm">
+                <div className="relative w-full max-w-xl">
                   <input
                     type="text"
                     id="input-requested-amount"
@@ -472,7 +472,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                 বর্তমান মূল বেতন
               </td>
               <td className="py-3 px-4">
-                <div className="relative max-w-sm">
+                <div className="relative w-full max-w-xl">
                   <input
                     type="text"
                     id="input-basic-salary"
@@ -499,7 +499,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                 <span className="block text-[11px] text-slate-500">(ডিডিও নাম - লকযোগ্য)</span>
               </td>
               <td className="py-3 px-4">
-                <div className="flex items-center gap-2 max-w-sm">
+                <div className="flex items-center gap-2 w-full max-w-xl">
                   <input
                     type="text"
                     id="input-ddo-name"
@@ -533,7 +533,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                 <span className="block text-[11px] text-slate-500">(লকযোগ্য)</span>
               </td>
               <td className="py-3 px-4">
-                <div className="flex items-center gap-2 max-w-sm">
+                <div className="flex items-center gap-2 w-full max-w-xl">
                   <input
                     type="text"
                     id="input-ddo-designation"
@@ -567,7 +567,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                 <span className="block text-[11px] text-slate-500">(স্থায়ীভাবে ফিক্সড)</span>
               </td>
               <td className="py-3 px-4">
-                <div className="flex items-center gap-2 max-w-sm">
+                <div className="flex items-center gap-2 w-full max-w-xl">
                   <input
                     type="text"
                     id="input-upazila-name"
@@ -603,7 +603,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                 <span className="block text-[11px] text-slate-500">(স্থায়ীভাবে ফিক্সড)</span>
               </td>
               <td className="py-3 px-4">
-                <div className="flex items-center gap-2 max-w-sm">
+                <div className="flex items-center gap-2 w-full max-w-xl">
                   <input
                     type="text"
                     id="input-district-name"

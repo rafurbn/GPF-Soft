@@ -438,7 +438,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   };
 
   return (
-    <div className="refundable-app space-y-6">
+    <div className="refundable-app space-y-6 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-emerald-950 border border-emerald-500 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-bounce no-print">

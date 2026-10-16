@@ -26,12 +26,14 @@ import {
   Eye,
   EyeOff,
   X,
-  LayoutDashboard
+  LayoutDashboard,
+  Settings
 } from 'lucide-react';
 import { UserSession, ActiveAppTab } from '../types';
 import portalLogo from '../assets/images/logo RF.svg';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { ForgotPasswordOtpModal } from './ForgotPasswordOtpModal';
+import { RegionSettingsModal } from './RegionSettingsModal';
 import { OfficialDashboard } from './OfficialDashboard';
 import { persistUpazilaContext } from '../lib/upazilaSession';
 import {
@@ -303,12 +305,33 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     setUpazilaCode(newCode);
   };
 
+  const [showRegionSettingsModal, setShowRegionSettingsModal] = useState(false);
+
   const toggleRegionLock = () => {
-    const nextLocked = !isRegionLocked;
-    setIsRegionLocked(nextLocked);
+    // Opening settings popup modal allows modifying and re-locking
+    setShowRegionSettingsModal(true);
+  };
+
+  const handleSaveRegionSettings = (
+    newDivEn: string,
+    newDistEn: string,
+    newUpazilaCode: string,
+    newEmail: string
+  ) => {
+    setDivision(newDivEn);
+    setDistrict(newDistEn);
+    setUpazilaCode(newUpazilaCode);
+    setEmail(newEmail);
+    setIsRegionLocked(true);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('gpf-lock-region', String(nextLocked));
+      localStorage.setItem('gpf-lock-region', 'true');
+      if (newEmail) {
+        localStorage.setItem('gpf-active-user-email', newEmail);
+      }
     }
+    setShowRegionSettingsModal(false);
+    setToastNotification('বিভাগ, জেলা, উপজেলা ও রিকভারি ই-মেইল সফলভাবে লক ও সংরক্ষণ করা হয়েছে!');
+    setTimeout(() => setToastNotification(null), 4000);
   };
 
   const [password, setPassword] = useState('');
@@ -698,111 +721,35 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                     </div>
                   )}
 
-                  {/* ১. বিভাগ, জেলা ও উপজেলা সিলেকশন ব্লক (লকড বা ড্রপডাউন) */}
-                  {isRegionLocked ? (
-                    <div className="rounded-xl border border-amber-600/50 bg-amber-950/25 p-3.5 text-xs text-amber-100 shadow-inner">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-1.5 font-bold text-amber-300">
-                          <Lock className="w-3.5 h-3.5 text-amber-400" />
-                          <span>কর্মরত উপজেলা ও জেলা (লকড ও স্থায়ী)</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={toggleRegionLock}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-white bg-amber-900/40 hover:bg-amber-900/60 border border-amber-700/60 px-2 py-0.5 rounded-lg transition cursor-pointer"
-                          title="বিভাগ, জেলা ও উপজেলা পরিবর্তন করতে আনলক করুন"
-                        >
-                          <Unlock className="w-3 h-3 text-amber-300" />
-                          <span>আনলক করুন</span>
-                        </button>
+                  {/* ১. বিভাগ, জেলা ও উপজেলা সিলেকশন ব্লক (লকড ও স্থায়ী) */}
+                  <div className="rounded-xl border border-amber-600/50 bg-amber-950/25 p-3.5 text-xs text-amber-100 shadow-inner">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-300">
+                        <Lock className="w-3.5 h-3.5 text-amber-400" />
+                        <span>কর্মরত উপজেলা ও জেলা (লকড ও স্থায়ী)</span>
                       </div>
-                      <div className="rounded-lg bg-slate-950/90 border border-slate-800 px-3.5 py-2.5 font-bold text-white text-sm sm:text-base tracking-wide flex items-center justify-between">
-                        <span>
-                          {selectedRegion?.divisionBn || 'সিলেট'} / {selectedRegion?.districtBn || 'সিলেট'} / {selectedRegion?.upazilaBn || 'বিয়ানীবাজার'}
-                        </span>
-                        <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 rounded">
-                          {selectedRegion?.defaultId || upazilaCode}
-                        </span>
-                      </div>
-                      <p className="mt-1.5 text-[10px] text-amber-300/80">
-                        ✓ বিভাগ, জেলা ও উপজেলা লক করা থাকায় এটি স্থায়ী থাকবে, পরবর্তীতে আর এন্ট্রি দিতে হবে না।
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5 rounded-xl border border-slate-700/80 bg-slate-950/60 p-3.5 shadow-inner">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>কর্মরত উপজেলা ও জেলা নির্বাচন করুন</span>
-                        </label>
-                        <button
-                          type="button"
-                          onClick={toggleRegionLock}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-white bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-700/60 px-2.5 py-1 rounded-lg transition cursor-pointer"
-                        >
-                          <Lock className="w-3 h-3 text-emerald-400" />
-                          <span>লক করে দিন</span>
-                        </button>
-                      </div>
-
-                      {/* বিভাগ ড্রপডাউন */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">বিভাগ</label>
-                        <select
-                          value={selectedDivisionObj?.en || ''}
-                          onChange={(e) => handleDivisionChange(e.target.value)}
-                          className="w-full rounded-xl border border-slate-700 bg-[#0a1526] px-3 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-hidden focus:border-emerald-500 shadow-inner"
-                        >
-                          {divisions.map((d) => (
-                            <option key={d.en} value={d.en}>
-                              {d.bn} ({d.en})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* জেলা ড্রপডাউন */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">জেলা</label>
-                        <select
-                          value={selectedDistrictObj?.en || ''}
-                          onChange={(e) => handleDistrictChange(e.target.value)}
-                          className="w-full rounded-xl border border-slate-700 bg-[#0a1526] px-3 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-hidden focus:border-emerald-500 shadow-inner"
-                        >
-                          {currentDistricts.map((d) => (
-                            <option key={d.en} value={d.en}>
-                              {d.bn} ({d.en})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* উপজেলা ড্রপডাউন */}
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">উপজেলা</label>
-                        <select
-                          value={selectedRegion?.defaultId || ''}
-                          onChange={(e) => handleUpazilaChange(e.target.value)}
-                          className="w-full rounded-xl border border-slate-700 bg-[#0a1526] px-3 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-hidden focus:border-emerald-500 shadow-inner"
-                        >
-                          {currentUpazilas.map((u) => (
-                            <option key={u.defaultId} value={u.defaultId}>
-                              {u.upazilaBn} ({u.defaultId})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
                       <button
                         type="button"
-                        onClick={toggleRegionLock}
-                        className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-xs transition cursor-pointer shadow-sm"
+                        onClick={() => setShowRegionSettingsModal(true)}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-300 hover:text-white bg-amber-900/40 hover:bg-amber-900/60 border border-amber-700/60 px-2.5 py-1 rounded-lg transition cursor-pointer"
+                        title="বিভাগ, জেলা, উপজেলা ও রিকভারি ই-মেইল সেটিংস পপআপ উইন্ডো খুলুন"
                       >
-                        <Lock className="w-3.5 h-3.5 text-white" />
-                        <span>বিভাগ, জেলা ও উপজেলা লক করে দিন (স্থায়ী থাকবে)</span>
+                        <Unlock className="w-3 h-3 text-amber-300" />
+                        <span>আনলক করুন</span>
                       </button>
                     </div>
-                  )}
+                    <div className="rounded-lg bg-slate-950/90 border border-slate-800 px-3.5 py-2.5 font-bold text-white text-sm sm:text-base tracking-wide flex items-center justify-between">
+                      <span>
+                        {selectedRegion?.divisionBn || 'সিলেট'} / {selectedRegion?.districtBn || 'সিলেট'} / {selectedRegion?.upazilaBn || 'বিয়ানীবাজার'}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 rounded">
+                        {selectedRegion?.defaultId || upazilaCode}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-[10px] text-amber-300/80">
+                      ✓ বিভাগ, জেলা, উপজেলা ও রিকভারি ইমেইল লক করা থাকায় এটি স্থায়ী থাকবে, পরবর্তীতে আর এন্ট্রি দিতে হবে না।
+                    </p>
+                  </div>
 
                   {/* ২. আপনার login ID (ডিফল্ট ও স্থায়ী) */}
                   <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3 shadow-inner">
@@ -819,26 +766,6 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       <span className="font-mono text-xl sm:text-2xl font-extrabold tracking-wider text-emerald-400">
                         {selectedRegion?.defaultId || upazilaCode}
                       </span>
-                    </div>
-                  </div>
-
-                  {/* ৩. Recovery email */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">
-                      Recovery email
-                    </label>
-                    <div className="relative">
-                      <div className="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center absolute left-1.5 top-1/2 -translate-y-1/2">
-                        <Mail className="w-4 h-4 text-emerald-400" />
-                      </div>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="আপনার ইমেইল ঠিকানা (যেমন: rafurbn@gmail.com)"
-                        autoComplete="email"
-                        className="w-full pl-11 pr-3 py-2.5 text-xs sm:text-sm bg-[#0a1526] border border-slate-700/80 rounded-xl font-medium text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 shadow-inner"
-                      />
                     </div>
                   </div>
 
@@ -984,6 +911,17 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
           }}
         />
       )}
+
+      {/* Settings Popup Modal for Division, District, Upazila & Recovery Email */}
+      <RegionSettingsModal
+        isOpen={showRegionSettingsModal}
+        onClose={() => setShowRegionSettingsModal(false)}
+        currentDivisionEn={selectedDivisionObj.en}
+        currentDistrictEn={selectedDistrictObj.en}
+        currentUpazilaCode={selectedRegion?.defaultId || upazilaCode}
+        currentEmail={email}
+        onSaveAndLock={handleSaveRegionSettings}
+      />
     </div>
   );
 };

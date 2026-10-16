@@ -189,7 +189,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
   );
 
   return (
-    <div className="mx-auto w-full max-w-[210mm] bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8">
+    <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8" id="input-dashboard-section">
       {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
           Same card shell, title, count badge and "আনলিমিটেড সেইভ ফাইল" badge so
           all four GPF apps present one identical input dashboard. */}
@@ -254,7 +254,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     onChange={(e) => handleChange('year', e.target.value)}
                     readOnly={lockedConfig.year}
                     placeholder="2026"
-                    className={`w-full max-w-sm rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
+                    className={`w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
                       lockedConfig.year
                         ? 'bg-amber-950/20 border-amber-500/50 text-amber-200 cursor-not-allowed'
                         : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:border-emerald-500'
@@ -280,7 +280,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     value={formData.applyDate}
                     onChange={(e) => handleChange('applyDate', e.target.value)}
                     placeholder="যেমন: ২২/০৯/২০২৪"
-                    className="w-full max-w-sm rounded-lg px-3 py-1.5 text-white bg-slate-950 border border-slate-700 focus:border-emerald-500 text-sm font-semibold focus:outline-hidden placeholder-slate-500"
+                    className="w-full max-w-xl rounded-lg px-3 py-1.5 text-white bg-slate-950 border border-slate-700 focus:border-emerald-500 text-sm font-semibold focus:outline-hidden placeholder-slate-500"
                   />
                   <button
                     type="button"
@@ -410,7 +410,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                   value={formData.gpfAccNo}
                   onChange={(e) => handleChange('gpfAccNo', toBanglaDigits(e.target.value))}
                   placeholder=""
-                  className="w-full max-w-sm bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+                  className="w-full max-w-xl bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
                 />
             </FormRow>
 
@@ -420,7 +420,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
               label="পূর্ববর্তী ৩০ শে জুনে জমাকৃত টাকার পরিমাণ"
               lockCells={renderEmptyLockCells()}
             >
-                <div className="relative max-w-sm">
+                <div className="relative w-full max-w-xl">
                   <input
                     type="text"
                     value={formData.gpfTotalBalance}
@@ -445,7 +445,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
               lockCells={renderEmptyLockCells()}
               rowClassName="bg-emerald-50/20"
             >
-                <div className="relative max-w-sm">
+                <div className="relative w-full max-w-xl">
                   <input
                     type="text"
                     value={formData.requestedAmount}
@@ -491,7 +491,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                 label="বর্তমান মূল বেতন"
                 lockCells={renderEmptyLockCells()}
             >
-                  <div className="relative max-w-sm">
+                  <div className="relative w-full max-w-xl">
                     <input
                       type="text"
                       value={formData.basicSalary}
@@ -619,7 +619,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     value={formData.lastInstallmentDate}
                     onChange={(e) => handleChange('lastInstallmentDate', e.target.value)}
                     placeholder="যেমন: প্রযোজ্য নয় অথবা জুন ২০২৪"
-                    className="flex-1 max-w-sm bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+                    className="flex-1 w-full max-w-xl bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
                   />
                   <button
                     type="button"
@@ -648,7 +648,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     value={formData.remainingInstallments}
                     onChange={(e) => handleChange('remainingInstallments', e.target.value)}
                     placeholder="যেমন: প্রযোজ্য নয় অথবা ১২ কিস্তি"
-                    className="flex-1 max-w-sm bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+                    className="flex-1 w-full max-w-xl bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
                   />
                   <button
                     type="button"
@@ -676,7 +676,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     onChange={(e) => handleChange('ddoName', e.target.value)}
                     readOnly={lockedConfig.ddoName}
                     placeholder=""
-                    className={`w-full max-w-sm rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
+                    className={`w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
                       lockedConfig.ddoName
                         ? 'bg-amber-950/20 border-amber-500/50 text-amber-200 cursor-not-allowed'
                         : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:border-emerald-500'
@@ -736,7 +736,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     value={formData.upazilaName}
                     readOnly
                     placeholder="যেমন: বিয়ানীবাজার"
-                    className="w-full max-w-sm rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden bg-emerald-950/20 border-emerald-700/50 text-emerald-200 placeholder-slate-500 cursor-not-allowed select-none"
+                    className="w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden bg-emerald-950/20 border-emerald-700/50 text-emerald-200 placeholder-slate-500 cursor-not-allowed select-none"
                   />
             </FormRow>
 
@@ -752,7 +752,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     value={formData.districtName}
                     readOnly
                     placeholder="যেমন: সিলেট"
-                    className="w-full max-w-sm rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden bg-emerald-950/20 border-emerald-700/50 text-emerald-200 placeholder-slate-500 cursor-not-allowed select-none"
+                    className="w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden bg-emerald-950/20 border-emerald-700/50 text-emerald-200 placeholder-slate-500 cursor-not-allowed select-none"
                   />
             </FormRow>
 

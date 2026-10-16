@@ -55,18 +55,19 @@ export const mountSubApp = async (
   const { loginUrl = '/', fallback = FALLBACK_UPAZILA } = options;
 
   const context = readUpazilaContext();
-  if (!context) {
-    // No Upazila chosen yet: bounce back to the secure root dashboard.
-    window.location.replace(loginUrl);
-    return;
-  }
+  const activeContext = context || {
+    upazila_code: fallback.upazila_code,
+    upazila_name_bn: fallback.upazila_name_bn,
+    district_name_bn: fallback.district_name_bn,
+    division_name_bn: fallback.division_name_bn || 'সিলেট',
+  };
 
   const currentUser: UserSession = {
     ...fallback,
-    upazila_code: context.upazila_code,
-    upazila_name_bn: context.upazila_name_bn || fallback.upazila_name_bn,
-    district_name_bn: context.district_name_bn || fallback.district_name_bn,
-    division_name_bn: context.division_name_bn || fallback.division_name_bn,
+    upazila_code: activeContext.upazila_code,
+    upazila_name_bn: activeContext.upazila_name_bn || fallback.upazila_name_bn,
+    district_name_bn: activeContext.district_name_bn || fallback.district_name_bn,
+    division_name_bn: activeContext.division_name_bn || fallback.division_name_bn,
   };
 
   const { default: RootComponent } = await moduleLoader();

@@ -53,6 +53,7 @@ export interface GpfDeathClaim {
   lastDeductionAmount?: number; // সর্বশেষ কর্তনকৃত চাঁদা (e.g. ৪৯০০)
   lastVoucherNo?: string; // সর্বশেষ ভাউচার নং (e.g. ০৮)
   treasuryOffice?: string; // ট্রেজারী অফিসের নাম
+  reason?: string; // কারণ (e.g. মৃত্যুজনিত কারণে)
 
   // System metadata
   status: ClaimStatus;

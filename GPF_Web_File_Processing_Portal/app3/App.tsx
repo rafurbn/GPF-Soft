@@ -338,7 +338,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6">
       {/* Top Header Navigation matching image.png */}
       <DesktopHeader
         onBack={onBack}

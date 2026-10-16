@@ -1,8 +1,21 @@
-@import "tailwindcss";
+/* ================= ফায়ারফক্স ও ক্রোম সার্বজনীন প্রিন্ট ফিক্স ================= */
+@media print {
+  html, body, #root {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    background: 
+                    #ffffff !important;
+    color: 
+                    #000000 !important;
+  }
 
-input[type="number"], 
-input[type="date"],
-input[type="text"] {
-  font-variant-numeric: table-nums;
-  font-feature-settings: "tnum" 1;
+  /* ফায়ারফক্সে রো ও কলামের দাগ অটুট রাখার নিয়ম */
+  table, tr, td, th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 }

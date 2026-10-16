@@ -438,7 +438,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   };
 
   return (
-    <div className="refundable-app space-y-6 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6">
+    <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col font-['Hind_Siliguri',sans-serif]">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-emerald-950 border border-emerald-500 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-bounce no-print">
@@ -447,69 +447,83 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
         </div>
       )}
 
-      {/* Top Bar with Big Attractive Return Button */}
-      <div className="sticky top-0 z-40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-[#091122] via-[#171827] to-[#091122] p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-lg shadow-slate-950/30 backdrop-blur-md no-print">
-        <div className="flex items-center gap-3.5">
-          {/* Big, Highly Visible & Attractive Back Button */}
-          <button
-            type="button"
-            onClick={onBack}
-            className="group flex items-center gap-2.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 hover:from-slate-800 hover:to-emerald-900 text-white shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer border border-emerald-500/40 hover:scale-[1.02] active:scale-98 shrink-0"
-            title="মূল ড্যাশবোর্ড বা ব্যাকপেইজে ফিরে যান"
-          >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all duration-200">
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform duration-200" />
-            </div>
-            <div className="text-left">
-              <span className="block text-[10px] text-emerald-300 font-semibold leading-tight">
-                ব্যাকপেইজ
-              </span>
-              <span className="block text-xs sm:text-[13px] font-bold text-white leading-tight">
-                ড্যাশবোর্ডে ফিরুন
-              </span>
-            </div>
-          </button>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6 space-y-6 print:hidden">
+        {/* Top Bar with Big Attractive Return Button */}
+        <div className="sticky top-0 z-40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-[#091122] via-[#171827] to-[#091122] p-4 sm:p-5 rounded-2xl border border-emerald-500/30 shadow-lg shadow-slate-950/30 backdrop-blur-md no-print">
+          <div className="flex items-center gap-3.5">
+            {/* Big, Highly Visible & Attractive Back Button */}
+            <button
+              type="button"
+              onClick={onBack}
+              className="group flex items-center gap-2.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 hover:from-slate-800 hover:to-emerald-900 text-white shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer border border-emerald-500/40 hover:scale-[1.02] active:scale-98 shrink-0"
+              title="মূল ড্যাশবোর্ড বা ব্যাকপেইজে ফিরে যান"
+            >
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all duration-200">
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform duration-200" />
+              </div>
+              <div className="text-left">
+                <span className="block text-[10px] text-emerald-300 font-semibold leading-tight">
+                  ব্যাকপেইজ
+                </span>
+                <span className="block text-xs sm:text-[13px] font-bold text-white leading-tight">
+                  ড্যাশবোর্ডে ফিরুন
+                </span>
+              </div>
+            </button>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                জিপিএফ অফেরতযোগ্য অগ্রিম উত্তোলন ফাইল প্রসেসিং
-              </h2>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                  জিপিএফ অফেরতযোগ্য অগ্রিম উত্তোলন ফাইল প্রসেসিং
+                </h2>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* 16-Row Input Demand Form Table */}
-      <FormTable
-        formData={formData}
-        onChange={handleFieldChange}
-        lockedState={lockedState}
-        onToggleLock={handleToggleLock}
-        onSave={handleSaveRecord}
-        onReset={handleReset}
-        onPreview={() => setIsPreviewOpen(true)}
-        onPrint={() => handlePrint('all')}
-        isEditingExisting={isEditingExisting}
-      />
+        {/* 16-Row Input Demand Form Table */}
+        <FormTable
+          formData={formData}
+          onChange={handleFieldChange}
+          lockedState={lockedState}
+          onToggleLock={handleToggleLock}
+          onSave={handleSaveRecord}
+          onReset={handleReset}
+          onPreview={() => setIsPreviewOpen(true)}
+          onPrint={() => handlePrint('all')}
+          isEditingExisting={isEditingExisting}
+        />
 
-      {/* Saved Records Section */}
-      <RecordsList
-        records={records}
-        onEditRecord={handleEditRecord}
-        onDeleteRecord={handleDeleteRecord}
-        onPrintRecord={(rec) => {
-          // Print straight from the records list; the preview modal is never opened.
-          setFormData(rec);
-          requestAnimationFrame(() => {
-            window.setTimeout(() => handlePrint('all'), 50);
-          });
-        }}
-        onDownloadPdfRecord={handleDownloadPdfRecord}
-        onNewRecord={handleReset}
-        onExportCSV={handleExportCSV}
-      />
+        {/* Saved Records Section */}
+        <RecordsList
+          records={records}
+          onEditRecord={handleEditRecord}
+          onDeleteRecord={handleDeleteRecord}
+          onPrintRecord={(rec) => {
+            // Print straight from the records list; the preview modal is never opened.
+            setFormData(rec);
+            requestAnimationFrame(() => {
+              window.setTimeout(() => handlePrint('all'), 50);
+            });
+          }}
+          onDownloadPdfRecord={handleDownloadPdfRecord}
+          onNewRecord={handleReset}
+          onExportCSV={handleExportCSV}
+        />
+      </main>
+
+      {/* Footer matching App 4 */}
+      <footer className="border-t border-slate-800/80 bg-[#0a0f1d] py-6 text-center text-xs text-slate-500 print:hidden">
+        <div className="max-w-7xl mx-auto px-4 space-y-1">
+          <p className="font-medium text-slate-400">
+            উপজেলা প্রাথমিক শিক্ষা জিপিএফ পোর্টাল • এ্যাপ ২ (অফেরতযোগ্য অগ্রিম উত্তোলন)
+          </p>
+          <p className="text-[11px] text-slate-600">
+            সর্বস্বত্ব সংরক্ষিত © ২০২৬ • সার্বক্ষণিক তদারকি ও প্রধান এডমিন: রফিকুল ইসলাম
+          </p>
+        </div>
+      </footer>
 
       {/* Interactive 5-Page PDF Preview Modal */}
       <PreviewModal
@@ -531,10 +545,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
         onClose={() => setIsDesktopModalOpen(false)}
       />
 
-      {/* Hidden Print Container: Only activates during print / PDF generation.
-          `print-only` is required because the @media print rule
-          `.refundable-app > :not(.print-only) { display: none !important }`
-          hides every other child, which is what produced a blank print page. */}
+      {/* Hidden Print Container: Only activates during print / PDF generation. */}
       <div className="print-only hidden print:block bg-white text-black">
         <DocumentTemplate data={formData} pageFilter={printPageFilter} />
       </div>

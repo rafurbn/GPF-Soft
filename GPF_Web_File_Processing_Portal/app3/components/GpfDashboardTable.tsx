@@ -96,18 +96,29 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
   const calculatedAge = formData.birthDate ? calculateBengaliAge(formData.birthDate) : '';
 
   return (
-    <div className="mx-auto w-full max-w-[210mm] bg-[#0b1328] rounded-xl border border-[#1a2845] shadow-2xl overflow-hidden font-['Hind_Siliguri',sans-serif]">
+    <div className="mx-auto w-full max-w-[210mm] bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden font-['Hind_Siliguri',sans-serif]">
       
-      {/* Top Header Card matching image.png */}
-      <div className="bg-[#080f20] px-4 sm:px-6 py-3.5 border-b border-[#182642] flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
-              <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
+      {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
+          Same title, "আনলিমিটেড সেইভ ফাইল" badge and subtitle so all four GPF
+          apps present one identical input dashboard. */}
+      <div className="px-4 sm:px-5 py-4 border-b border-slate-800/90 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
+            <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-bold text-white tracking-tight">
+                জিপিএফ চূড়ান্ত উত্তোলন-ইনপুট ড্যাশবোর্ড
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                আনলিমিটেড সেইভ ফাইল
+              </span>
             </div>
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-              জিপিএফ চূড়ান্ত উত্তোলন-ইনপুট ড্যাশবোর্ড
-            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              নিবন্ধিত শিক্ষক ও কর্মচারীর চূড়ান্ত উত্তোলন ফাইল প্রস্তুত ও সংরক্ষণ
+            </p>
           </div>
         </div>
       </div>

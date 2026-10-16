@@ -189,17 +189,28 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
   );
 
   return (
-    <div className="mx-auto w-full max-w-[210mm] bg-slate-900 border border-slate-700/80 rounded-2xl shadow-xl overflow-hidden mb-8">
-      {/* Top Action & Navigation Bar */}
-      <div className="bg-slate-850 px-4 sm:px-6 py-3.5 border-b border-slate-700 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-2.5">
+    <div className="mx-auto w-full max-w-[210mm] bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8">
+      {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
+          Same card shell, title, count badge and "আনলিমিটেড সেইভ ফাইল" badge so
+          all four GPF apps present one identical input dashboard. */}
+      <div className="px-4 sm:px-5 py-4 border-b border-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
             <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-              জিপিএফ ফেরতযোগ্য অগ্রিম উত্তোলন-ইনপুট ড্যাশবোর্ড
-            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-bold text-white tracking-tight">
+                জিপিএফ ফেরতযোগ্য অগ্রিম উত্তোলন-ইনপুট ড্যাশবোর্ড
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                আনলিমিটেড সেইভ ফাইল
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              নিবন্ধিত শিক্ষক ও কর্মচারীর ফেরতযোগ্য অগ্রিম উত্তোলন ফাইল প্রস্তুত ও সংরক্ষণ
+            </p>
           </div>
         </div>
       </div>
@@ -207,17 +218,9 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
       {/* Main Table */}
       <div className="overflow-x-auto p-2 sm:p-4 bg-[#080d1e]">
         <table className="w-full border-collapse text-sm border border-slate-800 rounded-xl overflow-hidden">
-          {/* Main Title Row */}
+          {/* Header Columns (the title lives in the header bar above, exactly
+              as in app4 — so it is not repeated here). */}
           <thead>
-            <tr>
-              <th
-                colSpan={5}
-                className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-emerald-300 py-3.5 px-4 text-center text-base sm:text-lg font-bold tracking-wide border-b border-emerald-500/30"
-              >
-                জিপিএফ ফেরতযোগ্য অগ্রিম উত্তোলন-ইনপুট ড্যাশবোর্ড
-              </th>
-            </tr>
-            {/* Header Columns */}
             <tr className="border-b border-slate-800 bg-[#0f172a]">
               <th className="bg-[#0f172a] text-slate-300 py-2.5 px-3 w-14 text-center font-bold text-xs sm:text-sm border-r border-slate-800">
                 ক্র: নং

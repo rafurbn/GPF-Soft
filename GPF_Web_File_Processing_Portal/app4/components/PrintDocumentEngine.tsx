@@ -330,7 +330,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         </div>
 
         <div className="mb-2 text-xs space-y-1 text-justify leading-relaxed">
-          <div className="underline">প্রত্যায়নসমূহ</div>
+          <div className="underline text-center">প্রত্যয়নসমূহ</div>
           <p>
             ১। প্রত্যায়ন করা যাইতেছে যে এই বিলে গৃহীত টাকা প্রকৃত প্রাপকদের মধ্যে বিলি করা হইয়াছে এবং প্রত্যেক ২০০ টাকার উপর প্রদানের ক্ষেত্রে রেভিনিউ স্ট্যাম্প লাগাইয়া সেগুলি যথাযথভাবে বাতিলপূর্বক আমার অফিসে রক্ষিত প্রাপ্তি বহিতে প্রাপ্তির রশিদ গ্রহণ করা হইয়াছে।
           </p>

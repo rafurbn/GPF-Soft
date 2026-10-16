@@ -11,6 +11,7 @@ import {
   HelpCircle, 
   Phone, 
   Mail,
+  MapPin,
   FileSpreadsheet, 
   FileText, 
   Sparkles, 
@@ -44,7 +45,7 @@ interface PortalDesktopSignInViewProps {
   currentUser: UserSession | null;
   isLoggedIn: boolean;
   onLogin: (loginId: string, password: string) => Promise<void>;
-  onOpenRegistration: () => void;
+  onOpenRegistration?: () => void;
   onLogout: () => void;
   onOpenPasswordModal: () => void;
   onNavigateToApp: (tab: ActiveAppTab) => void;
@@ -170,97 +171,143 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
   const divisions = useMemo(() => getAllDivisions(), []);
 
   const [division, setDivision] = useState<string>(() => {
-    return (typeof window !== 'undefined' && localStorage.getItem('gpf-active-upazila-division')) || 'সিলেট';
+    if (typeof window === 'undefined') return 'Sylhet';
+    const storedEn = localStorage.getItem('gpf-active-upazila-division-en');
+    if (storedEn) return storedEn;
+    const storedBn = localStorage.getItem('gpf-active-upazila-division');
+    if (storedBn) {
+      const match = getAllDivisions().find((d) => d.bn === storedBn || d.en.toLowerCase() === storedBn.toLowerCase());
+      if (match) return match.en;
+    }
+    return 'Sylhet';
   });
+
   const [district, setDistrict] = useState<string>(() => {
-    return (typeof window !== 'undefined' && localStorage.getItem('gpf-active-upazila-district')) || 'সিলেট';
+    if (typeof window === 'undefined') return 'Sylhet';
+    const storedEn = localStorage.getItem('gpf-active-upazila-district-en');
+    if (storedEn) return storedEn;
+    const storedBn = localStorage.getItem('gpf-active-upazila-district');
+    if (storedBn) return storedBn;
+    return 'Sylhet';
   });
-  const [upazila, setUpazila] = useState<string>(() => {
-    return (typeof window !== 'undefined' && localStorage.getItem('gpf-active-upazila-name')) || 'বিয়ানীবাজার';
+
+  const [upazilaCode, setUpazilaCode] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'Bea002';
+    return localStorage.getItem('gpf-active-upazila-code') || 'Bea002';
   });
+
   const [email, setEmail] = useState<string>(() => {
-    return (typeof window !== 'undefined' && localStorage.getItem('gpf-active-user-email')) || '';
-  });
-  const [upazilaId, setUpazilaId] = useState<string>(() => {
-    return (typeof window !== 'undefined' && localStorage.getItem('gpf-active-upazila-code')) || '10101';
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('gpf-active-user-email') || '';
   });
 
-  // Lock status for the 4 settings
-  const [isDivisionLocked, setIsDivisionLocked] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('gpf-lock-division') === 'false' ? false : true;
-  });
-  const [isDistrictLocked, setIsDistrictLocked] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('gpf-lock-district') === 'false' ? false : true;
-  });
-  const [isUpazilaLocked, setIsUpazilaLocked] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('gpf-lock-upazila') === 'false' ? false : true;
-  });
-  const [isEmailLocked, setIsEmailLocked] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('gpf-lock-email') === 'false' ? false : true;
+  // Lock status: default to true so it stays locked permanently once set
+  const [isRegionLocked, setIsRegionLocked] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = localStorage.getItem('gpf-lock-region');
+    if (stored === 'false') return false;
+    return true; // default locked permanently
   });
 
-  // Filtered districts based on selected division
-  const currentDistricts = useMemo(() => {
-    const divObj = divisions.find((d) => d.bn === division || d.en.toLowerCase() === division.toLowerCase());
-    return getDistrictsByDivision(divObj ? divObj.en : undefined);
-  }, [division, divisions]);
-
-  // Filtered upazilas based on selected district
-  const currentUpazilas = useMemo(() => {
-    const all = getAllUpazilas();
-    if (!district) return all;
-    return all.filter(
-      (u) =>
-        u.districtBn === district ||
-        u.district.toLowerCase() === district.toLowerCase()
+  // Matched division object
+  const selectedDivisionObj = useMemo(() => {
+    return (
+      divisions.find((d) => d.en.toLowerCase() === division.toLowerCase() || d.bn === division) ||
+      divisions.find((d) => d.en === 'Sylhet') ||
+      divisions[0]
     );
-  }, [district]);
+  }, [divisions, division]);
+
+  // Districts for current division
+  const currentDistricts = useMemo(() => {
+    return getDistrictsByDivision(selectedDivisionObj?.en);
+  }, [selectedDivisionObj]);
+
+  // Matched district object
+  const selectedDistrictObj = useMemo(() => {
+    return (
+      currentDistricts.find((d) => d.en.toLowerCase() === district.toLowerCase() || d.bn === district) ||
+      currentDistricts[0]
+    );
+  }, [currentDistricts, district]);
+
+  // Upazilas for current division and district
+  const currentUpazilas = useMemo(() => {
+    if (!selectedDivisionObj || !selectedDistrictObj) return [];
+    return getAllUpazilas().filter(
+      (u) =>
+        u.division.toLowerCase() === selectedDivisionObj.en.toLowerCase() &&
+        (u.district.toLowerCase() === selectedDistrictObj.en.toLowerCase() || u.districtBn === selectedDistrictObj.bn)
+    );
+  }, [selectedDivisionObj, selectedDistrictObj]);
+
+  // Selected upazila record
+  const selectedRegion = useMemo(() => {
+    return (
+      currentUpazilas.find((u) => u.defaultId.toLowerCase() === upazilaCode.toLowerCase()) ||
+      currentUpazilas[0] ||
+      null
+    );
+  }, [currentUpazilas, upazilaCode]);
 
   // Auto-persist and link context to all 4 apps via localStorage & persistUpazilaContext
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('gpf-active-upazila-division', division);
-    localStorage.setItem('gpf-active-upazila-district', district);
-    localStorage.setItem('gpf-active-upazila-name', upazila);
-    localStorage.setItem('gpf-active-user-email', email);
-    localStorage.setItem('gpf-active-upazila-code', upazilaId);
+    if (typeof window === 'undefined' || !selectedRegion) return;
+    localStorage.setItem('gpf-active-upazila-division-en', selectedRegion.division);
+    localStorage.setItem('gpf-active-upazila-division', selectedRegion.divisionBn);
+    localStorage.setItem('gpf-active-upazila-district-en', selectedRegion.district);
+    localStorage.setItem('gpf-active-upazila-district', selectedRegion.districtBn);
+    localStorage.setItem('gpf-active-upazila-name', selectedRegion.upazilaBn);
+    localStorage.setItem('gpf-active-upazila-code', selectedRegion.defaultId);
+    if (email) {
+      localStorage.setItem('gpf-active-user-email', email);
+    }
 
     persistUpazilaContext({
-      upazila_code: upazilaId,
-      upazila_name_bn: upazila,
-      district_name_bn: district,
-      division_name_bn: division,
+      upazila_code: selectedRegion.defaultId,
+      upazila_name_bn: selectedRegion.upazilaBn,
+      district_name_bn: selectedRegion.districtBn,
+      division_name_bn: selectedRegion.divisionBn,
       email: email,
     });
-  }, [division, district, upazila, email, upazilaId]);
+  }, [selectedRegion, email]);
 
-  const handleUpazilaChange = (val: string) => {
-    setUpazila(val);
-    const matched = UPAZILA_DATABASE.find(
-      (u) => u.upazilaBn === val.trim() || u.upazila.toLowerCase() === val.trim().toLowerCase()
+  const handleDivisionChange = (newDivEn: string) => {
+    setDivision(newDivEn);
+    const newDistricts = getDistrictsByDivision(newDivEn);
+    const firstDistrict = newDistricts[0]?.en || '';
+    setDistrict(firstDistrict);
+    const newUpazilas = getAllUpazilas().filter(
+      (u) => u.division.toLowerCase() === newDivEn.toLowerCase() && u.district.toLowerCase() === firstDistrict.toLowerCase()
     );
-    if (matched) {
-      setUpazilaId(matched.defaultId);
+    const firstUpazila = newUpazilas[0];
+    if (firstUpazila) {
+      setUpazilaCode(firstUpazila.defaultId);
     }
   };
 
-  const toggleLock = (field: 'division' | 'district' | 'upazila' | 'email') => {
-    if (field === 'division') {
-      const next = !isDivisionLocked;
-      setIsDivisionLocked(next);
-      localStorage.setItem('gpf-lock-division', String(next));
-    } else if (field === 'district') {
-      const next = !isDistrictLocked;
-      setIsDistrictLocked(next);
-      localStorage.setItem('gpf-lock-district', String(next));
-    } else if (field === 'upazila') {
-      const next = !isUpazilaLocked;
-      setIsUpazilaLocked(next);
-      localStorage.setItem('gpf-lock-upazila', String(next));
-    } else if (field === 'email') {
-      const next = !isEmailLocked;
-      setIsEmailLocked(next);
-      localStorage.setItem('gpf-lock-email', String(next));
+  const handleDistrictChange = (newDistEn: string) => {
+    setDistrict(newDistEn);
+    const newUpazilas = getAllUpazilas().filter(
+      (u) =>
+        u.division.toLowerCase() === selectedDivisionObj.en.toLowerCase() &&
+        (u.district.toLowerCase() === newDistEn.toLowerCase() || u.districtBn === newDistEn)
+    );
+    const firstUpazila = newUpazilas[0];
+    if (firstUpazila) {
+      setUpazilaCode(firstUpazila.defaultId);
+    }
+  };
+
+  const handleUpazilaChange = (newCode: string) => {
+    setUpazilaCode(newCode);
+  };
+
+  const toggleRegionLock = () => {
+    const nextLocked = !isRegionLocked;
+    setIsRegionLocked(nextLocked);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gpf-lock-region', String(nextLocked));
     }
   };
 
@@ -304,9 +351,12 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 
   const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const effectiveLoginId = upazilaId.trim() || email.trim();
+    // The permanent upazila ID is ALWAYS the login identity. The Recovery email box
+    // only supplies the address for OTP / password recovery - it must never replace
+    // the ID here, or a leftover address in localStorage would hijack the sign-in.
+    const effectiveLoginId = (selectedRegion?.defaultId || upazilaCode).trim();
     if (!effectiveLoginId) {
-      setErrorMsg('উপজেলা ID অথবা ইমেইল পাওয়া যায়নি।');
+      setErrorMsg('উপজেলা ID পাওয়া যায়নি। অনুগ্রহ করে পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।');
       return;
     }
     if (!password.trim()) {
@@ -648,200 +698,151 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                     </div>
                   )}
 
-                  {/* ১. বিভাগের নাম */}
-                  <div className="flex flex-col items-center">
-                    <div className="w-full relative">
-                      <input
-                        type="text"
-                        list="division-options"
-                        value={division}
-                        onChange={(e) => setDivision(e.target.value)}
-                        readOnly={isDivisionLocked}
-                        placeholder="বিভাগের নাম লিখুন"
-                        className={`w-full py-2.5 px-4 text-center rounded-xl text-sm sm:text-base font-bold transition-all shadow-inner tracking-wide ${
-                          isDivisionLocked
-                            ? 'bg-[#0a1526]/90 border border-slate-700/60 text-slate-300 cursor-not-allowed select-none'
-                            : 'bg-[#0e1d35] border border-emerald-500/70 text-white focus:outline-hidden focus:ring-1 focus:ring-emerald-400'
-                        }`}
-                        style={{
-                          textShadow: '0 2px 4px rgba(0,0,0,0.7)',
-                          fontFamily: "'Hind Siliguri', 'SolaimanLipi', sans-serif",
-                        }}
-                      />
+                  {/* ১. বিভাগ, জেলা ও উপজেলা সিলেকশন ব্লক (লকড বা ড্রপডাউন) */}
+                  {isRegionLocked ? (
+                    <div className="rounded-xl border border-amber-600/50 bg-amber-950/25 p-3.5 text-xs text-amber-100 shadow-inner">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-300">
+                          <Lock className="w-3.5 h-3.5 text-amber-400" />
+                          <span>কর্মরত উপজেলা ও জেলা (লকড ও স্থায়ী)</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={toggleRegionLock}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-white bg-amber-900/40 hover:bg-amber-900/60 border border-amber-700/60 px-2 py-0.5 rounded-lg transition cursor-pointer"
+                          title="বিভাগ, জেলা ও উপজেলা পরিবর্তন করতে আনলক করুন"
+                        >
+                          <Unlock className="w-3 h-3 text-amber-300" />
+                          <span>আনলক করুন</span>
+                        </button>
+                      </div>
+                      <div className="rounded-lg bg-slate-950/90 border border-slate-800 px-3.5 py-2.5 font-bold text-white text-sm sm:text-base tracking-wide flex items-center justify-between">
+                        <span>
+                          {selectedRegion?.divisionBn || 'সিলেট'} / {selectedRegion?.districtBn || 'সিলেট'} / {selectedRegion?.upazilaBn || 'বিয়ানীবাজার'}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 rounded">
+                          {selectedRegion?.defaultId || upazilaCode}
+                        </span>
+                      </div>
+                      <p className="mt-1.5 text-[10px] text-amber-300/80">
+                        ✓ বিভাগ, জেলা ও উপজেলা লক করা থাকায় এটি স্থায়ী থাকবে, পরবর্তীতে আর এন্ট্রি দিতে হবে না।
+                      </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => toggleLock('division')}
-                      className="mt-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer flex items-center justify-center gap-1 py-0.5 px-2"
-                    >
-                      {isDivisionLocked ? (
-                        <>
-                          <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>লকড (আনলক করতে ক্লিক করুন)</span>
-                        </>
-                      ) : (
-                        <>
-                          <Unlock className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <div className="space-y-2.5 rounded-xl border border-slate-700/80 bg-slate-950/60 p-3.5 shadow-inner">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>কর্মরত উপজেলা ও জেলা নির্বাচন করুন</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={toggleRegionLock}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-white bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-700/60 px-2.5 py-1 rounded-lg transition cursor-pointer"
+                        >
+                          <Lock className="w-3 h-3 text-emerald-400" />
                           <span>লক করে দিন</span>
-                        </>
-                      )}
-                    </button>
+                        </button>
+                      </div>
+
+                      {/* বিভাগ ড্রপডাউন */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">বিভাগ</label>
+                        <select
+                          value={selectedDivisionObj?.en || ''}
+                          onChange={(e) => handleDivisionChange(e.target.value)}
+                          className="w-full rounded-xl border border-slate-700 bg-[#0a1526] px-3 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-hidden focus:border-emerald-500 shadow-inner"
+                        >
+                          {divisions.map((d) => (
+                            <option key={d.en} value={d.en}>
+                              {d.bn} ({d.en})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* জেলা ড্রপডাউন */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">জেলা</label>
+                        <select
+                          value={selectedDistrictObj?.en || ''}
+                          onChange={(e) => handleDistrictChange(e.target.value)}
+                          className="w-full rounded-xl border border-slate-700 bg-[#0a1526] px-3 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-hidden focus:border-emerald-500 shadow-inner"
+                        >
+                          {currentDistricts.map((d) => (
+                            <option key={d.en} value={d.en}>
+                              {d.bn} ({d.en})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* উপজেলা ড্রপডাউন */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">উপজেলা</label>
+                        <select
+                          value={selectedRegion?.defaultId || ''}
+                          onChange={(e) => handleUpazilaChange(e.target.value)}
+                          className="w-full rounded-xl border border-slate-700 bg-[#0a1526] px-3 py-2 text-xs sm:text-sm font-semibold text-white focus:outline-hidden focus:border-emerald-500 shadow-inner"
+                        >
+                          {currentUpazilas.map((u) => (
+                            <option key={u.defaultId} value={u.defaultId}>
+                              {u.upazilaBn} ({u.defaultId})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={toggleRegionLock}
+                        className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-xs transition cursor-pointer shadow-sm"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-white" />
+                        <span>বিভাগ, জেলা ও উপজেলা লক করে দিন (স্থায়ী থাকবে)</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ২. আপনার login ID (ডিফল্ট ও স্থায়ী) */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-3 shadow-inner">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400 font-medium">আপনার login ID</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800/60 text-emerald-400 font-semibold">
+                        ডিফল্ট ও অপরিবর্তনীয়
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-400 shrink-0">
+                        <KeyRound className="w-4 h-4" />
+                      </div>
+                      <span className="font-mono text-xl sm:text-2xl font-extrabold tracking-wider text-emerald-400">
+                        {selectedRegion?.defaultId || upazilaCode}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* ২. জেলার নাম */}
-                  <div className="flex flex-col items-center">
-                    <div className="w-full relative">
-                      <input
-                        type="text"
-                        list="district-options"
-                        value={district}
-                        onChange={(e) => setDistrict(e.target.value)}
-                        readOnly={isDistrictLocked}
-                        placeholder="জেলার নাম লিখুন"
-                        className={`w-full py-2.5 px-4 text-center rounded-xl text-sm sm:text-base font-bold transition-all shadow-inner tracking-wide ${
-                          isDistrictLocked
-                            ? 'bg-[#0a1526]/90 border border-slate-700/60 text-slate-300 cursor-not-allowed select-none'
-                            : 'bg-[#0e1d35] border border-emerald-500/70 text-white focus:outline-hidden focus:ring-1 focus:ring-emerald-400'
-                        }`}
-                        style={{
-                          textShadow: '0 2px 4px rgba(0,0,0,0.7)',
-                          fontFamily: "'Hind Siliguri', 'SolaimanLipi', sans-serif",
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => toggleLock('district')}
-                      className="mt-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer flex items-center justify-center gap-1 py-0.5 px-2"
-                    >
-                      {isDistrictLocked ? (
-                        <>
-                          <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>লকড (আনলক করতে ক্লিক করুন)</span>
-                        </>
-                      ) : (
-                        <>
-                          <Unlock className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>লক করে দিন</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* ৩. উপজেলার নাম */}
-                  <div className="flex flex-col items-center">
-                    <div className="w-full relative">
-                      <input
-                        type="text"
-                        list="upazila-options"
-                        value={upazila}
-                        onChange={(e) => handleUpazilaChange(e.target.value)}
-                        readOnly={isUpazilaLocked}
-                        placeholder="উপজেলার নাম লিখুন"
-                        className={`w-full py-2.5 px-4 text-center rounded-xl text-sm sm:text-base font-bold transition-all shadow-inner tracking-wide ${
-                          isUpazilaLocked
-                            ? 'bg-[#0a1526]/90 border border-slate-700/60 text-slate-300 cursor-not-allowed select-none'
-                            : 'bg-[#0e1d35] border border-emerald-500/70 text-white focus:outline-hidden focus:ring-1 focus:ring-emerald-400'
-                        }`}
-                        style={{
-                          textShadow: '0 2px 4px rgba(0,0,0,0.7)',
-                          fontFamily: "'Hind Siliguri', 'SolaimanLipi', sans-serif",
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => toggleLock('upazila')}
-                      className="mt-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer flex items-center justify-center gap-1 py-0.5 px-2"
-                    >
-                      {isUpazilaLocked ? (
-                        <>
-                          <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>লকড (আনলক করতে ক্লিক করুন)</span>
-                        </>
-                      ) : (
-                        <>
-                          <Unlock className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>লক করে দিন</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* ৪. ই-মেইল */}
-                  <div className="flex flex-col items-center">
-                    <div className="w-full relative">
+                  {/* ৩. Recovery email */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      Recovery email
+                    </label>
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center absolute left-1.5 top-1/2 -translate-y-1/2">
+                        <Mail className="w-4 h-4 text-emerald-400" />
+                      </div>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        readOnly={isEmailLocked}
-                        placeholder="ই-মেইল"
-                        className={`w-full py-2.5 px-4 text-center rounded-xl text-sm sm:text-base font-bold transition-all shadow-inner tracking-wide ${
-                          isEmailLocked
-                            ? 'bg-[#0a1526]/90 border border-slate-700/60 text-slate-300 cursor-not-allowed select-none'
-                            : 'bg-[#0e1d35] border border-emerald-500/70 text-white focus:outline-hidden focus:ring-1 focus:ring-emerald-400'
-                        }`}
-                        style={{
-                          textShadow: '0 2px 4px rgba(0,0,0,0.7)',
-                          fontFamily: "'Hind Siliguri', 'SolaimanLipi', sans-serif",
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => toggleLock('email')}
-                      className="mt-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer flex items-center justify-center gap-1 py-0.5 px-2"
-                    >
-                      {isEmailLocked ? (
-                        <>
-                          <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>লকড (আনলক করতে ক্লিক করুন)</span>
-                        </>
-                      ) : (
-                        <>
-                          <Unlock className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>লক করে দিন</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Datalists for Combobox Auto-Suggest */}
-                  <datalist id="division-options">
-                    {divisions.map((d) => (
-                      <option key={d.en} value={d.bn} />
-                    ))}
-                  </datalist>
-                  <datalist id="district-options">
-                    {currentDistricts.map((d) => (
-                      <option key={d.en} value={d.bn} />
-                    ))}
-                  </datalist>
-                  <datalist id="upazila-options">
-                    {currentUpazilas.map((u) => (
-                      <option key={u.defaultId} value={u.upazilaBn} />
-                    ))}
-                  </datalist>
-
-                  {/* ৫. উপজেলা login ID (ডিফল্ট ও স্থায়ী) */}
-                  <div>
-                    <div className="relative">
-                      <div className="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center absolute left-1.5 top-1/2 -translate-y-1/2">
-                        <KeyRound className="w-4 h-4 text-emerald-400" />
-                      </div>
-                      <input
-                        type="text"
-                        value={upazilaId}
-                        readOnly
-                        placeholder="উপজেলা ID অথবা ইমেইল"
-                        className="w-full pl-11 pr-3 py-2.5 text-xs sm:text-sm bg-[#081224]/90 border border-slate-700/80 rounded-xl font-bold font-mono text-emerald-300 cursor-not-allowed select-none shadow-inner"
-                        title="উপজেলা আইডিটি ডিফল্ট — এটি সবসময়ের জন্য প্রদর্শিত থাকবে"
+                        placeholder="আপনার ইমেইল ঠিকানা (যেমন: rafurbn@gmail.com)"
+                        autoComplete="email"
+                        className="w-full pl-11 pr-3 py-2.5 text-xs sm:text-sm bg-[#0a1526] border border-slate-700/80 rounded-xl font-medium text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 shadow-inner"
                       />
                     </div>
                   </div>
 
-                  {/* ৬. গোপন পাসওয়ার্ড */}
+                  {/* ৪. গোপন পাসওয়ার্ড */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-xs font-bold text-slate-300">
@@ -901,7 +902,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                     </div>
                   </div>
 
-                  {/* ৭. শর্তাবলী চেকবক্স */}
+                  {/* ৫. শর্তাবলী চেকবক্স */}
                   <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 shadow-2xs">
                     <label className="flex items-start gap-2.5 text-slate-300 text-xs cursor-pointer select-none">
                       <input
@@ -916,7 +917,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                     </label>
                   </div>
 
-                  {/* ৮. সাইন ইন বাটন */}
+                  {/* ৬. সাইন ইন বাটন */}
                   <button
                     type="submit"
                     disabled={isSubmitting || !agreedTerms}
@@ -924,15 +925,6 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                   >
                     <span>{isSubmitting ? 'যাচাই হচ্ছে...' : 'সাইন ইন করুন'}</span>
                     <ArrowRight className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onOpenRegistration}
-                    className="group w-full rounded-xl border border-emerald-500/60 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 px-5 py-3.5 text-sm sm:text-base font-extrabold text-white shadow-lg shadow-emerald-950/50 transition-all duration-200 hover:from-emerald-500 hover:via-emerald-400 hover:to-teal-400 hover:shadow-emerald-900/60 hover:scale-[1.02] active:scale-98 cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <Sparkles className="h-5 w-5 text-amber-300 group-hover:animate-pulse" />
-                    <span>প্রথমে উপজেলা আইডি তৈরি করুন</span>
-                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </button>
                 </form>
               </div>
@@ -952,7 +944,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
         </div>
       </div>
 
-      {/* 
+      {/*
         ========================================================================
         3. FOOTER
         সার্বক্ষণিক তদারকি ও প্রধান এডমিন: রফিকুল ইসলাম • সর্বস্বত্ব সংরক্ষিত।
@@ -983,7 +975,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
       {/* Forgot Password OTP Modal */}
       {showForgotOtpModal && (
         <ForgotPasswordOtpModal
-          initialEmail=""
+          initialEmail={email.trim()}
           onClose={() => setShowForgotOtpModal(false)}
           onSuccessReset={() => {
             setPassword('');

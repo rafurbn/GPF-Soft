@@ -73,8 +73,8 @@ export default function App() {
   // Open a sub-app as a real page navigation (MPA), not an in-tab React switch.
   const openSubApp = (tab: SubAppRoute) => {
     if (currentUser) persistUpazilaContext(currentUser);
-    // `replace` keeps the sub-app out of the history stack so the browser Back
-    // button returns to the dashboard without re-opening the sub-app.
+    // A real navigation keeps the sub-app out of the dashboard's React state; the
+    // browser Back button then returns to the dashboard without re-opening the app.
     window.location.assign(SUB_APP_URLS[tab]);
   };
 
@@ -129,13 +129,13 @@ export default function App() {
   };
 
   // Signs in through Supabase Auth: an email is verified by Supabase itself,
-  // while a upazila ID is resolved by the sign-in-by-upazila edge function.
+  // while a upazila ID is resolved by the sign-in-by-upazila edge function or stored candidate email.
   const signInWithSupabase = async (identifier: string, password: string) => {
     if (!supabase) {
       throw new Error('Supabase Auth সংযোগ প্রস্তুত নয়। আবার চেষ্টা করুন।');
     }
 
-    // An email address is verified by Supabase Auth itself, so it signs in directly.
+    // 1. Direct email sign in if identifier contains @
     if (identifier.includes('@')) {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: identifier,
@@ -152,7 +152,24 @@ export default function App() {
       return;
     }
 
-    // A upazila ID is resolved to its verified email by the sign-in-by-upazila edge function.
+    // 2. Candidate email check from stored session/input
+    const candidateEmail = typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-user-email') : '';
+    if (candidateEmail && candidateEmail.includes('@')) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: candidateEmail.trim(),
+        password,
+      });
+      if (!error && data.user) {
+        try {
+          await applySignedInUser(data.user);
+          return;
+        } catch {
+          // Continue to edge function
+        }
+      }
+    }
+
+    // 3. A upazila ID is resolved to its verified email by the sign-in-by-upazila edge function.
     const { data: tokenData, error: loginError, response } = await supabase.functions.invoke<{
       access_token?: string;
       refresh_token?: string;

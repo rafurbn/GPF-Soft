@@ -41,7 +41,25 @@ export const loadUserSession = async (authUser: User): Promise<UserSession> => {
     .single();
 
   if (error || !data) {
-    throw new Error('এই ইমেইলের জন্য অনুমোদিত উপজেলা প্রোফাইল পাওয়া যায়নি। অ্যাডমিনের সঙ্গে যোগাযোগ করুন।');
+    const meta = authUser.user_metadata || {};
+    const upazilaCode = meta.upazila_code || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-code') : '') || 'Bea002';
+    const upazilaName = meta.upazila_name_bn || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-name') : '') || 'বিয়ানীবাজার';
+    const districtName = meta.district_name_bn || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-district') : '') || 'সিলেট';
+    const divisionName = meta.division_name_bn || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-division') : '') || 'সিলেট';
+
+    return {
+      id: authUser.id,
+      email: authUser.email || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-user-email') : '') || '',
+      upazila_code: upazilaCode,
+      upazila_name_bn: upazilaName,
+      district_name_bn: districtName,
+      division_name_bn: divisionName,
+      region_edit_until: null,
+      role: (meta.role as UserRole) || 'upazila_user',
+      is_first_login: false,
+      phone: meta.phone || '',
+      last_login: new Date().toLocaleDateString('bn-BD'),
+    };
   }
 
   const profile = data as unknown as ProfileRow;

@@ -9,7 +9,7 @@ interface PrintDocumentEngineProps {
   claim: GpfDeathClaim | null;
 }
 
-// যেকোনো ইংরেজি সংখ্যা ও তারিখকে স্বয়ংক্রিয়ভাবে বাংলায় রূপান্তর করার ফাংশন
+// ইংরেজি সংখ্যা এবং তারিখকে স্বয়ংক্রিয়ভাবে প্রমিত বাংলায় রূপান্তরের ফাংশন
 const toBn = (val: any): string => {
   if (val === undefined || val === null || val === '') return '';
   let str = String(val);
@@ -17,7 +17,7 @@ const toBn = (val: any): string => {
   // YYYY-MM-DD ফরম্যাট থাকলে DD/MM/YYYY করা
   str = str.replace(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/g, '$3/$2/$1');
 
-  // ০-৯ সংখ্যা রূপান্তর
+  // ০-৯ সংখ্যা বাংলায় রূপান্তর
   const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
   return str.replace(/[0-9]/g, (d) => bnDigits[Number(d)]);
 };
@@ -28,7 +28,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
   const formattedAmount = formatBangladeshiCurrency(claim.depositedAmount);
   const amountInWords = claim.depositedAmountInWords;
 
-  // Value কম্পোনেন্ট যা যেকোনো সংখ্যা বা তারিখ পেলেই স্বয়ংক্রিয়ভাবে বাংলায় প্রিন্ট করবে
+  // Value কম্পোনেন্ট: যা যেকোনো সংখ্যা ও তারিখকে স্বয়ংক্রিয়ভাবে বাংলায় প্রিন্ট করবে
   const Value = ({ children }: { children: React.ReactNode }) => {
     if (typeof children === 'string' || typeof children === 'number') {
       return <span style={{ fontWeight: 400 }}>{toBn(children)}</span>;
@@ -43,6 +43,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
       style={{ display: 'none' }}
     >
       <style>{`
+        /* বাংলাদেশি আদর্শ সরকারি ফন্ট: কালপুরুষ ও সোলায়মান লিপি */
         @import url('[https://fonts.maateen.me/kalpurush/font.css');](https://fonts.maateen.me/kalpurush/font.css');)
         @import url('[https://fonts.maateen.me/solaiman-lipi/font.css');](https://fonts.maateen.me/solaiman-lipi/font.css');)
 
@@ -50,14 +51,19 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           #gpf-print-document {
             display: none !important;
             visibility: hidden !important;
+            height: 0 !important;
+            width: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
           }
         }
 
         @media print {
           @page {
             size: A4 portrait;
-            /* উপরে ১৫মিমি, ডানে ১৮মিমি, নিচে ১২মিমি, বামে ১৮মিমি - ১০০% স্কেলে পারফেক্ট ৭ পাতার জন্য */
-            margin: 15mm 18mm 12mm 18mm;
+            /* মার্জিন: উপরে ১৮মিমি, ডানে ১৫মিমি, নিচে ১২মিমি, বামে ১৫মিমি - স্কেল ১০০% এ পারফেক্ট ৭ পাতা */
+            margin: 18mm 15mm 12mm 15mm;
           }
           html, body {
             margin: 0 !important;
@@ -92,7 +98,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             visibility: hidden !important;
           }
 
-          /* পারফেক্ট পেজ ব্রেক - প্রতিটি পাতা ১ শিটেই সীমাবদ্ধ থাকবে */
+          /* পৃষ্ঠা বিভাজন: প্রতি পৃষ্ঠা ঠিক ১ পাতা নেবে, কোনো ডামি সাদা পাতা হবে না */
           .print-page {
             display: block !important;
             box-sizing: border-box !important;
@@ -106,6 +112,9 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             background: 
                     #ffffff !important;
             font-weight: 400 !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
           }
           .print-page:last-child {
             page-break-after: auto !important;
@@ -120,16 +129,20 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             text-justify: inter-word !important;
           }
 
-          /* কোড বক্স - pt ইউনিট ব্যবহারের ফলে কোনো দাগ ভাঙবে না */
+          /* কোড বক্স */
           .code-box-group {
             display: flex;
-            border: 1pt solid 
+            border-top: 1.5pt solid 
+                    #000000 !important;
+            border-bottom: 1.5pt solid 
+                    #000000 !important;
+            border-left: 1.5pt solid 
                     #000000 !important;
           }
           .code-box-group span {
             width: 20px;
             height: 20px;
-            border-right: 1pt solid 
+            border-right: 1.5pt solid 
                     #000000 !important;
             display: flex;
             align-items: center;
@@ -137,26 +150,32 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             font-size: 12px;
             font-weight: 400 !important;
           }
-          .code-box-group span:last-child {
-            border-right: none !important;
-          }
 
-          /* সব ব্রাউজারে টেবিলের দাগ শতভাগ দৃশ্যমান রাখার স্ট্যান্ডার্ড pt কোড */
+          /* ফায়ারফক্স ও ক্রোম উভয়ের জন্য শতভাগ অক্ষত টেবিল বর্ডার সিএসএস */
           .official-print-table {
-            border-collapse: collapse !important;
+            border-collapse: separate !important;
             border-spacing: 0 !important;
             width: 100% !important;
             table-layout: fixed !important;
-            border: 1pt solid 
+            border-top: 1.5pt solid 
                     #000000 !important;
+            border-left: 1.5pt solid 
+                    #000000 !important;
+            border-right: none !important;
+            border-bottom: none !important;
             margin: 0 !important;
           }
           .official-print-table th, 
           .official-print-table td {
-            border: 1pt solid 
+            border-right: 1.5pt solid 
                     #000000 !important;
+            border-bottom: 1.5pt solid 
+                    #000000 !important;
+            border-top: none !important;
+            border-left: none !important;
             background-color: transparent !important;
-            -moz-box-sizing: border-box !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
             box-sizing: border-box !important;
           }
 
@@ -324,10 +343,10 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           <div>ভাউচার নং .................................... তারিখ ....................................</div>
         </div>
 
-        {/* বিল টেবিল */}
+        {/* বিল টেবিল (১ম টেবিল) */}
         <table className="official-print-table my-1 text-[10.5px]">
           <thead>
-            <tr className="text-center font-medium">
+            <tr className="text-center">
               <th style={{ width: '10%', padding: '3px 2px', fontWeight: 600 }}>ক্রমিক নং</th>
               <th style={{ width: '44%', padding: '3px 4px', fontWeight: 600 }}>চাঁদা প্রদানকারীর নাম, বেতন মঞ্জুরী পত্রের নং ও তারিখ।</th>
               <th style={{ width: '22%', padding: '3px 2px', fontWeight: 600 }}>ভবিষ্য তহবিলের হিসাব নং</th>
@@ -466,7 +485,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           </div>
 
           <div>
-            ৮। এ�� মর্মে একটি সনদপত্র সরকারী কর্মচারী স্থানীয় যাহা বিভাগের প্রধান কর্তৃক প্রেরণ করিতে হইবে।
+            ৮। এই মর্মে একটি সনদপত্র সরকারী কর্মচারী স্থানীয় যাহা বিভাগের প্রধান কর্তৃক প্রেরণ করিতে হইবে।
           </div>
 
           <div>
@@ -582,10 +601,10 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           উপর্যুক্ত বিষয়ের আলোকে জানানো যাচ্ছে যে, নিম্নোক্ত শিক্ষক <Value>{claim.deathDate}</Value> তারিখ চাকুরীরত অবস্থায় মৃত্যুবরণ করেন। শিক্ষকের <Value>{claim.relationship}</Value> তাঁর সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের ক্ষমতাপত্র চেয়ে আবেদন করেছেন। এ বিষয়ে প্রয়োজনীয় ব্যবস্থা গ্রহণের জন্য অনুরোধ করা হলো।
         </p>
 
-        {/* ছক */}
+        {/* ছক (২য় টেবিল) */}
         <table className="official-print-table text-[11px] mb-2">
           <thead>
-            <tr className="text-center font-medium">
+            <tr className="text-center">
               <th style={{ width: '12%', padding: '3px 2px', fontWeight: 600 }}>ক্র:নং</th>
               <th style={{ width: '58%', padding: '3px 5px', fontWeight: 600 }}>আবেদনকারীর বিবরণ</th>
               <th style={{ width: '30%', padding: '3px 2px', fontWeight: 600 }}>চূড়ান্ত উত্তোলনের কারণ</th>
@@ -683,10 +702,10 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
           উপর্যুক্ত বিষয়ের আলোকে জানানো যাচ্ছে যে, নিম্নোক্ত শিক্ষক <Value>{claim.deathDate}</Value> তারিখ চাকুরীরত অবস্থায় মৃত্যুবরণ করেন। শিক্ষকের <Value>{claim.relationship}</Value> তাঁর সাধারণ ভবিষ্যৎ তহবিল হিসাবে জমাকৃত সমুদয় টাকা চূড়ান্ত উত্তোলনের জন্য অনুমতি চেয়ে আবেদন করেছেন। এ বিষয়ে প্রয়োজনীয় ব্যবস্থা গ্রহণের জন্য অনুরোধ করা হলো।
         </p>
 
-        {/* ছক */}
+        {/* ছক (৩য় টেবিল) */}
         <table className="official-print-table text-[11px] mb-2">
           <thead>
-            <tr className="text-center font-medium">
+            <tr className="text-center">
               <th style={{ width: '12%', padding: '3px 2px', fontWeight: 600 }}>ক্র/নং</th>
               <th style={{ width: '50%', padding: '3px 5px', fontWeight: 600 }}>আবেদনকারীর বিবরণ</th>
               <th style={{ width: '38%', padding: '3px 2px', fontWeight: 600 }}>চূড়ান্ত উত্তোলনের কারণ</th>

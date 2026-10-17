@@ -80,57 +80,74 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   onReset,
   isEditing = false,
 }) => {
-  // Form fields
+    // Form fields
   // 1. সন: 2026, 2027, 2028
-  const [year, setYear] = useState<string>(initialData?.year || '2026');
+  const [year, setYear] = useState<string>(toBengaliNumber(initialData?.year || '2026'));
+  
   // 2. আবেদনের তারিখ
-  const [applicationDate, setApplicationDate] = useState<string>(initialData?.applicationDate || '16/03/2026');
+  const [applicationDate, setApplicationDate] = useState<string>(toBengaliNumber(initialData?.applicationDate || '16/03/2026'));
+  
   // 3. প্রাপক: একাধিক লাইনে লেখাযোগ্য ফিল্ড
   const [recipient, setRecipient] = useState<string>(
     initialData?.recipient || 'উপজেলা হিসাবরক্ষণ কর্মকর্তা\nবিয়ানীবাজার, সিলেট।'
   );
+  
   // 4. মৃত কর্মচারীর নাম
   const [deceasedEmployeeName, setDeceasedEmployeeName] = useState<string>(
     initialData?.deceasedEmployeeName || ''
   );
+  
   // 5. মৃত কর্মচারীর পদবী: প্রাক্তন সহকারী শিক্ষক, প্রাক্তন প্রধান শিক্ষক(চ:দা:) ও প্রাক্তন প্রধান শিক্ষক
   const [deceasedDesignation, setDeceasedDesignation] = useState<DesignationType>(
-    initialData?.deceasedDesignation || 'প্রাক্তন সহকারী শিক্ষক'
+    initialData?.deceasedDesignation || 'প্র প্রাক্তন সহকারী শিক্ষক'
   );
+  
   // 6. মৃত কর্মচারীর বিদ্যালয়ের নাম
   const [schoolName, setSchoolName] = useState<string>(initialData?.schoolName || '');
+  
   // 7. মৃত্যুর তারিখ
-  const [deathDate, setDeathDate] = useState<string>(initialData?.deathDate || '16/03/2026');
+  const [deathDate, setDeathDate] = useState<string>(toBengaliNumber(initialData?.deathDate || '16/03/2026'));
+  
   // 8. আবেদনকারীর নাম
   const [applicantName, setApplicantName] = useState<string>(initialData?.applicantName || '');
+  
   // 9. মৃত কর্মচারীর সাথে সম্পর্ক
   const [relationship, setRelationship] = useState<RelationshipType>(
     initialData?.relationship || 'স্ত্রী'
   );
-  // 10. জিপিএফ হিসাব নং
-  const [gpfAccountNo, setGpfAccountNo] = useState<string>(initialData?.gpfAccountNo || '১৩৬৮');
+  
+  // 10. জিপিএফ হিসাব নং (১৩৬৮ অলরেডি বাংলায় আছে, তবুও সুরক্ষার জন্য ফাংশন দেওয়া হলো)
+  const [gpfAccountNo, setGpfAccountNo] = useState<string>(toBengaliNumber(initialData?.gpfAccountNo || '১৩৬৮'));
+  
   // 11. জমাকৃত টাকার পরিমাণ
   const [depositedAmount, setDepositedAmount] = useState<string>(
-    initialData?.depositedAmount ? String(initialData.depositedAmount) : '300000'
+    toBengaliNumber(initialData?.depositedAmount ? String(initialData.depositedAmount) : '300000')
   );
+  
   // 12. জমাকৃত টাকা (কথায়)
   const [depositedAmountInWords, setDepositedAmountInWords] = useState<string>(
     initialData?.depositedAmountInWords || 'তিন লক্ষ টাকা মাত্র'
   );
+  
   // 13. আয়ন ব্যয়ন কর্মকর্তার নাম
   const [ddoName, setDdoName] = useState<string>(initialData?.ddoName || 'নৃপেন্দ্র নাথ সরকার');
+  
   // 14. আয়ন ব্যয়ন কর্মকর্তার পদবী
   const [ddoDesignation, setDdoDesignation] = useState<string>(
     initialData?.ddoDesignation || 'উপজেলা প্রাথমিক শিক্ষা অফিসার (চ:দা:)'
   );
+  
   // 15. উপজেলার নাম
   const [upazilaName, setUpazilaName] = useState<string>(initialData?.upazilaName || 'বিয়ানীবাজার');
+  
   // 16. জেলার নাম
   const [districtName, setDistrictName] = useState<string>(initialData?.districtName || 'সিলেট');
+  
   // 17. সংযুক্তি: শুধু 01(এক) খানা ও 02(দুই) খানা
   const [attachmentsCount, setAttachmentsCount] = useState<string>(
-    initialData?.attachmentsCount || '02(দুই) খানা'
+    toBengaliNumber(initialData?.attachmentsCount || '02(দুই) খানা')
   );
+
 
   // Template variables
   const [sanctionMemoNo, setSanctionMemoNo] = useState<string>(initialData?.sanctionMemoNo || '৪৭০/১(০৪)');

@@ -8,10 +8,11 @@
  * for apps that will be added later.
  */
 import React from 'react';
-import { BookmarkCheck, Sparkles, ChevronRight, Clock, Plus, Activity } from 'lucide-react';
+import { BookmarkCheck, Sparkles, ChevronRight, Clock, Plus, Activity, ShieldCheck, Lock } from 'lucide-react';
 import { ActiveAppTab, UserSession } from '../types';
+import { getAppMaintenanceStates, getRemoteMaintenanceState, hydrateMaintenanceStates } from '../lib/centralAdminStore';
 
-// ৩টি সক্রিয় এ্যাপ + ২টি খালি স্লট (ভবিষ্যতে এখানে নতুন এ্যাপ যোগ করা হবে)।
+// ৪টি সক্রিয় এ্যাপ + ১টি খালি স্লট (ভবিষ্যতে এখানে নতুন এ্যাপ যোগ করা হবে)।
 type LauncherApp = {
   id: string;
   no: string;
@@ -100,10 +101,8 @@ const APPS: LauncherApp[] = [
 
 interface OfficialDashboardProps {
   onNavigateToApp?: (tab: ActiveAppTab) => void;
-  /** The signed-in account; the user statistics panel is shown to the admin only. */
   currentUser?: UserSession | null;
-  /** Accounts included in the admin statistics (super admin accounts are excluded). */
- users?: UserSession[];
+  users?: UserSession[];
 }
 
 export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
@@ -111,7 +110,46 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
   currentUser,
   users = [],
 }) => {
-  const handleAppClick = (tab?: ActiveAppTab) => {
+  const [maintenanceStates, setMaintenanceStates] = React.useState(getAppMaintenanceStates());
+
+  React.useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const states = await hydrateMaintenanceStates();
+        if (active) setMaintenanceStates(states);
+      } catch {
+        // App opening still performs a server-side availability check.
+      }
+    };
+    void load();
+    const interval = window.setInterval(() => void load(), 30000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  const handleAppClick = async (appId: string, tab?: ActiveAppTab) => {
+    // Check maintenance lock
+    const localInfo = maintenanceStates.find((state) => state.appId === appId);
+    let lockInfo = {
+      isLocked: localInfo?.isLocked || false,
+      reason: localInfo?.lockReason || '',
+      appName: localInfo?.appName || '',
+    };
+    try {
+      const remoteLock = await getRemoteMaintenanceState(appId);
+      if (remoteLock) lockInfo = { ...lockInfo, isLocked: remoteLock.isLocked, reason: remoteLock.lockReason, appName: remoteLock.appName };
+    } catch {
+      window.alert('কেন্দ্রীয় রক্ষণাবেক্ষণ অবস্থা যাচাই করা যায়নি। পরে আবার চেষ্টা করুন।');
+      return;
+    }
+    if (lockInfo.isLocked) {
+      window.alert(`[${lockInfo.appName}] রক্ষণাবেক্ষণের জন্য সাময়িক বন্ধ রয়েছে।\nকারণ: ${lockInfo.reason}`);
+      return;
+    }
+
     if (tab === 'gpf_DeathClaim') {
       window.location.href = '/app4/index.html';
       return;
@@ -119,8 +157,6 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
     if (tab && onNavigateToApp) onNavigateToApp(tab);
   };
 
-  // ব্যবহারকারী-সংক্রান্ত পরিসংখ্যান শুধু এডমিন দেখে; সাধারণ উপজেলা ইউজার
-  // এই প্যানেলটি একেবারেই দেখে না।
   const isAdmin = currentUser?.role === 'super_admin';
   const upazilaAccounts = users.filter((user) => user.role !== 'super_admin');
   const stats = [
@@ -147,27 +183,44 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
           <div className="w-12 h-12 rounded-xl bg-[#0a1e22] border border-emerald-500/70 flex items-center justify-center flex-shrink-0 text-emerald-400">
             <BookmarkCheck className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-wide text-white">
-            এই পোর্টালে আপনাকে স্বাগতম
-          </h2>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-wide text-white">
+              এই পোর্টালে আপনাকে স্বাগতম
+            </h2>
+            <p className="text-xs text-slate-300 mt-0.5">
+              কর্মরত উপজেলা: <strong className="text-emerald-300">{currentUser?.upazila_name_bn}</strong>, {currentUser?.district_name_bn}
+            </p>
+          </div>
         </div>
 
-        {/* ব্যবহারকারী-সংক্রান্ত পরিসংখ্যান — শুধুমাত্র এডমিনের জন্য */}
+        {/* ব্যবহারকারী-সংক্রান্ত পরিসংখ্যান ও সুপার এডমিন কন্ট্রোল বাটন */}
         {isAdmin && (
-          <div className="flex items-center gap-4 sm:gap-6 px-4 py-2.5 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-            <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 border-r border-slate-800 pr-4">
-              <Activity className="w-4 h-4 text-emerald-400" />
-              <span>ব্যবহারকারী পরিসংখ্যান</span>
-            </div>
-            {stats.map((stat) => (
-              <div key={stat.id} className="flex items-center gap-2">
-                <span className={`w-1.5 h-6 rounded-full ${stat.dotClass}`} />
-                <div className="leading-tight">
-                  <div className="text-xl font-black text-white font-mono">{stat.value}</div>
-                  <div className="text-[10px] font-semibold text-slate-400 whitespace-nowrap">{stat.label}</div>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-4 sm:gap-6 px-4 py-2 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 border-r border-slate-800 pr-4">
+                <Activity className="w-4 h-4 text-emerald-400" />
+                <span>ইউজার পরিসংখ্যান</span>
               </div>
-            ))}
+              {stats.map((stat) => (
+                <div key={stat.id} className="flex items-center gap-2">
+                  <span className={`w-1.5 h-6 rounded-full ${stat.dotClass}`} />
+                  <div className="leading-tight">
+                    <div className="text-xl font-black text-white font-mono">{stat.value}</div>
+                    <div className="text-[10px] font-semibold text-slate-400 whitespace-nowrap">{stat.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onNavigateToApp?.('super_admin_suite')}
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-950/60 border border-indigo-400/40 flex items-center justify-center gap-2 cursor-pointer transition animate-pulse"
+            >
+              <ShieldCheck className="w-4 h-4 text-indigo-200" />
+              <span>Super Admin Suite</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
       </div>
@@ -181,25 +234,33 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
           </h3>
         </div>
         <span className="text-[11px] font-semibold text-slate-500 font-mono">
-          মোট ৫টি স্লট • ৩টি চালু
+          মোট ৫টি স্লট • ৪টি চালু
         </span>
       </div>
 
-      {/* ২-কলামের গ্রিড (৩টি সচল বাটন + ২টি খালি স্লট) */}
+      {/* ২-কলামের গ্রিড (৪টি সচল বাটন + ১টি খালি স্লট) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
         {APPS.map((app) => {
+          const lockedInfo = maintenanceStates.find((state) => state.appId === app.id) || {
+            isLocked: false,
+            lockReason: '',
+            appName: '',
+          };
+
           if (app.isActive && app.accent) {
             return (
               <button
                 key={app.id}
                 type="button"
-                onClick={() => handleAppClick(app.tab)}
-                className={`group w-full text-left p-4 rounded-2xl bg-[#0d1829]/90 hover:bg-[#112036] border border-slate-800/80 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg flex items-center justify-between gap-3 active:scale-[0.99] ${app.accent.hoverBorder}`}
+                onClick={() => handleAppClick(app.id, app.tab)}
+                className={`group w-full text-left p-4 rounded-2xl bg-[#0d1829]/90 hover:bg-[#112036] border border-slate-800/80 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg flex items-center justify-between gap-3 active:scale-[0.99] ${
+                  lockedInfo.isLocked ? 'border-rose-800/80 bg-rose-950/15' : app.accent.hoverBorder
+                }`}
               >
                 <div className="flex items-start gap-3 min-w-0">
                   {/* নম্বর ব্যাজ */}
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 border mt-0.5 ${app.accent.badge}`}>
-                    {app.no}
+                    {lockedInfo.isLocked ? <Lock className="w-4 h-4 text-rose-400" /> : app.no}
                   </div>
 
                   {/* এ্যাপের বিবরণ */}
@@ -208,12 +269,18 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
                       <span className={`font-bold text-sm sm:text-[15px] text-white ${app.accent.hoverTitle}`}>
                         {app.title}
                       </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-medium border ${app.accent.tag}`}>
-                        {app.badge}
-                      </span>
+                      {lockedInfo.isLocked ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-rose-950 text-rose-300 border border-rose-800">
+                          সাময়িক বন্ধ (রক্ষণাবেক্ষণ)
+                        </span>
+                      ) : (
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-medium border ${app.accent.tag}`}>
+                          {app.badge}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-400 group-hover:text-slate-300 line-clamp-2">
-                      {app.desc}
+                      {lockedInfo.isLocked ? lockedInfo.lockReason : app.desc}
                     </p>
                   </div>
                 </div>

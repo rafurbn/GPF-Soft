@@ -649,6 +649,16 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {currentUser.role === 'super_admin' && (
+                    <button
+                      type="button"
+                      onClick={() => onNavigateToApp('super_admin_suite')}
+                      className="px-3 py-2 rounded-xl text-[11px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400 transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-950/60 animate-pulse"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Super Admin Suite</span>
+                    </button>
+                  )}
                   {onOpenConditionNotice && (
                     <button
                       type="button"

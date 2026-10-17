@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import {  UserSession, ActiveAppTab } from './types';
+import { UserSession, ActiveAppTab } from './types';
 import { PortalDesktopSignInView } from './components/PortalDesktopSignInView';
 import { AccountRegistrationModal } from './components/AccountRegistrationModal';
 import { FirstTimePasswordModal } from './components/FirstTimePasswordModal';
 import { SuperAdminOverview } from './components/SuperAdminOverview';
+import { SuperAdminSuite } from './components/SuperAdminSuite';
+import { BroadcastNoticeMarquee } from './components/BroadcastNoticeMarquee';
 import { ArchitectureDocsView } from './components/ArchitectureDocsView';
 import { loadAllUserSessions, loadUserSession } from './lib/authProfile';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
-import { persistUpazilaContext, clearUpazilaContext, readUpazilaContext } from './lib/upazilaSession';
+import { persistUpazilaContext, clearUpazilaContext } from './lib/upazilaSession';
+import { registerActiveSession, addAuditLog, isCurrentSessionTerminated, isCurrentAccountActive, endCurrentSessionOnServer, touchCurrentSession } from './lib/centralAdminStore';
 import type { User } from '@supabase/supabase-js';
 
 // ---------------------------------------------------------------------------
@@ -94,6 +97,21 @@ export default function App() {
       try {
         const profile = await loadUserSession(data.session.user);
         if (!active) return;
+        if (profile.account_status && profile.account_status !== 'active') {
+          await client.auth.signOut();
+          return;
+        }
+        registerActiveSession({
+          userId: profile.id,
+          upazilaCode: profile.upazila_code,
+          upazilaNameBn: profile.upazila_name_bn,
+          email: profile.email,
+          role: profile.role,
+          loginTime: new Date().toLocaleTimeString('bn-BD'),
+          ipAddress: 'সার্ভার থেকে উপলভ্য নয়',
+          browser: typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome',
+          isCurrentSession: true,
+        });
         const accountUsers = profile.role === 'super_admin'
           ? await loadAllUserSessions()
           : [profile];
@@ -115,9 +133,64 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!currentUser || !supabase) return;
+    const client = supabase;
+    let active = true;
+    let checking = false;
+    const checkAccess = async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        const [terminated, accountActive] = await Promise.all([
+          isCurrentSessionTerminated(),
+          isCurrentAccountActive(),
+        ]);
+        if (!active) return;
+        if (!terminated && accountActive) {
+          await touchCurrentSession();
+          return;
+        }
+        try {
+          await endCurrentSessionOnServer();
+        } catch {
+          // Auth is still cleared if the server cannot close presence state.
+        }
+        await client.auth.signOut();
+        window.sessionStorage.removeItem('gpf-active-session-id');
+        clearUpazilaContext();
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+        setUsers([]);
+        setActiveTab('gpf_dashboard');
+      } catch {
+        // Keep the current screen during a transient network failure.
+      } finally {
+        checking = false;
+      }
+    };
+    const interval = window.setInterval(() => void checkAccess(), 15000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [currentUser?.id]);
+
   // Shared post-authentication step: load the approved profile and open the portal.
   const applySignedInUser = async (authUser: User) => {
     const profile = await loadUserSession(authUser);
+
+    // Check account status (মডিউল ১: এক ক্লিকে সাসপেন্ড বা ডিঅ্যাক্টিভেশন কার্যকর করা)
+    if (profile.account_status === 'suspended') {
+      throw new Error('আপনার উপজেলার অ্যাকাউন্টটি কেন্দ্রীয় অ্যাডমিন কর্তৃক সাময়িকভাবে স্থগিত (Suspended) রাখা হয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।');
+    }
+    if (profile.account_status === 'deactivated') {
+      throw new Error('আপনার উপজেলার অ্যাকাউন্টটি স্থায়ীভাবে নিষ্ক্রিয় (Deactivated) করা হয়েছে।');
+    }
+    if (profile.account_status === 'pending') {
+      throw new Error('আপনার অ্যাকাউন্টটি এখনো সক্রিয় করা হয়নি। অ্যাডমিনের সাথে যোগাযোগ করুন।');
+    }
+
     const accountUsers = profile.role === 'super_admin'
       ? await loadAllUserSessions()
       : [profile];
@@ -126,56 +199,42 @@ export default function App() {
     setUsers(accountUsers);
     setShowPasswordModal(profile.is_first_login);
     setShowRegistrationModal(false);
+
+    // Register active session & audit log (মডিউল ৩)
+    registerActiveSession({
+      userId: profile.id,
+      upazilaCode: profile.upazila_code,
+      upazilaNameBn: profile.upazila_name_bn,
+      email: profile.email,
+      role: profile.role,
+      loginTime: new Date().toLocaleTimeString('bn-BD'),
+      ipAddress: 'সার্ভার থেকে উপলভ্য নয়',
+      browser: typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome',
+      isCurrentSession: true,
+    });
+
+    addAuditLog({
+      eventType: 'login',
+      upazilaCode: profile.upazila_code,
+      email: profile.email,
+      description: `ব্যবহারকারী সফলভাবে সাইন-ইন করেছেন: ${profile.upazila_name_bn} (${profile.role === 'super_admin' ? 'সুপার এডমিন' : 'উপজেলা ইউজার'})`,
+      status: 'success',
+    });
   };
 
-  // Signs in through Supabase Auth: an email is verified by Supabase itself,
-  // while a upazila ID is resolved by the sign-in-by-upazila edge function or stored candidate email.
+  // All login identifiers go through the server function so lockouts and account status
+  // are enforced consistently for email and upazila-code sign-ins.
   const signInWithSupabase = async (identifier: string, password: string) => {
     if (!supabase) {
       throw new Error('Supabase Auth সংযোগ প্রস্তুত নয়। আবার চেষ্টা করুন।');
     }
 
-    // 1. Direct email sign in if identifier contains @
-    if (identifier.includes('@')) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: identifier,
-        password,
-      });
-      if (error || !data.user) throw new Error('ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।');
-
-      try {
-        await applySignedInUser(data.user);
-      } catch (profileError) {
-        await supabase.auth.signOut();
-        throw profileError;
-      }
-      return;
-    }
-
-    // 2. Candidate email check from stored session/input
-    const candidateEmail = typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-user-email') : '';
-    if (candidateEmail && candidateEmail.includes('@')) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: candidateEmail.trim(),
-        password,
-      });
-      if (!error && data.user) {
-        try {
-          await applySignedInUser(data.user);
-          return;
-        } catch {
-          // Continue to edge function
-        }
-      }
-    }
-
-    // 3. A upazila ID is resolved to its verified email by the sign-in-by-upazila edge function.
     const { data: tokenData, error: loginError, response } = await supabase.functions.invoke<{
       access_token?: string;
       refresh_token?: string;
       error?: string;
     }>('sign-in-by-upazila', {
-      body: { loginId: identifier, password },
+      body: { identifier, password },
     });
 
     if (loginError || !tokenData?.access_token || !tokenData?.refresh_token) {
@@ -197,26 +256,9 @@ export default function App() {
   };
 
   const handleLogin = async (loginId: string, password: string) => {
+    // Never infer privilege from user input or allow a localStorage-only session.
     if (!supabase || !isSupabaseConfigured) {
-      // Local fallback using active upazila selection from login page
-      const activeContext = readUpazilaContext();
-      const localUser: UserSession = {
-        id: 'local-session-' + (activeContext?.upazila_code || loginId || '10101'),
-        email: (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-user-email') : '') || loginId,
-        upazila_code: activeContext?.upazila_code || loginId || '10101',
-        upazila_name_bn: activeContext?.upazila_name_bn || 'বিয়ানীবাজার',
-        district_name_bn: activeContext?.district_name_bn || 'সিলেট',
-        division_name_bn: activeContext?.division_name_bn || 'সিলেট',
-        role: 'upazila_user',
-        is_first_login: false,
-        phone: '',
-        last_login: new Date().toLocaleDateString('bn-BD'),
-      };
-      setCurrentUser(localUser);
-      setIsLoggedIn(true);
-      setUsers([localUser]);
-      persistUpazilaContext(localUser);
-      return;
+      throw new Error('Supabase Auth সংযোগ প্রস্তুত নয়। সাইন-ইন করতে সার্ভার কনফিগার করতে হবে।');
     }
     await signInWithSupabase(loginId.trim(), password);
   };
@@ -278,7 +320,13 @@ export default function App() {
 
   // Handle Logout
   const handleLogout = async () => {
+    try {
+      await endCurrentSessionOnServer();
+    } catch {
+      // Always clear the local auth session, even if presence cleanup fails.
+    }
     await supabase?.auth.signOut();
+    window.sessionStorage.removeItem('gpf-active-session-id');
     // Drop the shared Upazila context so the sub-app pages can no longer open.
     clearUpazilaContext();
     setIsLoggedIn(false);
@@ -334,6 +382,9 @@ export default function App() {
 
   return (
     <div className="app-shell min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start p-2 sm:p-4 md:p-6 lg:p-8 font-sans selection:bg-emerald-500 selection:text-white">
+      {/* কেন্দ্রীয় নোটিশ ও ব্রডকাস্ট ব্যানার (মডিউল ৪) */}
+      {currentUser && <BroadcastNoticeMarquee userUpazilaCode={currentUser.upazila_code} />}
+
       {/*
         MAIN DESKTOP SCREEN:
         - Layout based on Image 3
@@ -367,26 +418,22 @@ export default function App() {
         />
       )}
 
-      {/* এ্যাপ ১ / ২ / ৩ এখন আলাদা MPA পেজ (app1/index.html, app2, app3)।
-          মূল ড্যাশবোর্ড শুধু সুরক্ষিত সাইন-ইন ও লঞ্চার — `SUB_APP_URLS` দেখুন। */}
-
-      {/* Super Admin Overview (if admin) */}
-      {activeTab === 'admin_overview' && (
-        <div className="w-full max-w-[1300px] mx-auto">
-          <div className="mb-4">
-            <button
-              onClick={() => setActiveTab('gpf_dashboard')}
-              className="px-3 py-1.5 bg-slate-800 text-white rounded text-xs cursor-pointer"
-            >
-              ← মূল ড্যাশবোর্ডে ফিরুন
-            </button>
-          </div>
-          <SuperAdminOverview
-            users={users}
-            gpfApplications={[]}
-            onResetPassword={handleResetPassword}
-          />
-        </div>
+      {/* Super Admin Control Suite (মডিউল ১ থেকে ৬) */}
+      {(activeTab === 'super_admin_suite' || activeTab === 'admin_overview') && currentUser?.role === 'super_admin' && (
+        <SuperAdminSuite
+          users={users}
+          currentUser={currentUser}
+          onBackToDashboard={() => {
+            setActiveTab('gpf_dashboard');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onRefreshUsers={async () => {
+            if (currentUser.role === 'super_admin') {
+              const reloaded = await loadAllUserSessions();
+              setUsers(reloaded);
+            }
+          }}
+        />
       )}
 
       {/* Architecture Guide (if selected) */}

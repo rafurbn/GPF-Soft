@@ -1,4 +1,5 @@
 export type UserRole = 'upazila_user' | 'super_admin' | 'account_officer';
+export type UserAccountStatus = 'active' | 'suspended' | 'deactivated' | 'pending';
 
 export interface UserSession {
   id: string;
@@ -9,6 +10,7 @@ export interface UserSession {
   division_name_bn?: string;
   region_edit_until?: string | null;
   role: UserRole;
+  account_status?: UserAccountStatus;
   is_first_login: boolean;
   phone: string;
   last_login: string;
@@ -21,7 +23,73 @@ export type ActiveAppTab =
   | 'gpf_final'
   | 'gpf_DeathClaim'
   | 'admin_overview'
+  | 'super_admin_suite'
   | 'architecture_guide';
+
+export interface CentralClaimRecord {
+  id: string;
+  appType: 'app1' | 'app2' | 'app3' | 'app4';
+  appTitle: string;
+  upazilaCode: string;
+  upazilaNameBn: string;
+  districtNameBn: string;
+  trackingNo: string;
+  employeeName: string;
+  designation: string;
+  gpfAccNo: string;
+  amount: number;
+  status: 'খসড়া' | 'যাচাইকৃত' | 'অনুমোদিত' | 'বাতিল' | 'প্রস্তুত';
+  applyDate: string;
+  createdAt: string;
+  updatedAt: string;
+  details?: Record<string, any>;
+}
+
+export interface SystemAnnouncement {
+  id: string;
+  title: string;
+  message: string;
+  severity: 'info' | 'warning' | 'critical';
+  targetUpazilaCode?: string | null; // null = all upazilas
+  targetUpazilaName?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface AppMaintenanceControl {
+  appId: 'app1' | 'app2' | 'app3' | 'app4';
+  appName: string;
+  isLocked: boolean;
+  lockReason: string;
+  updatedAt: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  eventType: 'login' | 'failed_login' | 'account_locked' | 'force_logout' | 'claim_saved' | 'claim_deleted' | 'status_change' | 'announcement' | 'app_lock' | 'backup';
+  upazilaCode: string;
+  email: string;
+  description: string;
+  ipAddress?: string;
+  status: 'success' | 'warning' | 'danger';
+  isTestData?: boolean;
+}
+
+export interface ActiveSession {
+  sessionId: string;
+  userId: string;
+  upazilaCode: string;
+  upazilaNameBn: string;
+  email: string;
+  role: UserRole;
+  loginTime: string;
+  lastActiveTime: string;
+  ipAddress: string;
+  browser: string;
+  isCurrentSession?: boolean;
+}
 
 export type GpfType = 'refundable' | 'non_refundable' | 'final';
 

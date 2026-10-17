@@ -27,9 +27,10 @@ The older `VITE_SUPABASE_ANON_KEY` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` names are a
 > `POST {VITE_SUPABASE_URL}/functions/v1/sign-in-by-upazila` — a `404` means the
 > edge function was never deployed. Run the command below once per environment.
 
-The portal talks to two Supabase pieces that must exist before sign-in works: the
-`public.profiles` table (with its RLS policies and triggers) and the `sign-in-by-upazila`
-edge function. Both are created by one command:
+The portal needs the `public.profiles` table and the `sign-in-by-upazila` Edge Function.
+The schema also provisions the protected central claims, notices, maintenance, audit,
+active-session, and login-lock tables used by the Super Admin Suite. Both the schema and
+function are provisioned by one command:
 
 ```powershell
 $env:SUPABASE_ACCESS_TOKEN = "sbp_..."   # https://supabase.com/dashboard/account/tokens
@@ -47,22 +48,19 @@ personal access token, never a database password, and is safe to re-run.
 
 ## 3. Sign in
 
-The sign-in form accepts **either a upazila ID or a verified email**:
+The sign-in form accepts **either a upazila ID or a verified email**. Both go through
+the `sign-in-by-upazila` Edge Function so failed-login locking and account status are
+checked on the server:
 
-* **Upazila ID** (for example `Bea002`) — resolved to its verified email by the
-  `sign-in-by-upazila` edge function, which uses the service-role key on the server.
-* **Email** — signed in directly through `supabase.auth.signInWithPassword`.
+* **Upazila ID** (for example `Bea002`) — resolved to its verified email by the Edge Function.
+* **Email** — looked up in the approved profile directory by the Edge Function.
 
-### Offline demo fallback
+### Backend requirement
 
-Supabase is always tried first. If the backend is not reachable yet (function not
-deployed, schema not applied), an identifier that matches the built-in directory in
-`src/data/mockData.ts` still signs in with a local **demo session**, so the portal can be
-demonstrated before provisioning. The user card then shows a `ডেমো (অফলাইন) সেশন` badge
-instead of `সক্রিয় সাইন-ইন সেশন`, and the session is remembered in `localStorage`.
-
-Run `npm run supabase:setup` to remove this fallback for real accounts: once the backend
-answers normally, Supabase credentials decide the sign-in and the demo path is skipped.
+There is no local authentication fallback. If Supabase, the schema, or the Edge Function
+is unavailable, sign-in and the protected processing apps remain unavailable. The
+service-role key is read only by the Edge Function's Supabase runtime; never put it in
+`.env.local` or a `VITE_`/`NEXT_PUBLIC_` variable.
 
 ## 4. Invite a user
 
@@ -105,3 +103,19 @@ Accounts marked `password_setup_required` are prompted to set a password and con
 recovery email. If they enter a different personal email, Supabase sends a confirmation
 link before that address becomes the recovery email. Forgot-password sends a recovery code
 to the verified Auth email; Supabase validates the code before accepting a new password.
+The Super Admin Suite's OTP action also sends Supabase's recovery code to the account's
+registered email; the code itself is never stored in browser storage or shown to admins.
+Configure Supabase Auth email/SMTP delivery before using either recovery action.
+
+## 6. Super Admin data
+
+Super Admin account roles must be assigned in `public.profiles` by a trusted database
+administrator. A username or password containing the word `admin` does not grant admin
+access. Account status updates use a database RPC that checks the signed-in profile's
+`super_admin` role. Central claims and control data use row-level security; the frontend
+does not use a service-role key.
+
+Failed sign-ins are counted server-side. Five incorrect passwords suspend the account
+for 15 minutes; the Edge Function automatically restores an auto-locked account after
+the interval, while manual suspensions remain in effect until an admin reactivates them.
+Active sessions are checked for forced logout and status changes every 15 seconds.

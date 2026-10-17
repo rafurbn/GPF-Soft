@@ -16,6 +16,7 @@ import { numberToBengaliWords, cleanNumberString, calculatePrlDate } from '../sr
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { CheckCircle2 } from 'lucide-react';
+import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 
 const STORAGE_FORM_KEY = 'gpf_final_applet_draft_v3';
 const STORAGE_LOCKS_KEY = 'gpf_final_applet_locks_v3';
@@ -122,6 +123,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   const [isHtmlEditModalOpen, setIsHtmlEditModalOpen] = useState(false);
   const [activePrintData, setActivePrintData] = useState<GpfFinalFormData>(formData);
   const [saveSuccessNotification, setSaveSuccessNotification] = useState(false);
+  const [saveSyncWarning, setSaveSyncWarning] = useState(false);
 
   const dashboardRef = useRef<HTMLDivElement>(null);
 
@@ -282,6 +284,24 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
       reason: 'চাকরি হতে অবসর (PRL) ও চূড়ান্ত নিষ্পত্তিকরণ'
     };
     onSaveApplication(parentApp);
+    void syncClaimToCentral('app3', {
+      id: parentApp.id,
+      trackingNo: parentApp.tracking_no,
+      employeeName: formData.applicantName || 'নামবিহীন',
+      designation: formData.designation || 'শিক্ষক',
+      gpfAccNo: formData.gpfAccountNo || '',
+      amount: cleanAmount,
+      status: parentApp.status,
+      applyDate: parentApp.apply_date,
+      upazilaCode: currentUser.upazila_code,
+      upazilaName: currentUser.upazila_name_bn,
+      districtName: currentUser.district_name_bn,
+      rawDetails: newRecord,
+    }).then((synced) => {
+      if (synced) return;
+      setSaveSyncWarning(true);
+      window.setTimeout(() => setSaveSyncWarning(false), 6000);
+    });
   };
 
   // Edit record - preserves any currently locked fields
@@ -344,6 +364,11 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
         <div className="fixed top-20 right-5 z-50 bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 text-sm font-semibold animate-in slide-in-from-top duration-200">
           <CheckCircle2 className="w-5 h-5 text-white" />
           <span>আবেদনটি সফলভাবে তালিকায় সংরক্ষণ করা হয়েছে!</span>
+        </div>
+      )}
+      {saveSyncWarning && (
+        <div className="fixed top-20 left-5 z-50 bg-amber-700 text-white px-4 py-2.5 rounded-lg shadow-xl text-sm font-semibold">
+          আবেদনটি এই ডিভাইসে সেভ হয়েছে, তবে কেন্দ্রীয় ডেটাবেজে সিঙ্ক হয়নি।
         </div>
       )}
 

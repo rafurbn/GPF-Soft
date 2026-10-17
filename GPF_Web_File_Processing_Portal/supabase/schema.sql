@@ -87,7 +87,301 @@ grant execute on function public.complete_password_setup() to authenticated;
 
 alter table public.profiles
   add column if not exists division_name_bn text,
-  add column if not exists region_edit_until timestamptz;
+  add column if not exists region_edit_until timestamptz,
+  add column if not exists account_status text not null default 'active';
+
+alter table public.profiles
+  drop constraint if exists profiles_account_status_check;
+alter table public.profiles
+  add constraint profiles_account_status_check
+  check (account_status in ('active', 'suspended', 'deactivated', 'pending'));
+
+create or replace function public.is_super_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where user_id = auth.uid()
+      and role = 'super_admin'
+      and account_status = 'active'
+  );
+$$;
+revoke all on function public.is_super_admin() from public;
+grant execute on function public.is_super_admin() to authenticated;
+
+create or replace function public.is_active_user()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where user_id = auth.uid() and account_status = 'active'
+  );
+$$;
+revoke all on function public.is_active_user() from public;
+grant execute on function public.is_active_user() to authenticated;
+
+create table if not exists public.login_security_state (
+  user_id uuid primary key references public.profiles (user_id) on delete cascade,
+  failed_attempts smallint not null default 0 check (failed_attempts between 0 and 5),
+  locked_until timestamptz,
+  auto_locked boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+alter table public.login_security_state add column if not exists auto_locked boolean not null default false;
+alter table public.login_security_state enable row level security;
+revoke all on public.login_security_state from anon, authenticated;
+
+create or replace function public.record_login_failure(requested_user_id uuid)
+returns table (failed_attempts smallint, locked_until timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  state public.login_security_state%rowtype;
+begin
+  insert into public.login_security_state (user_id, failed_attempts)
+  values (requested_user_id, 0)
+  on conflict (user_id) do nothing;
+
+  select * into state from public.login_security_state
+  where user_id = requested_user_id for update;
+
+  if state.locked_until is not null and state.locked_until > now() then
+    return query select state.failed_attempts, state.locked_until;
+    return;
+  else
+    state.failed_attempts := case
+      when state.locked_until is not null and state.locked_until <= now() then 1
+      else state.failed_attempts + 1
+    end;
+    state.locked_until := case when state.failed_attempts >= 5 then now() + interval '15 minutes' else null end;
+    state.updated_at := now();
+    update public.login_security_state
+    set failed_attempts = state.failed_attempts,
+        locked_until = state.locked_until,
+        auto_locked = (state.failed_attempts >= 5),
+        updated_at = state.updated_at
+    where user_id = requested_user_id;
+  end if;
+
+  return query select state.failed_attempts, state.locked_until;
+end;
+$$;
+
+create or replace function public.clear_login_failures(requested_user_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.login_security_state where user_id = requested_user_id;
+$$;
+
+revoke all on function public.record_login_failure(uuid) from public, anon, authenticated;
+revoke all on function public.clear_login_failures(uuid) from public, anon, authenticated;
+grant execute on function public.record_login_failure(uuid) to service_role;
+grant execute on function public.clear_login_failures(uuid) to service_role;
+
+create table if not exists public.central_claims (
+  id text primary key,
+  app_type text not null check (app_type in ('app1', 'app2', 'app3', 'app4')),
+  upazila_code text not null,
+  tracking_no text not null,
+  record jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (app_type, upazila_code, tracking_no)
+);
+alter table public.central_claims enable row level security;
+revoke all on public.central_claims from anon;
+grant select, insert, update, delete on public.central_claims to authenticated;
+
+drop policy if exists "Users read own central claims" on public.central_claims;
+create policy "Users read own central claims" on public.central_claims
+  for select to authenticated
+  using (
+    public.is_super_admin()
+    or (public.is_active_user() and exists (
+      select 1 from public.profiles p
+      where p.user_id = auth.uid() and p.upazila_code = central_claims.upazila_code and p.account_status = 'active'
+    ))
+  );
+drop policy if exists "Users write own central claims" on public.central_claims;
+create policy "Users write own central claims" on public.central_claims
+  for insert to authenticated
+  with check (
+    public.is_super_admin()
+    or (public.is_active_user() and exists (
+      select 1 from public.profiles p
+      where p.user_id = auth.uid() and p.upazila_code = central_claims.upazila_code and p.account_status = 'active'
+    ))
+  );
+drop policy if exists "Users update own central claims" on public.central_claims;
+create policy "Users update own central claims" on public.central_claims
+  for update to authenticated
+  using (
+    public.is_super_admin()
+    or (public.is_active_user() and exists (
+      select 1 from public.profiles p
+      where p.user_id = auth.uid() and p.upazila_code = central_claims.upazila_code and p.account_status = 'active'
+    ))
+  )
+  with check (
+    public.is_super_admin()
+    or (public.is_active_user() and exists (
+      select 1 from public.profiles p
+      where p.user_id = auth.uid() and p.upazila_code = central_claims.upazila_code and p.account_status = 'active'
+    ))
+  );
+drop policy if exists "Only super admins delete central claims" on public.central_claims;
+create policy "Only super admins delete central claims" on public.central_claims
+  for delete to authenticated using (public.is_super_admin());
+
+create table if not exists public.system_announcements (
+  id text primary key,
+  target_upazila_code text,
+  is_active boolean not null default true,
+  payload jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.system_announcements enable row level security;
+revoke all on public.system_announcements from anon;
+grant select, insert, update, delete on public.system_announcements to authenticated;
+drop policy if exists "Users read matching active notices" on public.system_announcements;
+create policy "Users read matching active notices" on public.system_announcements
+  for select to authenticated using (
+    public.is_super_admin()
+    or (
+      is_active
+      and public.is_active_user()
+      and (target_upazila_code is null or exists (
+        select 1 from public.profiles p
+        where p.user_id = auth.uid() and p.upazila_code = system_announcements.target_upazila_code and p.account_status = 'active'
+      ))
+    )
+  );
+drop policy if exists "Only super admins manage notices" on public.system_announcements;
+create policy "Only super admins manage notices" on public.system_announcements
+  for all to authenticated using (public.is_super_admin())
+  with check (public.is_super_admin());
+
+create table if not exists public.app_maintenance_controls (
+  app_id text primary key check (app_id in ('app1', 'app2', 'app3', 'app4')),
+  app_name text not null,
+  is_locked boolean not null default false,
+  lock_reason text not null default '',
+  updated_at timestamptz not null default now()
+);
+alter table public.app_maintenance_controls enable row level security;
+revoke all on public.app_maintenance_controls from anon;
+grant select, insert, update, delete on public.app_maintenance_controls to authenticated;
+drop policy if exists "Authenticated users read maintenance state" on public.app_maintenance_controls;
+create policy "Authenticated users read maintenance state" on public.app_maintenance_controls
+  for select to authenticated using (public.is_active_user());
+drop policy if exists "Only super admins manage maintenance state" on public.app_maintenance_controls;
+create policy "Only super admins manage maintenance state" on public.app_maintenance_controls
+  for all to authenticated using (public.is_super_admin())
+  with check (public.is_super_admin());
+
+create table if not exists public.admin_audit_logs (
+  id text primary key,
+  upazila_code text not null,
+  user_id uuid references auth.users (id) on delete set null,
+  payload jsonb not null,
+  created_at timestamptz not null default now()
+);
+alter table public.admin_audit_logs enable row level security;
+revoke all on public.admin_audit_logs from anon;
+grant select, insert, delete on public.admin_audit_logs to authenticated;
+drop policy if exists "Super admins read audit logs" on public.admin_audit_logs;
+create policy "Super admins read audit logs" on public.admin_audit_logs
+  for select to authenticated using (public.is_super_admin());
+drop policy if exists "Users record own audit events" on public.admin_audit_logs;
+create policy "Users record own audit events" on public.admin_audit_logs
+  for insert to authenticated with check (
+    public.is_super_admin()
+    or (
+      user_id = auth.uid() and public.is_active_user()
+      and exists (
+        select 1 from public.profiles p
+        where p.user_id = auth.uid() and p.upazila_code = admin_audit_logs.upazila_code and p.account_status = 'active'
+      )
+    )
+  );
+drop policy if exists "Only super admins delete audit logs" on public.admin_audit_logs;
+create policy "Only super admins delete audit logs" on public.admin_audit_logs
+  for delete to authenticated using (public.is_super_admin());
+
+create table if not exists public.active_sessions (
+  session_id text primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  upazila_code text not null,
+  record jsonb not null,
+  terminated_at timestamptz,
+  last_seen_at timestamptz not null default now()
+);
+alter table public.active_sessions enable row level security;
+revoke all on public.active_sessions from anon;
+grant select, insert, update on public.active_sessions to authenticated;
+drop policy if exists "Users read own sessions and admins read all" on public.active_sessions;
+create policy "Users read own sessions and admins read all" on public.active_sessions
+  for select to authenticated using (public.is_super_admin() or (public.is_active_user() and user_id = auth.uid()));
+drop policy if exists "Users create own sessions" on public.active_sessions;
+create policy "Users create own sessions" on public.active_sessions
+  for insert to authenticated with check (public.is_active_user() and user_id = auth.uid());
+drop policy if exists "Users and admins update sessions" on public.active_sessions;
+create policy "Users and admins update sessions" on public.active_sessions
+  for update to authenticated using (public.is_super_admin() or (public.is_active_user() and user_id = auth.uid()))
+  with check (public.is_super_admin() or (public.is_active_user() and user_id = auth.uid()));
+drop policy if exists "Users can end their own sessions" on public.active_sessions;
+create policy "Users can end their own sessions" on public.active_sessions
+  for update to authenticated using (user_id = auth.uid())
+  with check (user_id = auth.uid() and terminated_at is not null);
+
+create or replace function public.set_upazila_account_status(
+  requested_upazila_code text,
+  requested_status text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_super_admin() then
+    raise exception using message = 'SUPER_ADMIN_REQUIRED';
+  end if;
+  if requested_status not in ('active', 'suspended', 'deactivated', 'pending') then
+    raise exception using message = 'INVALID_ACCOUNT_STATUS';
+  end if;
+
+  update public.profiles
+  set account_status = requested_status
+  where upazila_code = requested_upazila_code
+    and role <> 'super_admin';
+
+  if not found then
+    raise exception using message = 'UPAZILA_PROFILE_NOT_FOUND';
+  end if;
+  if requested_status = 'active' then
+    delete from public.login_security_state
+    where user_id = (select user_id from public.profiles where upazila_code = requested_upazila_code);
+  end if;
+end;
+$$;
+
+revoke all on function public.set_upazila_account_status(text, text) from public;
+grant execute on function public.set_upazila_account_status(text, text) to authenticated;
 
 create or replace function public.create_upazila_profile_for_signup()
 returns trigger

@@ -16,6 +16,7 @@ import { numberToBanglaWords, cleanNumberString } from '../src/utils/numberToBan
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { readScoped, writeScoped, scopedKey } from '../src/lib/scopedStorage';
+import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 
 // Base keys; `scopedStorage` prefixes them with the upazila code at call time so
 // two upazilas on the same browser never share records or lock settings.
@@ -342,6 +343,22 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
       reason: '৫২ বছর বয়স পূর্ণ হওয়া জনিত অফেরতযোগ্য অগ্রিম'
     };
     onSaveApplication(parentApp);
+    void syncClaimToCentral('app2', {
+      id: parentApp.id,
+      trackingNo: parentApp.tracking_no,
+      employeeName: updatedData.applicant_name,
+      designation: updatedData.designation,
+      gpfAccNo: updatedData.gpf_acc_no,
+      amount: cleanAmount,
+      status: parentApp.status,
+      applyDate: updatedData.apply_date,
+      upazilaCode: currentUser.upazila_code,
+      upazilaName: currentUser.upazila_name_bn,
+      districtName: currentUser.district_name_bn,
+      rawDetails: updatedData,
+    }).then((synced) => {
+      if (!synced) showToast('আবেদনটি এই ডিভাইসে সেভ হয়েছে, তবে কেন্দ্রীয় ডেটাবেজে সিঙ্ক হয়নি।');
+    });
   };
 
   // Edit existing record - strictly preserves locked fields

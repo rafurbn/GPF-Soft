@@ -7,6 +7,7 @@ import { ClaimsDataTable } from './components/ClaimsDataTable';
 import { PrintDocumentEngine } from './components/PrintDocumentEngine';
 import { readScoped, writeScoped } from '../src/lib/scopedStorage';
 import type { SubAppProps } from '../app-shared/bootstrap';
+import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 
 // Base keys; every read/write is scoped to the signed-in upazila so two upazilas
 // sharing one browser never see or overwrite each other's death-claim records.
@@ -147,6 +148,22 @@ export default function App({ currentUser, onBack }: SubAppProps) {
       setCurrentClaim(updatedClaim);
       setPrintTargetClaim(updatedClaim);
       showToast(`"${claimData.deceasedEmployeeName}" এর ডেথ ক্লেইম তথ্য সফলভাবে আপডেট করা হয়েছে।`);
+      void syncClaimToCentral('app4', {
+        id: updatedClaim.id,
+        trackingNo: updatedClaim.id,
+        employeeName: updatedClaim.deceasedEmployeeName,
+        designation: updatedClaim.deceasedDesignation,
+        gpfAccNo: updatedClaim.gpfAccountNo,
+        amount: updatedClaim.depositedAmount,
+        status: 'যাচাইকৃত',
+        applyDate: updatedClaim.applicationDate,
+        upazilaCode: currentUser.upazila_code,
+        upazilaName: currentUser.upazila_name_bn,
+        districtName: currentUser.district_name_bn,
+        rawDetails: updatedClaim,
+      }).then((synced) => {
+        if (!synced) showToast('এই ডিভাইসে সেভ হয়েছে, তবে কেন্দ্রীয় ডেটাবেজে সিঙ্ক হয়নি।');
+      });
       return;
     }
 
@@ -162,6 +179,22 @@ export default function App({ currentUser, onBack }: SubAppProps) {
     setClaims([newClaim, ...claims]);
     setPrintTargetClaim(newClaim);
     showToast(`"${claimData.deceasedEmployeeName}" এর নতুন ডেথ ক্লেইম সফলভাবে সংরক্ষণ করা হয়েছে (ক্রমিক: ${nextSerial})।`);
+    void syncClaimToCentral('app4', {
+      id: newClaim.id,
+      trackingNo: newClaim.id,
+      employeeName: newClaim.deceasedEmployeeName,
+      designation: newClaim.deceasedDesignation,
+      gpfAccNo: newClaim.gpfAccountNo,
+      amount: newClaim.depositedAmount,
+      status: 'যাচাইকৃত',
+      applyDate: newClaim.applicationDate,
+      upazilaCode: currentUser.upazila_code,
+      upazilaName: currentUser.upazila_name_bn,
+      districtName: currentUser.district_name_bn,
+      rawDetails: newClaim,
+    }).then((synced) => {
+      if (!synced) showToast('এই ডিভাইসে সেভ হয়েছে, তবে কেন্দ্রীয় ডেটাবেজে সিঙ্ক হয়নি।');
+    });
 
     // Keep the locked values for the next entry, but clear the per-applicant ones.
     const nextFormValues: GpfDeathClaim = {

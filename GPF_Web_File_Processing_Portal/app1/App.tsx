@@ -20,6 +20,7 @@ import { PrintTemplates } from './components/PrintTemplates';
 import { toBanglaDigits, cleanNumberString } from '../src/utils/numberToBanglaWords';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
+import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 
 // localStorage key that app1 mirrors its records into (see src/utils/storage.ts).
 const RECORDS_STORAGE_KEY = 'gpf_advance_saved_records_v2';
@@ -205,6 +206,22 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
       reason: recordToSave.purpose || 'গৃহমেরামত'
     };
     onSaveApplication(parentApp);
+    void syncClaimToCentral('app1', {
+      id: parentApp.id,
+      trackingNo: parentApp.tracking_no,
+      employeeName: recordToSave.applicantName,
+      designation: recordToSave.designation,
+      gpfAccNo: recordToSave.gpfAccNo,
+      amount: cleanAmount,
+      status: parentApp.status,
+      applyDate: recordToSave.applyDate,
+      upazilaCode: currentUser.upazila_code,
+      upazilaName: currentUser.upazila_name_bn,
+      districtName: currentUser.district_name_bn,
+      rawDetails: recordToSave,
+    }).then((synced) => {
+      if (!synced) showToast('আবেদনটি এই ডিভাইসে সেভ হয়েছে, তবে কেন্দ্রীয় ডেটাবেজে সিঙ্ক হয়নি।', 'info');
+    });
   };
 
   const handleSelectRecordToEdit = (record: GpfFormData) => {

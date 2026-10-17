@@ -70,7 +70,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
                     #ffffff !important;
             color: 
                     #000000 !important;
-            font-family: 'Kalpurush', 'SolaimanLipi', 'Nikosh', sans-serif !important;
+            font-family: 'SolaimanLipi', 'Nikosh', 'Kalpurush', sans-serif !important;
             font-weight: 400 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -85,7 +85,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
                     #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
-            font-family: 'Kalpurush', 'SolaimanLipi', 'Nikosh', sans-serif !important;
+            font-family: 'SolaimanLipi', 'Nikosh', 'Kalpurush', sans-serif !important;
           }
           #gpf-print-document * {
             box-sizing: border-box !important;

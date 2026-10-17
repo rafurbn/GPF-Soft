@@ -8,8 +8,12 @@ import {
 } from '../types/gpf';
 import {
   toBengaliNumber,
+  toEnglishNumber,
   amountToBengaliWords,
   formatBangladeshiCurrency,
+  normaliseBengaliInput,
+  normaliseBengaliDate,
+  parseBengaliNumber,
 } from '../utils/bengaliWords';
 import {
   Lock,
@@ -18,6 +22,7 @@ import {
   Sparkles,
   Check,
   FileCheck,
+  PlusCircle,
 } from 'lucide-react';
 import { LockToggleButton } from './LockToggleButton';
 
@@ -67,7 +72,10 @@ interface DeathClaimFormProps {
   initialData?: GpfDeathClaim | null;
   lockSettings: LockSettings;
   onToggleLock: (field: LockableField) => void;
-  onSaveClaim: (claimData: Omit<GpfDeathClaim, 'id' | 'serialNo' | 'createdAt' | 'updatedAt'>) => void;
+  onSaveClaim: (
+    claimData: Omit<GpfDeathClaim, 'id' | 'serialNo' | 'createdAt' | 'updatedAt'>,
+    forceNew?: boolean
+  ) => void;
   onReset: () => void;
   isEditing?: boolean;
 }
@@ -80,12 +88,13 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   onReset,
   isEditing = false,
 }) => {
-    // Form fields
-  // 1. সন: 2026, 2027, 2028
-  const [year, setYear] = useState<string>(toBengaliNumber(initialData?.year || '2026'));
+    // 1. সন: 2026, 2027, 2028
+  const [year, setYear] = useState<string>(toBengaliNumber(initialData?.year || '২০২৬'));
   
   // 2. আবেদনের তারিখ
-  const [applicationDate, setApplicationDate] = useState<string>(toBengaliNumber(initialData?.applicationDate || '16/03/2026'));
+  const [applicationDate, setApplicationDate] = useState<string>(
+    initialData?.applicationDate ? normaliseBengaliDate(initialData.applicationDate) : '১৬/০৩/২০২৬'
+  );
   
   // 3. প্রাপক: একাধিক লাইনে লেখাযোগ্য ফিল্ড
   const [recipient, setRecipient] = useState<string>(
@@ -99,140 +108,172 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   
   // 5. মৃত কর্মচারীর পদবী: প্রাক্তন সহকারী শিক্ষক, প্রাক্তন প্রধান শিক্ষক(চ:দা:) ও প্রাক্তন প্রধান শিক্ষক
   const [deceasedDesignation, setDeceasedDesignation] = useState<DesignationType>(
-    initialData?.deceasedDesignation || 'প্র প্রাক্তন সহকারী শিক্ষক'
+    initialData?.deceasedDesignation || 'প্রাক্তন সহকারী শিক্ষক'
   );
-  
+
   // 6. মৃত কর্মচারীর বিদ্যালয়ের নাম
   const [schoolName, setSchoolName] = useState<string>(initialData?.schoolName || '');
-  
+
   // 7. মৃত্যুর তারিখ
-  const [deathDate, setDeathDate] = useState<string>(toBengaliNumber(initialData?.deathDate || '16/03/2026'));
-  
+  const [deathDate, setDeathDate] = useState<string>(
+    initialData?.deathDate ? normaliseBengaliDate(initialData.deathDate) : '১৬/০৩/২০২৬'
+  );
+
   // 8. আবেদনকারীর নাম
   const [applicantName, setApplicantName] = useState<string>(initialData?.applicantName || '');
-  
+
   // 9. মৃত কর্মচারীর সাথে সম্পর্ক
   const [relationship, setRelationship] = useState<RelationshipType>(
     initialData?.relationship || 'স্ত্রী'
   );
-  
-  // 10. জিপিএফ হিসাব নং (১৩৬৮ অলরেডি বাংলায় আছে, তবুও সুরক্ষার জন্য ফাংশন দেওয়া হলো)
-  const [gpfAccountNo, setGpfAccountNo] = useState<string>(toBengaliNumber(initialData?.gpfAccountNo || '১৩৬৮'));
-  
+
+  // 10. জিপিএফ হিসাব নং
+  const [gpfAccountNo, setGpfAccountNo] = useState<string>(
+    initialData?.gpfAccountNo ? toBengaliNumber(initialData.gpfAccountNo) : '১৩৬৮'
+  );
+
   // 11. জমাকৃত টাকার পরিমাণ
   const [depositedAmount, setDepositedAmount] = useState<string>(
-    toBengaliNumber(initialData?.depositedAmount ? String(initialData.depositedAmount) : '300000')
+    initialData?.depositedAmount ? toBengaliNumber(String(initialData.depositedAmount)) : '৩০০০০০'
   );
-  
+
   // 12. জমাকৃত টাকা (কথায়)
   const [depositedAmountInWords, setDepositedAmountInWords] = useState<string>(
     initialData?.depositedAmountInWords || 'তিন লক্ষ টাকা মাত্র'
   );
-  
+
   // 13. আয়ন ব্যয়ন কর্মকর্তার নাম
   const [ddoName, setDdoName] = useState<string>(initialData?.ddoName || 'নৃপেন্দ্র নাথ সরকার');
-  
+
   // 14. আয়ন ব্যয়ন কর্মকর্তার পদবী
   const [ddoDesignation, setDdoDesignation] = useState<string>(
     initialData?.ddoDesignation || 'উপজেলা প্রাথমিক শিক্ষা অফিসার (চ:দা:)'
   );
-  
+
   // 15. উপজেলার নাম
   const [upazilaName, setUpazilaName] = useState<string>(initialData?.upazilaName || 'বিয়ানীবাজার');
-  
+
   // 16. জেলার নাম
   const [districtName, setDistrictName] = useState<string>(initialData?.districtName || 'সিলেট');
-  
-  // 17. সংযুক্তি: শুধু 01(এক) খানা ও 02(দুই) খানা
-  const [attachmentsCount, setAttachmentsCount] = useState<string>(
-    toBengaliNumber(initialData?.attachmentsCount || '02(দুই) খানা')
-  );
 
+  // 17. সংযুক্তি: শুধুমাত্র ০১(এক) খানা ও ০২(দুই) খানা
+  const [attachmentsCount, setAttachmentsCount] = useState<string>(
+    initialData?.attachmentsCount ? toBengaliNumber(initialData.attachmentsCount) : '০২(দুই) খানা'
+  );
 
   // Template variables
-  const [sanctionMemoNo, setSanctionMemoNo] = useState<string>(initialData?.sanctionMemoNo || '৪৭০/১(০৪)');
-  const [sanctionDate, setSanctionDate] = useState<string>(initialData?.sanctionDate || '24/09/2026');
-  const [forwardingMemoNo, setForwardingMemoNo] = useState<string>(initialData?.forwardingMemoNo || 'উশিঅ/বিবা/সিল/2026/');
-  const [forwardingDate, setForwardingDate] = useState<string>(initialData?.forwardingDate || '16/03/2026');
-  const [lastDeductionAmount, setLastDeductionAmount] = useState<string>(
-    initialData?.lastDeductionAmount ? String(initialData.lastDeductionAmount) : '4900'
+  const [sanctionMemoNo, setSanctionMemoNo] = useState<string>(
+    initialData?.sanctionMemoNo ? toBengaliNumber(initialData.sanctionMemoNo) : '৪৭০/১(০৪)'
   );
-  const [lastVoucherNo, setLastVoucherNo] = useState<string>(initialData?.lastVoucherNo || '০৮');
+  const [sanctionDate, setSanctionDate] = useState<string>(
+    initialData?.sanctionDate ? normaliseBengaliDate(initialData.sanctionDate) : '২৪/০৯/২০২৬'
+  );
+  const [forwardingMemoNo, setForwardingMemoNo] = useState<string>(
+    initialData?.forwardingMemoNo ? toBengaliNumber(initialData.forwardingMemoNo) : 'উশিঅ/বিবা/সিল/২০২৬/'
+  );
+  const [forwardingDate, setForwardingDate] = useState<string>(
+    initialData?.forwardingDate ? normaliseBengaliDate(initialData.forwardingDate) : '১৬/০৩/২০২৬'
+  );
+  const [lastDeductionAmount, setLastDeductionAmount] = useState<string>(
+    initialData?.lastDeductionAmount ? toBengaliNumber(String(initialData.lastDeductionAmount)) : '৪৯০০'
+  );
+  const [lastVoucherNo, setLastVoucherNo] = useState<string>(
+    initialData?.lastVoucherNo ? toBengaliNumber(initialData.lastVoucherNo) : '০৮'
+  );
   const [treasuryOffice, setTreasuryOffice] = useState<string>(
     initialData?.treasuryOffice || 'উপজেলা হিসাবরক্ষণ অফিস, বিয়ানীবাজার, সিলেট'
   );
 
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Synchronize when initialData changes
+  // Synchronize when initialData changes.
   useEffect(() => {
     if (initialData) {
-      setYear(initialData.year || '2026');
-      setApplicationDate(initialData.applicationDate || '');
+      setYear(toBengaliNumber(initialData.year || '২০২৬'));
+      setApplicationDate(normaliseBengaliDate(initialData.applicationDate || '১৬/০৩/২০২৬'));
       setRecipient(initialData.recipient || '');
       setDeceasedEmployeeName(initialData.deceasedEmployeeName || '');
       setDeceasedDesignation(initialData.deceasedDesignation || 'প্রাক্তন সহকারী শিক্ষক');
       setSchoolName(initialData.schoolName || '');
-      setDeathDate(initialData.deathDate || '');
+      setDeathDate(normaliseBengaliDate(initialData.deathDate || ''));
       setApplicantName(initialData.applicantName || '');
       setRelationship(initialData.relationship || 'স্ত্রী');
-      setGpfAccountNo(initialData.gpfAccountNo || '');
-      setDepositedAmount(initialData.depositedAmount ? String(initialData.depositedAmount) : '');
-      setDepositedAmountInWords(initialData.depositedAmountInWords || '');
+      setGpfAccountNo(toBengaliNumber(initialData.gpfAccountNo || ''));
+      setDepositedAmount(
+        initialData.depositedAmount !== undefined && initialData.depositedAmount !== null
+          ? toBengaliNumber(String(initialData.depositedAmount))
+          : ''
+      );
+      setDepositedAmountInWords(
+        initialData.depositedAmountInWords ||
+          (initialData.depositedAmount ? amountToBengaliWords(initialData.depositedAmount) : '')
+      );
       setDdoName(initialData.ddoName || '');
       setDdoDesignation(initialData.ddoDesignation || '');
       setUpazilaName(initialData.upazilaName || '');
       setDistrictName(initialData.districtName || '');
-      setAttachmentsCount(initialData.attachmentsCount || '02(দুই) খানা');
-      setSanctionMemoNo(initialData.sanctionMemoNo || '');
-      setSanctionDate(initialData.sanctionDate || '');
-      setForwardingMemoNo(initialData.forwardingMemoNo || '');
-      setForwardingDate(initialData.forwardingDate || '');
-      setLastDeductionAmount(initialData.lastDeductionAmount ? String(initialData.lastDeductionAmount) : '4900');
-      setLastVoucherNo(initialData.lastVoucherNo || '০৮');
+      setAttachmentsCount(
+        initialData.attachmentsCount ? toBengaliNumber(initialData.attachmentsCount) : '০২(দুই) খানা'
+      );
+      setSanctionMemoNo(initialData.sanctionMemoNo ? toBengaliNumber(initialData.sanctionMemoNo) : '');
+      setSanctionDate(initialData.sanctionDate ? normaliseBengaliDate(initialData.sanctionDate) : '');
+      setForwardingMemoNo(initialData.forwardingMemoNo ? toBengaliNumber(initialData.forwardingMemoNo) : '');
+      setForwardingDate(initialData.forwardingDate ? normaliseBengaliDate(initialData.forwardingDate) : '');
+      setLastDeductionAmount(
+        initialData.lastDeductionAmount !== undefined && initialData.lastDeductionAmount !== null
+          ? toBengaliNumber(String(initialData.lastDeductionAmount))
+          : ''
+      );
+      setLastVoucherNo(initialData.lastVoucherNo ? toBengaliNumber(initialData.lastVoucherNo) : '');
       setTreasuryOffice(initialData.treasuryOffice || '');
     }
   }, [initialData]);
 
-  // Auto-generate words when deposited amount changes
+  // Auto-generate words when deposited amount changes.
   const handleAmountChange = (val: string) => {
-    setDepositedAmount(val);
-    if (!val || val.trim() === '') {
+    const bengaliValue = normaliseBengaliInput(val.replace(/[^0-9০-৯./,]/g, ''));
+    setDepositedAmount(bengaliValue);
+    if (!bengaliValue || bengaliValue.trim() === '') {
       setDepositedAmountInWords('');
       return;
     }
-    const words = amountToBengaliWords(val);
+    const words = amountToBengaliWords(bengaliValue);
     setDepositedAmountInWords(words);
   };
 
+  // Same normalisation for the last-deduction amount (Bengali digits).
+  const handleLastDeductionChange = (val: string) => {
+    setLastDeductionAmount(normaliseBengaliInput(val.replace(/[^0-9০-৯.,]/g, '')));
+  };
+
   const getFormDataObject = (): Omit<GpfDeathClaim, 'id' | 'serialNo' | 'createdAt' | 'updatedAt'> => {
-    const depAmountNum = parseFloat(depositedAmount) || 0;
-    const lastDedNum = parseFloat(lastDeductionAmount) || 0;
+    const depAmountNum = parseBengaliNumber(depositedAmount);
+    const lastDedNum = parseBengaliNumber(lastDeductionAmount);
 
     return {
-      year,
-      applicationDate,
+      year: toBengaliNumber(year) || '২০২৬',
+      applicationDate: normaliseBengaliDate(applicationDate),
       recipient,
-      deceasedEmployeeName,
+      deceasedEmployeeName: deceasedEmployeeName.trim(),
       deceasedDesignation,
-      schoolName,
-      deathDate,
-      applicantName,
+      schoolName: schoolName.trim(),
+      deathDate: normaliseBengaliDate(deathDate),
+      applicantName: applicantName.trim(),
       relationship,
-      gpfAccountNo,
+      gpfAccountNo: toBengaliNumber(gpfAccountNo),
       depositedAmount: depAmountNum,
       depositedAmountInWords: depositedAmountInWords || amountToBengaliWords(depAmountNum),
       ddoName,
       ddoDesignation,
       upazilaName,
       districtName,
-      attachmentsCount,
-      sanctionMemoNo,
-      sanctionDate,
-      forwardingMemoNo,
-      forwardingDate,
+      attachmentsCount: toBengaliNumber(attachmentsCount) === '০১(এক) খানা' ? '০১(এক) খানা' : '০২(দুই) খানা',
+      sanctionMemoNo: sanctionMemoNo ? toBengaliNumber(sanctionMemoNo) : '',
+      sanctionDate: sanctionDate ? normaliseBengaliDate(sanctionDate) : '',
+      forwardingMemoNo: forwardingMemoNo ? toBengaliNumber(forwardingMemoNo) : '',
+      forwardingDate: forwardingDate ? normaliseBengaliDate(forwardingDate) : '',
       lastDeductionAmount: lastDedNum,
-      lastVoucherNo,
+      lastVoucherNo: lastVoucherNo ? toBengaliNumber(lastVoucherNo) : '',
       treasuryOffice,
       status: initialData?.status || 'খসড়া',
     };
@@ -351,18 +392,33 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
     </>
   );
 
-  // Locked-input styling, shared so locked fields look the same in every row.
+  // Locked-input styling: completely disables cursor, caret and selection
   const fieldClass = (locked: boolean) =>
-    `w-full max-w-sm rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
+    `w-full max-w-sm rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden transition-colors ${
       locked
-        ? 'bg-amber-950/20 border-amber-500/50 text-amber-200 cursor-not-allowed'
+        ? 'bg-amber-950/20 border-amber-500/40 text-amber-200 cursor-not-allowed select-none caret-transparent pointer-events-none'
         : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:border-emerald-500'
     }`;
 
+  /**
+   * Spread onto any <input>/<textarea> so a locked field cannot receive focus,
+   * a caret or a text selection.
+   */
+  const lockProps = (locked: boolean) =>
+    locked
+      ? {
+          disabled: true,
+          readOnly: true,
+          tabIndex: -1,
+          'aria-readonly': true,
+          style: { caretColor: 'transparent', userSelect: 'none' as const, pointerEvents: 'none' as const },
+        }
+      : {};
+
   return (
-    <div className="bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden print:hidden">
-      {/* Top Banner */}
-      <div className="px-5 py-4 bg-gradient-to-r from-slate-900 via-[#131d33] to-slate-900 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl print:hidden">
+      {/* Top Banner - Sticky Freeze Pane right below the top navigation Header */}
+      <div className="sticky top-[48px] sm:top-[52px] z-30 px-5 py-3.5 bg-[#0e1628]/95 backdrop-blur-md border-b border-emerald-900/50 shadow-lg shadow-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-t-2xl">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
             <FileCheck className="w-5 h-5" />
@@ -370,25 +426,40 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
           <div>
             <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
               জিপিএফ মৃত্যুদাবী নিষ্পত্তি-ইনপুট ড্যাশবোর্ড
-              {isEditing && (
-                <span className="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              {isEditing ? (
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold animate-pulse">
                   সম্পাদনা মোড
+                </span>
+              ) : (
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">
+                  নতুন এন্ট্রি মোড
                 </span>
               )}
             </h2>
           </div>
         </div>
+
+        {isEditing && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 font-medium transition-colors cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>নতুন এন্ট্রি শুরু করুন</span>
+          </button>
+        )}
       </div>
 
       {/* Main Table Form */}
       <form onSubmit={handleSave}>
-        <div className="overflow-x-auto p-2 sm:p-4 bg-[#080d1e]">
-        <table className="w-full border-collapse text-sm border border-slate-800 rounded-xl overflow-hidden">
-          <thead>
+        <div className="p-2 sm:p-4 bg-[#080d1e]">
+        <table className="w-full border-collapse text-sm border border-slate-800 rounded-xl">
+          <thead className="sticky top-[106px] sm:top-[112px] z-20 shadow-md">
             <tr>
               <th
                 colSpan={5}
-                className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-emerald-300 py-3.5 px-4 text-center text-base sm:text-lg font-bold tracking-wide border-b border-emerald-500/30"
+                className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-emerald-300 py-3 px-4 text-center text-sm sm:text-base font-bold tracking-wide border-b border-emerald-500/30"
               >
                 জিপিএফ মৃত্যুদাবী নিষ্পত্তি-ইনপুট ড্যাশবোর্ড
               </th>
@@ -417,10 +488,11 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
             <div className="flex items-center gap-2">
               <input
                 type="text"
+                inputMode="numeric"
                 value={year}
-                onChange={(e) => setYear(e.target.value)}
-                readOnly={lockSettings.year}
-                placeholder="2026"
+                onChange={(e) => setYear(normaliseBengaliInput(e.target.value.replace(/[^0-9০-৯]/g, '')))}
+                {...lockProps(lockSettings.year)}
+                placeholder="২০২৬"
                 className={fieldClass(lockSettings.year)}
               />
               {lockSettings.year && (
@@ -432,12 +504,14 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
           </FormRow>
 
           {/* Row 2: আবেদনের তারিখ */}
-          <FormRow index="২" label="আবেদনের তারিখ" hint="দাখিলের তারিখ (যেমন: 16/03/2026)" lockCells={renderEmptyLockCells()}>
+          <FormRow index="২" label="আবেদনের তারিখ" hint="দাখিলের তারিখ (যেমন: ১৬/০৩/২০২৬)" lockCells={renderEmptyLockCells()}>
             <input
               type="text"
+              inputMode="numeric"
               value={applicationDate}
-              onChange={(e) => setApplicationDate(e.target.value)}
-              placeholder="16/03/2026"
+              onChange={(e) => setApplicationDate(normaliseBengaliInput(e.target.value))}
+              onBlur={(e) => setApplicationDate(normaliseBengaliDate(e.target.value))}
+              placeholder="১৬/০৩/২০২৬"
               className="w-full max-w-sm rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
             />
           </FormRow>
@@ -461,11 +535,11 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               rows={2}
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              readOnly={lockSettings.recipient}
+              {...lockProps(lockSettings.recipient)}
               placeholder={`উপজেলা হিসাবরক্ষণ কর্মকর্তা\n${upazilaName}, ${districtName}।`}
               className={`w-full rounded-lg px-3 py-2 text-sm ${
                 lockSettings.recipient
-                  ? 'bg-emerald-950/25 border border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none'
+                  ? 'bg-emerald-950/25 border border-emerald-500/50 text-emerald-200 cursor-not-allowed pointer-events-none select-none'
                   : 'bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500'
               }`}
             />
@@ -519,9 +593,11 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
           <FormRow index="৭" label={<>মৃত্যুর তারিখ <span className="text-rose-400">*</span></>} hint="মৃত্যুর সনদপত্র অনুযায়ী তারিখ" lockCells={renderEmptyLockCells()}>
             <input
               type="text"
+              inputMode="numeric"
               value={deathDate}
-              onChange={(e) => setDeathDate(e.target.value)}
-              placeholder="16/03/2026"
+              onChange={(e) => setDeathDate(normaliseBengaliInput(e.target.value))}
+              onBlur={(e) => setDeathDate(normaliseBengaliDate(e.target.value))}
+              placeholder="১৬/০৩/২০২৬"
               required
               className="w-full max-w-sm rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
             />
@@ -563,8 +639,9 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
           <FormRow index="১০" label={<>জিপিএফ হিসাব নং <span className="text-rose-400">*</span></>} hint="সাধারণ ভবিষ্যৎ তহবিল নম্বর" lockCells={renderEmptyLockCells()}>
             <input
               type="text"
+              inputMode="numeric"
               value={gpfAccountNo}
-              onChange={(e) => setGpfAccountNo(e.target.value)}
+              onChange={(e) => setGpfAccountNo(normaliseBengaliInput(e.target.value.replace(/[^0-9০-৯]/g, '')))}
               placeholder="১৩৬৮"
               required
               className="w-full max-w-sm rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
@@ -577,9 +654,10 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               <div className="relative max-w-sm">
                 <input
                   type="text"
+                  inputMode="numeric"
                   value={depositedAmount}
                   onChange={(e) => handleAmountChange(e.target.value)}
-                  placeholder="300000"
+                  placeholder="৩০০০০০"
                   required
                   className="w-full rounded-lg px-3 py-1.5 pl-8 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-bold"
                 />
@@ -628,7 +706,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               type="text"
               value={ddoName}
               onChange={(e) => setDdoName(e.target.value)}
-              readOnly={lockSettings.ddoName}
+              {...lockProps(lockSettings.ddoName)}
               placeholder="নৃপেন্দ্র নাথ সরকার"
               required
               className={fieldClass(lockSettings.ddoName)}
@@ -641,7 +719,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               type="text"
               value={ddoDesignation}
               onChange={(e) => setDdoDesignation(e.target.value)}
-              readOnly={lockSettings.ddoDesignation}
+              {...lockProps(lockSettings.ddoDesignation)}
               placeholder="উপজেলা প্রাথমিক শিক্ষা অফিসার (চ:দা:)"
               required
               className={fieldClass(lockSettings.ddoDesignation)}
@@ -653,7 +731,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
             <input
               type="text"
               value={upazilaName}
-              readOnly
+              {...lockProps(true)}
               placeholder="বিয়ানীবাজার"
               className={fieldClass(true)}
             />
@@ -664,7 +742,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
             <input
               type="text"
               value={districtName}
-              readOnly
+              {...lockProps(true)}
               placeholder="সিলেট"
               className={fieldClass(true)}
             />
@@ -673,21 +751,112 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
           {/* Row 17: সংযুক্তি (01(এক) খানা / 02(দুই) খানা) */}
           <FormRow index="১৭" label={<>সংযুক্তি <span className="text-rose-400">*</span></>} hint="01(এক) খানা / 02(দুই) খানা" hintClassName="text-teal-400/90" lockCells={renderLockControls('attachmentsCount')}>
             <div className="flex gap-2 items-center">
-              {attachmentOptions.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setAttachmentsCount(opt)}
-                  className={`px-3 py-1.5 text-xs rounded-lg font-semibold border transition-colors cursor-pointer ${
-                    attachmentsCount === opt
-                      ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
-                      : 'bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500'
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
+              {attachmentOptions.map((opt) => {
+                // The state holds the value exactly as chosen, but an imported
+                // record may store the English-digit form ('02(দুই) খানা').
+                // Compare on a normalised (Bengali-digit) copy so the selected
+                // option is always highlighted.
+                const isSelected = toBengaliNumber(attachmentsCount) === toBengaliNumber(opt);
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setAttachmentsCount(opt)}
+                    aria-pressed={isSelected}
+                    className={`px-3 py-1.5 text-xs rounded-lg font-semibold border transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+                        : 'bg-slate-950 text-slate-300 border-slate-700 hover:border-slate-500'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
             </div>
+          </FormRow>
+
+          {/* ---- Official template variables (used across the 7 print pages) ---- */}
+          <tr>
+            <td colSpan={5} className="bg-[#0b1324] border-y border-slate-800 px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-teal-400">
+              অতিরিক্ত অফিশিয়াল তথ্য (প্রিন্ট ফাইলের জন্য)
+            </td>
+          </tr>
+
+          <FormRow index="১৮" label="মঞ্জুরী নং ও তারিখ" hint="যেমন: ৪৭০/১(০৪) ও ২৪/০৯/২০২৬" lockCells={renderEmptyLockCells()}>
+            <div className="flex flex-wrap items-center gap-2 max-w-lg">
+              <input
+                type="text"
+                value={sanctionMemoNo}
+                onChange={(e) => setSanctionMemoNo(normaliseBengaliInput(e.target.value))}
+                placeholder="৪৭০/১(০৪)"
+                className="w-40 rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                value={sanctionDate}
+                onChange={(e) => setSanctionDate(normaliseBengaliInput(e.target.value))}
+                onBlur={(e) => setSanctionDate(normaliseBengaliDate(e.target.value))}
+                placeholder="২৪/০৯/২০২৬"
+                className="w-40 rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+              />
+            </div>
+          </FormRow>
+
+          <FormRow index="১৯" label="স্মারক নং ও তারিখ" hint="ফরোয়ার্ডিং পত্রের স্মারক" lockCells={renderEmptyLockCells()}>
+            <div className="flex flex-wrap items-center gap-2 max-w-lg">
+              <input
+                type="text"
+                value={forwardingMemoNo}
+                onChange={(e) => setForwardingMemoNo(normaliseBengaliInput(e.target.value))}
+                placeholder="উশিঅ/বিবা/সিল/২০২৬/"
+                className="w-56 rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                value={forwardingDate}
+                onChange={(e) => setForwardingDate(normaliseBengaliInput(e.target.value))}
+                onBlur={(e) => setForwardingDate(normaliseBengaliDate(e.target.value))}
+                placeholder="১৬/০৩/২০২৬"
+                className="w-40 rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+              />
+            </div>
+          </FormRow>
+
+          <FormRow index="২০" label="সর্বশেষ কর্তনকৃত চাঁদা ও ভাউচার নং" hint="শেষ ফান্ড কর্তন তথ্য" lockCells={renderEmptyLockCells()}>
+            <div className="flex flex-wrap items-center gap-2 max-w-lg">
+              <div className="relative w-40">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={lastDeductionAmount}
+                  onChange={(e) => handleLastDeductionChange(e.target.value)}
+                  placeholder="৪৯০০"
+                  className="w-full rounded-lg px-3 py-1.5 pl-8 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+                />
+                <span className="absolute left-2.5 top-1.5 text-xs font-semibold text-slate-400">৳</span>
+              </div>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={lastVoucherNo}
+                onChange={(e) => setLastVoucherNo(normaliseBengaliInput(e.target.value.replace(/[^0-9০-৯]/g, '')))}
+                placeholder="০৮"
+                className="w-28 rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+              />
+            </div>
+          </FormRow>
+
+          <FormRow index="২১" label="ট্রেজারী অফিসের নাম" hint="হিসাবরক্ষণ কার্যালয়" lockCells={renderEmptyLockCells()}>
+            <input
+              type="text"
+              value={treasuryOffice}
+              onChange={(e) => setTreasuryOffice(e.target.value)}
+              placeholder="উপজেলা হিসাবরক্ষণ অফিস, বিয়ানীবাজার, সিলেট"
+              className="w-full max-w-md rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+            />
           </FormRow>
 
           </tbody>
@@ -701,15 +870,35 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
             <span>চিহ্নিত ফিল্ডসমূহ আবশ্যক। লকড ফিল্ডের তথ্য পরবর্তী ফর্মে অটো লোড থাকবে।</span>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
             <button
               type="button"
               onClick={onReset}
-              className="px-4 py-2 rounded-lg text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors flex items-center gap-1.5 border border-slate-700 cursor-pointer"
+              className="px-3.5 py-2 rounded-lg text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors flex items-center gap-1.5 border border-slate-700 cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>রিসেট</span>
+              <span>রিসেট / খালি ফর্ম</span>
             </button>
+
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!deceasedEmployeeName || !applicantName || !schoolName || !gpfAccountNo) {
+                    alert('অনুগ্রহ করে মৃত কর্মচারীর নাম, বিদ্যালয়, আবেদনকারী ও জিপিএফ হিসাব নম্বর পূরণ করুন।');
+                    return;
+                  }
+                  onSaveClaim(getFormDataObject(), true);
+                  setSaveSuccess(true);
+                  setTimeout(() => setSaveSuccess(false), 3000);
+                }}
+                className="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold text-emerald-200 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/70 transition-colors flex items-center gap-1.5 shadow-md cursor-pointer"
+                title="বিদ্যমান ফাইল অপরিবর্তিত রেখে এটি নতুন ক্লেইম হিসেবে সংরক্ষণ করুন"
+              >
+                <PlusCircle className="w-4 h-4 text-emerald-400" />
+                <span>নতুন হিসেবে সংরক্ষণ</span>
+              </button>
+            )}
 
             <button
               type="submit"

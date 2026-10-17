@@ -42,9 +42,6 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
       style={{ display: 'none' }}
     >
       <style>{`
-        @import url('[https://fonts.maateen.me/kalpurush/font.css');](https://fonts.maateen.me/kalpurush/font.css');)
-        @import url('[https://fonts.maateen.me/solaiman-lipi/font.css');](https://fonts.maateen.me/solaiman-lipi/font.css');)
-
         @media screen {
           #gpf-print-document {
             display: none !important;
@@ -60,17 +57,14 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         @media print {
           @page {
             size: A4 portrait;
-            /* উপরে ১২মিমি, ডানে ১৫মিমি, নিচে ১০মিমি, বামে ১৫মিমি - ১০০% স্কেলে পারফেক্ট ৭ পাতা */
-            margin: 12mm 15mm 10mm 15mm;
+            margin: 20mm 20mm 15mm 20mm;
           }
           html, body {
             margin: 0 !important;
             padding: 0 !important;
-            background: 
-                    #ffffff !important;
-            color: 
-                    #000000 !important;
-            font-family: 'SolaimanLipi', 'Nikosh', 'Kalpurush', sans-serif !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-family: 'SolaimanLipi', 'Nikosh', 'NikoshBAN', 'Kalpurush', 'Hind Siliguri', sans-serif !important;
             font-weight: 400 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -79,24 +73,24 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             display: block !important;
             visibility: visible !important;
             width: 100% !important;
-            background: 
-                    #ffffff !important;
-            color: 
-                    #000000 !important;
+            background: #ffffff !important;
+            color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
-            font-family: 'SolaimanLipi', 'Nikosh', 'Kalpurush', sans-serif !important;
+            font-family: 'SolaimanLipi', 'Nikosh', 'NikoshBAN', 'Kalpurush', 'Hind Siliguri', sans-serif !important;
           }
           #gpf-print-document * {
             box-sizing: border-box !important;
-            font-family: 'Kalpurush', 'SolaimanLipi', sans-serif !important;
+            -moz-box-sizing: border-box !important;
+            font-family: 'SolaimanLipi', 'Nikosh', 'NikoshBAN', 'Kalpurush', 'Hind Siliguri', sans-serif !important;
+            font-weight: 400 !important;
           }
           header, main, footer, .print-hidden, nav {
             display: none !important;
             visibility: hidden !important;
           }
 
-          /* ফায়ারফক্সে ১৪ পাতা রোধের নিয়ম */
+          /* ফায়ারফক্স ও ক্রোম সার্বজনীন ৭ পাতা ফরম্যাটিং */
           .print-page {
             display: block !important;
             box-sizing: border-box !important;
@@ -107,8 +101,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             break-inside: avoid !important;
             padding: 0 !important;
             margin: 0 !important;
-            background: 
-                    #ffffff !important;
+            background: #ffffff !important;
             font-weight: 400 !important;
           }
           .print-page:last-child {
@@ -126,16 +119,16 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
 
           /* কোড বক্স */
           .code-box-group {
-            display: flex;
-            border: 1.5px solid 
-                    #000000 !important;
+            display: inline-flex;
+            border: 1.5px solid #000000 !important;
+            margin: 0 2px;
+            vertical-align: middle;
           }
           .code-box-group span {
-            width: 19px;
-            height: 19px;
-            border-right: 1.5px solid 
-                    #000000 !important;
-            display: flex;
+            width: 20px;
+            height: 20px;
+            border-right: 1.5px solid #000000 !important;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 11.5px;
@@ -151,14 +144,12 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             border-spacing: 0 !important;
             width: 100% !important;
             table-layout: fixed !important;
-            border: 1.5px solid 
-                    #000000 !important;
+            border: 1.5px solid #000000 !important;
             margin: 0 !important;
           }
           .official-bordered-table th, 
           .official-bordered-table td {
-            border: 1.5px solid 
-                    #000000 !important;
+            border: 1.5px solid #000000 !important;
             background-color: transparent !important;
             box-sizing: border-box !important;
             -webkit-print-color-adjust: exact !important;

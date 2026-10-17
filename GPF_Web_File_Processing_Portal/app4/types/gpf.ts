@@ -7,6 +7,8 @@ export type RelationshipType = 'স্ত্রী' | 'স্বামী' | '�
 
 export type ClaimStatus = 'খসড়া' | 'যাচাইকৃত' | 'শিক্ষা অফিসে প্রক্রিয়াধীন' | 'অনুমোদিত' | 'সিএও অফিসে প্রেরিত';
 
+export type AttachmentCountType = '০১(এক) খানা' | '০২(দুই) খানা' | '01(এক) খানা' | '02(দুই) খানা';
+
 export interface GpfDeathClaim {
   id: string;
   serialNo: number;
@@ -43,7 +45,7 @@ export interface GpfDeathClaim {
   // Row 16: জেলার নাম
   districtName: string;
   // Row 17: সংযুক্তি (শুধুমাত্র 01(এক) খানা ও 02(দুই) খানা)
-  attachmentsCount: string;
+  attachmentsCount: AttachmentCountType | string;
 
   // Additional official template variables
   sanctionMemoNo?: string; // মঞ্জুরী নং (e.g. ৪৭০/১(০৪))

@@ -24,6 +24,7 @@ interface ClaimsDataTableProps {
   onNewClaim: () => void;
   onShowToast: (msg: string) => void;
   onImportClaims?: (imported: GpfDeathClaim[]) => void;
+  onSetPrintTarget?: (claim: GpfDeathClaim) => void;
 }
 
 export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
@@ -33,6 +34,7 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
   onNewClaim,
   onShowToast,
   onImportClaims,
+  onSetPrintTarget,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -100,20 +102,21 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
       'মৃত্যুর তারিখ',
       'স্থিতি',
     ];
+    const escapeCsv = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
     const rows = claims.map((c, i) => [
       i + 1,
-      `"${c.applicantName}"`,
-      `"${c.deceasedEmployeeName}"`,
-      `"${c.relationship}"`,
-      `"${c.deceasedDesignation}"`,
-      `"${c.schoolName}"`,
-      `"${c.upazilaName}"`,
-      `"${c.districtName}"`,
-      `"${c.gpfAccountNo}"`,
-      `"${c.depositedAmount}"`,
-      `"${c.applicationDate}"`,
-      `"${c.deathDate}"`,
-      `"${c.status}"`,
+      escapeCsv(c.applicantName),
+      escapeCsv(c.deceasedEmployeeName),
+      escapeCsv(c.relationship),
+      escapeCsv(c.deceasedDesignation),
+      escapeCsv(c.schoolName),
+      escapeCsv(c.upazilaName),
+      escapeCsv(c.districtName),
+      escapeCsv(c.gpfAccountNo),
+      escapeCsv(c.depositedAmount),
+      escapeCsv(c.applicationDate),
+      escapeCsv(c.deathDate),
+      escapeCsv(c.status),
     ]);
     const csvContent =
       'data:text/csv;charset=utf-8,\uFEFF' +
@@ -161,6 +164,7 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
 
   const handlePrint = (claim: GpfDeathClaim) => {
     try {
+      if (onSetPrintTarget) onSetPrintTarget(claim);
       printClaimDocument(claim);
       onShowToast(`"${claim.deceasedEmployeeName}" এর ৭টি পেজের প্রিন্ট প্রস্তুত করা হয়েছে।`);
     } catch (e) {
@@ -171,6 +175,7 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
 
   const handleDownload = (claim: GpfDeathClaim) => {
     try {
+      if (onSetPrintTarget) onSetPrintTarget(claim);
       downloadClaimDocument(claim);
       onShowToast(`"${claim.deceasedEmployeeName}" এর ৭টি পেজ অফিশিয়াল ফাইল ডাউনলোড হয়েছে।`);
     } catch (e) {

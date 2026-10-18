@@ -39,8 +39,20 @@ const describeLoginError = async (
   response: Response | undefined,
   fallback?: string,
 ): Promise<string> => {
+  // The edge function was unreachable (offline, DNS, CORS preflight blocked).
+  const err = loginError as { message?: string; name?: string } | null;
+  if (err?.name === 'FunctionsFetchError' || /failed to fetch|networkerror|load failed/i.test(err?.message || '')) {
+    return 'সার্ভারের সাথে সংযোগ করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।';
+  }
+
   if (response?.status === 404) {
     return 'উপজেলা ID সেবা এখনো চালু হয়নি। ইমেইল দিয়ে সাইন-ইন করুন অথবা অ্যাডমিনের সঙ্গে যোগাযোগ করুন।';
+  }
+  if (response?.status === 429) {
+    return 'অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।';
+  }
+  if (response && response.status >= 500) {
+    return 'সাইন-ইন সার্ভারে সাময়িক ত্রুটি হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।';
   }
 
   const context = (loginError as { context?: Response } | null)?.context;

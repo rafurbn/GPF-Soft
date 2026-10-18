@@ -782,17 +782,9 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                   {/* ৪. গোপন পাসওয়ার্ড */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-slate-300">
+                      <label htmlFor="portal-signin-password" className="block text-xs font-bold text-slate-300">
                         গোপন পাসওয়ার্ড
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="text-[11px] text-slate-400 hover:text-white font-medium flex items-center gap-1 cursor-pointer"
-                      >
-                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                        <span>{showPassword ? 'লুকান' : 'পাসওয়ার্ড দেখুন'}</span>
-                      </button>
                     </div>
 
                     <div className="relative">
@@ -800,25 +792,35 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                         <Lock className="w-4 h-4 text-emerald-400" />
                       </div>
                       <input
+                        id="portal-signin-password"
+                        name="password"
                         type={showPassword ? 'text' : 'password'}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          // Clear a stale error as soon as the field is edited so the
+                          // previous message cannot mislead the next attempt.
+                          if (errorMsg) setErrorMsg('');
+                        }}
                         placeholder="পাসওয়ার্ড লিখুন"
                         autoComplete="current-password"
+                        autoFocus
                         required
-                        className={`w-full pl-11 pr-11 py-2.5 bg-[#0a1526] border border-slate-700/80 rounded-xl focus:outline-hidden focus:border-emerald-500 shadow-2xs font-bold transition-all text-white placeholder-slate-500 ${
-                          showPassword
-                            ? 'text-xs sm:text-sm font-mono tracking-normal'
-                            : 'text-2xl sm:text-3xl'
-                        }`}
-                        style={{
-                          letterSpacing: !showPassword && password ? '0.45em' : 'normal',
-                          fontFamily: !showPassword ? 'caption, sans-serif' : 'monospace',
-                        }}
+                        // NOTE: no custom letter-spacing / font here. The old 0.45em
+                        // tracking plus the `caption` font made the masked dots look
+                        // broken and the final character appear cut off, which users
+                        // read as "the field is not accepting my password".
+                        className="w-full pl-11 pr-11 py-2.5 bg-[#0a1526] border border-slate-700/80 rounded-xl focus:outline-hidden focus:border-emerald-500 shadow-2xs font-bold transition-all text-white placeholder-slate-500 text-sm tracking-normal"
                       />
+                      {/* One single eye toggle. The previous version rendered TWO
+                          buttons controlling the same state (one beside the label,
+                          one inside the field), which looked like a duplicated and
+                          broken control. */}
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখুন'}
+                        aria-pressed={showPassword}
                         className="w-8 h-8 flex items-center justify-center absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition cursor-pointer"
                         title={showPassword ? 'লুকান' : 'পাসওয়ার্ড দেখুন'}
                       >
@@ -857,7 +859,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                   {/* ৬. সাইন ইন বাটন */}
                   <button
                     type="submit"
-                    disabled={isSubmitting || !agreedTerms}
+                    disabled={isSubmitting}
                     className="w-full mt-2 py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-400 text-white font-bold shadow-lg shadow-emerald-950/50 transition-all duration-200 text-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed active:scale-98"
                   >
                     <span>{isSubmitting ? 'যাচাই হচ্ছে...' : 'সাইন ইন করুন'}</span>

@@ -1,4 +1,4 @@
-import { GpfFormData, LockedFieldsConfig, ReceiverPreset } from '../types';
+import { GpfFormData, LockedFieldsConfig } from '../types';
 
 export const DEFAULT_INITIAL_FORM: GpfFormData = {
   year: '২০২৪-২০২৫',
@@ -37,24 +37,6 @@ export const DEFAULT_LOCKED_CONFIG: LockedFieldsConfig = {
   upazilaName: true,
   districtName: true,
 };
-
-export const DEFAULT_RECEIVER_PRESETS: ReceiverPreset[] = [
-  {
-    id: '1',
-    title: 'উপজেলা শিক্ষা অফিসার, বিয়ানীবাজার',
-    content: 'উপজেলা শিক্ষা অফিসার\nবিয়ানীবাজার, সিলেট।',
-  },
-  {
-    id: '2',
-    title: 'জেলা প্রাথমিক শিক্ষা অফিসার, সিলেট',
-    content: 'জেলা প্রাথমিক শিক্ষা অফিসার\nসিলেট।',
-  },
-  {
-    id: '3',
-    title: 'উপজেলা শিক্ষা অফিসার, সদর, সিলেট',
-    content: 'উপজেলা শিক্ষা অফিসার\nসিলেট সদর, সিলেট।',
-  },
-];
 
 export const SAMPLE_RECORDS: GpfFormData[] = [
   {
@@ -121,7 +103,6 @@ const STORAGE_KEYS = {
   RECORDS: 'gpf_advance_saved_records_v2',
   LOCKED_CONFIG: 'gpf_advance_locked_config_v3',
   LOCKED_VALUES: 'gpf_advance_locked_values_v3',
-  RECEIVER_PRESETS: 'gpf_advance_receiver_presets_v2',
   CUSTOM_HTML: 'gpf_advance_custom_html_v2',
 };
 
@@ -186,27 +167,6 @@ export const saveLockedValues = (vals: Partial<GpfFormData>): void => {
     localStorage.setItem(STORAGE_KEYS.LOCKED_VALUES, JSON.stringify(vals));
   } catch (err) {
     console.error('Failed to save locked values', err);
-  }
-};
-
-export const getReceiverPresets = (): ReceiverPreset[] => {
-  try {
-    const data = localStorage.getItem(STORAGE_KEYS.RECEIVER_PRESETS);
-    if (data) {
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (err) {
-    console.error('Failed to get presets', err);
-  }
-  return DEFAULT_RECEIVER_PRESETS;
-};
-
-export const saveReceiverPresets = (presets: ReceiverPreset[]): void => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.RECEIVER_PRESETS, JSON.stringify(presets));
-  } catch (err) {
-    console.error('Failed to save presets', err);
   }
 };
 

@@ -147,12 +147,6 @@ export interface LockedFieldsConfig {
   districtName: boolean;
 }
 
-export interface ReceiverPreset {
-  id: string;
-  title: string;
-  content: string;
-}
-
 export interface GpfFormData {
   id?: string;
   year: string;

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Radio, AlertTriangle, Info, Bell, X, Sparkles } from 'lucide-react';
 import { getActiveAnnouncementsForUser, hydrateAnnouncements } from '../lib/centralAdminStore';
+import { supabase } from '../lib/supabase';
 import type { SystemAnnouncement } from '../types';
 
 interface BroadcastNoticeMarqueeProps {
@@ -12,23 +13,36 @@ export const BroadcastNoticeMarquee: React.FC<BroadcastNoticeMarqueeProps> = ({ 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDismissed, setIsDismissed] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      try {
-        const list = await hydrateAnnouncements(userUpazilaCode);
-        if (active) setAnnouncements(list);
-      } catch {
-        if (active) setAnnouncements(getActiveAnnouncementsForUser(userUpazilaCode));
-      }
-    };
-    void load();
-    const interval = window.setInterval(() => void load(), 30000);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
+  const load = useCallback(async () => {
+    try {
+      const list = await hydrateAnnouncements(userUpazilaCode);
+      setAnnouncements(list);
+    } catch {
+      setAnnouncements(getActiveAnnouncementsForUser(userUpazilaCode));
+    }
   }, [userUpazilaCode]);
+
+  useEffect(() => {
+    void load();
+    // Poll stays as the fallback for browsers whose websocket never connects.
+    const interval = window.setInterval(() => void load(), 30000);
+    return () => window.clearInterval(interval);
+  }, [load]);
+
+  // Realtime delivery (মডিউল ৪): a broadcast must reach an upazila screen the
+  // moment it is published, not when the next poll happens.
+  useEffect(() => {
+    if (!supabase) return;
+    const channel = supabase
+      .channel(`gpf-announcements-${userUpazilaCode || 'all'}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_announcements' }, () => {
+        void load();
+      })
+      .subscribe();
+    return () => {
+      void supabase?.removeChannel(channel);
+    };
+  }, [load, userUpazilaCode]);
 
   if (isDismissed || announcements.length === 0) return null;
 

@@ -501,3 +501,249 @@ $$;
 
 revoke all on function public.is_upazila_available(text) from public;
 grant execute on function public.is_upazila_available(text) to anon, authenticated;
+
+-- ============================================================================
+-- Super Admin recovery & lockout visibility.
+--
+-- `set_upazila_account_status` deliberately refuses to touch super_admin rows so
+-- an upazila account can never be used to suspend the owner. That leaves two gaps:
+-- a super_admin auto-suspended by 5 failed passwords stays suspended (the sign-in
+-- function only self-heals it once the 15 minute lock expires), and the panel has
+-- no way to see *why* an account is suspended. These functions close both, and
+-- every one of them is gated on is_super_admin().
+-- ============================================================================
+
+create or replace function public.admin_get_login_security()
+returns table (
+  upazila_code text,
+  user_id uuid,
+  failed_attempts smallint,
+  locked_until timestamptz,
+  auto_locked boolean,
+  account_status text
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    p.upazila_code,
+    p.user_id,
+    coalesce(s.failed_attempts, 0)::smallint as failed_attempts,
+    s.locked_until,
+    coalesce(s.auto_locked, false) as auto_locked,
+    p.account_status
+  from public.profiles p
+  left join public.login_security_state s on s.user_id = p.user_id
+  where public.is_super_admin()
+  order by coalesce(s.failed_attempts, 0) desc, p.upazila_code;
+$$;
+revoke all on function public.admin_get_login_security() from public;
+grant execute on function public.admin_get_login_security() to authenticated;
+
+-- Unlocks an account and clears its failed-login counter. Unlike
+-- set_upazila_account_status this may target a super_admin profile, because the
+-- whole point is to recover a locked administrator. It never grants a role.
+create or replace function public.admin_unlock_upazila_account(requested_upazila_code text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  target public.profiles%rowtype;
+begin
+  if not public.is_super_admin() then
+    raise exception using message = 'SUPER_ADMIN_REQUIRED';
+  end if;
+
+  select * into target from public.profiles
+  where upazila_code = requested_upazila_code;
+  if not found then
+    raise exception using message = 'UPAZILA_PROFILE_NOT_FOUND';
+  end if;
+
+  delete from public.login_security_state where user_id = target.user_id;
+  update public.profiles set account_status = 'active' where user_id = target.user_id;
+
+  insert into public.admin_audit_logs (id, upazila_code, user_id, payload)
+  values (
+    'unlock-' || gen_random_uuid(),
+    target.upazila_code,
+    target.user_id,
+    jsonb_build_object(
+      'timestamp', now(),
+      'eventType', 'account_unlocked',
+      'upazilaCode', target.upazila_code,
+      'description', 'সুপার এডমিন কর্তৃক অ্যাকাউন্টের লকআউট ও ব্যর্থ লগইন গণনা রিসেট করা হয়েছে।',
+      'status', 'success'
+    )
+  );
+end;
+$$;
+revoke all on function public.admin_unlock_upazila_account(text) from public;
+grant execute on function public.admin_unlock_upazila_account(text) to authenticated;
+
+-- Role management. Guards: cannot change your own role, cannot remove the last
+-- active super_admin, and only the three known roles are accepted.
+create or replace function public.admin_set_upazila_role(
+  requested_upazila_code text,
+  requested_role text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  actor uuid := auth.uid();
+  target public.profiles%rowtype;
+  active_super_admins integer;
+begin
+  if not public.is_super_admin() then
+    raise exception using message = 'SUPER_ADMIN_REQUIRED';
+  end if;
+  if requested_role not in ('upazila_user', 'super_admin', 'account_officer') then
+    raise exception using message = 'INVALID_ROLE';
+  end if;
+
+  select * into target from public.profiles
+  where upazila_code = requested_upazila_code;
+  if not found then
+    raise exception using message = 'UPAZILA_PROFILE_NOT_FOUND';
+  end if;
+  if target.user_id = actor then
+    raise exception using message = 'CANNOT_CHANGE_OWN_ROLE';
+  end if;
+
+  if target.role = 'super_admin' and requested_role <> 'super_admin' then
+    select count(*) into active_super_admins from public.profiles
+    where role = 'super_admin' and account_status = 'active' and user_id <> actor;
+    if active_super_admins = 0 then
+      raise exception using message = 'LAST_SUPER_ADMIN_PROTECTED';
+    end if;
+  end if;
+
+  update public.profiles set role = requested_role where user_id = target.user_id;
+
+  insert into public.admin_audit_logs (id, upazila_code, user_id, payload)
+  values (
+    'role-' || gen_random_uuid(),
+    target.upazila_code,
+    target.user_id,
+    jsonb_build_object(
+      'timestamp', now(),
+      'eventType', 'role_changed',
+      'upazilaCode', target.upazila_code,
+      'description', format('ভূমিকা পরিবর্তন: %s -> %s', target.role, requested_role),
+      'status', 'warning'
+    )
+  );
+end;
+$$;
+revoke all on function public.admin_set_upazila_role(text, text) from public;
+grant execute on function public.admin_set_upazila_role(text, text) to authenticated;
+
+-- ============================================================================
+-- Trash / restore for central claims (মডিউল ৬) and live notice delivery (মডিউল ৪).
+-- Deleting a claim is an everyday action, so it must be reversible: rows move to
+-- `deleted_at` and only an explicit purge removes them.
+-- ============================================================================
+
+alter table public.central_claims add column if not exists deleted_at timestamptz;
+create index if not exists central_claims_trash_idx on public.central_claims (deleted_at)
+  where deleted_at is not null;
+
+create or replace function public.admin_soft_delete_central_claim(requested_id text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_super_admin() then
+    raise exception using message = 'SUPER_ADMIN_REQUIRED';
+  end if;
+
+  update public.central_claims
+  set deleted_at = now(), updated_at = now()
+  where id = requested_id and deleted_at is null;
+  if not found then
+    raise exception using message = 'CLAIM_NOT_FOUND';
+  end if;
+end;
+$$;
+revoke all on function public.admin_soft_delete_central_claim(text) from public;
+grant execute on function public.admin_soft_delete_central_claim(text) to authenticated;
+
+create or replace function public.admin_restore_central_claim(requested_id text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_super_admin() then
+    raise exception using message = 'SUPER_ADMIN_REQUIRED';
+  end if;
+
+  update public.central_claims
+  set deleted_at = null, updated_at = now()
+  where id = requested_id and deleted_at is not null;
+  if not found then
+    raise exception using message = 'CLAIM_NOT_IN_TRASH';
+  end if;
+end;
+$$;
+revoke all on function public.admin_restore_central_claim(text) from public;
+grant execute on function public.admin_restore_central_claim(text) to authenticated;
+
+-- Empties the trash. Returns how many rows were destroyed so the panel can report it.
+create or replace function public.admin_purge_trashed_central_claims()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  destroyed integer;
+begin
+  if not public.is_super_admin() then
+    raise exception using message = 'SUPER_ADMIN_REQUIRED';
+  end if;
+
+  delete from public.central_claims where deleted_at is not null;
+  get diagnostics destroyed = row_count;
+
+  insert into public.admin_audit_logs (id, upazila_code, user_id, payload)
+  values (
+    'purge-' || gen_random_uuid(),
+    '00000',
+    auth.uid(),
+    jsonb_build_object(
+      'timestamp', now(),
+      'eventType', 'trash_purged',
+      'upazilaCode', '00000',
+      'description', format('Trash permanently cleared: %s record(s) destroyed.', destroyed),
+      'status', 'danger'
+    )
+  );
+
+  return destroyed;
+end;
+$$;
+revoke all on function public.admin_purge_trashed_central_claims() from public;
+grant execute on function public.admin_purge_trashed_central_claims() to authenticated;
+
+-- Live notices: push announcement writes to subscribers so a broadcast reaches every
+-- upazila screen without waiting for the next poll. Wrapped so re-running the schema
+-- (or a project without the publication) never aborts the migration.
+do $$
+begin
+  execute 'alter publication supabase_realtime add table public.system_announcements';
+exception
+  when duplicate_object then null;
+  when insufficient_privilege then null;
+  when undefined_object then null;
+end $$;

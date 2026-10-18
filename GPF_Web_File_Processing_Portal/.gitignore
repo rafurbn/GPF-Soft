@@ -9,3 +9,7 @@ coverage/
 tmp/
 supabase/.temp/
 .env.local
+
+# Supabase CLI local linkage state - never commit (project ref, org slug, pooler host)
+supabase/.temp/
+GPF_Web_File_Processing_Portal/supabase/.temp/

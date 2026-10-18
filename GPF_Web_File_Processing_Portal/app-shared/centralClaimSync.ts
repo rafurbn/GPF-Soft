@@ -30,9 +30,9 @@ export const syncClaimToCentral = async (
       app4: '৪. জিপিএফ মৃত্যুদাবী নিষ্পত্তি',
     };
 
-    const upazilaCode = claimData.upazilaCode || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-code') : '') || '10101';
-    const upazilaNameBn = claimData.upazilaName || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-name') : '') || 'বিয়ানীবাজার';
-    const districtNameBn = claimData.districtName || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-district') : '') || 'সিলেট';
+    const upazilaCode = claimData.upazilaCode || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-code') : '') || '';
+    const upazilaNameBn = claimData.upazilaName || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-name') : '') || '';
+    const districtNameBn = claimData.districtName || (typeof window !== 'undefined' ? window.localStorage.getItem('gpf-active-upazila-district') : '') || '';
 
     const numAmount = typeof claimData.amount === 'number' ? claimData.amount : parseFloat(String(claimData.amount).replace(/[^\d.]/g, '')) || 0;
 
@@ -64,6 +64,8 @@ export const syncClaimToCentral = async (
       upazila_code: record.upazilaCode,
       tracking_no: record.trackingNo,
       record,
+      // Re-saving a claim that was moved to the trash brings it back.
+      deleted_at: null,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'id' });
     if (error) throw error;

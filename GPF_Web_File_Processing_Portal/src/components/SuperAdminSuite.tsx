@@ -30,7 +30,7 @@ import {
   RefreshCw,
   Zap,
 } from 'lucide-react';
-import { UserSession, CentralClaimRecord, SystemAnnouncement, AppMaintenanceControl, AuditLogEntry, ActiveSession, UserAccountStatus } from '../types';
+import { UserSession, CentralClaimRecord, SystemAnnouncement, AppMaintenanceControl, AuditLogEntry, ActiveSession, UserAccountStatus, UserRole } from '../types';
 import {
   getCentralClaims,
   hydrateCentralClaims,
@@ -38,8 +38,6 @@ import {
   hydrateMaintenanceStates,
   hydrateAuditLogs,
   hydrateActiveSessions,
-  deleteCentralClaim,
-  deleteCentralClaimFromServer,
   getClaimsStats,
   getUserStatuses,
   setUserAccountStatus,
@@ -64,9 +62,33 @@ import {
   generateClaimsCsv,
   purgeTestData,
   purgeTestDataOnServer,
+  hydrateClaimTrash,
+  getTrashedClaims,
+  trashCentralClaim,
+  restoreTrashedClaim,
+  purgeClaimTrash,
+  buildBackupPayload,
+  applyBackupSnapshot,
+  replayClaimsToServer,
+  type BackupPayload,
 } from '../lib/centralAdminStore';
 import { getAllDivisions, getAllUpazilas } from '../data/upazilaData';
 import { supabase } from '../lib/supabase';
+import {
+  fetchLoginSecurity,
+  securityAlertFor,
+  unlockUpazilaOnServer,
+  assignUpazilaRoleOnServer,
+  LoginSecurityRow,
+} from '../lib/adminSecurity';
+
+import {
+  encryptBackup,
+  decryptBackup,
+  isEncryptedBackupFile,
+  parseBackupPayload,
+  describeBackupError,
+} from '../lib/secureBackup';
 
 interface SuperAdminSuiteProps {
   users: UserSession[];
@@ -91,6 +113,14 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
   const [announcements, setAnnouncements] = useState<SystemAnnouncement[]>([]);
   const [appMaintenance, setAppMaintenance] = useState<AppMaintenanceControl[]>([]);
   const [userStatusMap, setUserStatusMap] = useState(getUserStatuses());
+  const [loginSecurity, setLoginSecurity] = useState<Record<string, LoginSecurityRow>>({});
+  const [claimTrash, setClaimTrash] = useState<CentralClaimRecord[]>([]);
+  const [backupPassword, setBackupPassword] = useState('');
+  const [restoreFileName, setRestoreFileName] = useState('');
+  const [restoreFileText, setRestoreFileText] = useState('');
+  const [restorePassword, setRestorePassword] = useState('');
+  const [restoreIncludesClaims, setRestoreIncludesClaims] = useState(true);
+  const [isBackupBusy, setIsBackupBusy] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'warning' | 'error' } | null>(null);
 
   // Filter states for Users tab
@@ -127,6 +157,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
     }
     try {
       await hydrateCentralClaims();
+      await hydrateClaimTrash();
     } catch {
       allRemoteDataLoaded = false;
       showToast('সেন্ট্রাল দাবি ডেটাবেজ লোড করা যায়নি। Supabase schema ও সংযোগ যাচাই করুন।', 'error');
@@ -144,8 +175,18 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
       allRemoteDataLoaded = false;
       showToast('নোটিশ বা রক্ষণাবেক্ষণের কেন্দ্রীয় সেটিংস লোড করা যায়নি।', 'error');
     }
+
+    if (supabase) {
+      try {
+        const remoteSecurity = await fetchLoginSecurity();
+        setLoginSecurity(Object.fromEntries(remoteSecurity.map((row) => [row.upazilaCode, row])));
+      } catch {
+        showToast('লগইন নিরাপত্তার তথ্য (ব্যর্থ চেষ্টা ও লক) লোড করা যায়নি।', 'error');
+      }
+    }
     setStats(getClaimsStats());
     setClaims(getCentralClaims());
+    setClaimTrash(getTrashedClaims());
     setAuditLogs(getAuditLogs());
     setActiveSessions(getActiveSessions());
     setAnnouncements(getAnnouncements());
@@ -218,23 +259,43 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
 
   const handleUnlockUser = async (upazilaCode: string) => {
     if (!supabase) {
-      showToast('Supabase Auth সংযোগ প্রস্তুত নয়; অ্যাকাউন্ট আনলক করা যায়নি।', 'error');
+      showToast('Supabase Auth সংযোগ প্রস্তুত নয়; অ্যাকাউন্ট আনলক করা যায়নি।', 'error');
       return;
     }
-    const { error } = await supabase.rpc('set_upazila_account_status', {
-      requested_upazila_code: upazilaCode,
-      requested_status: 'active',
-    });
-    if (error) {
-      showToast('সার্ভারে অ্যাকাউন্ট আনলক করা যায়নি।', 'error');
+    try {
+      await unlockUpazilaOnServer(upazilaCode);
+    } catch (unlockError) {
+      showToast((unlockError as Error).message || 'সার্ভারে অ্যাকাউন্ট আনলক করা যায়নি।', 'error');
       return;
     }
     unlockUserAccount(upazilaCode);
-    showToast(`উপজেলা (${upazilaCode}) আনলক করা হয়েছে।`, 'success');
+    showToast(`উপজেলা (${upazilaCode}) এর লকআউট ও ব্যর্থ লগইন গণনা রিসেট করা হয়েছে।`, 'success');
     try {
       await onRefreshUsers?.();
     } catch {
-      showToast('অ্যাকাউন্ট আনলক হয়েছে, তবে তালিকা রিফ্রেশ হয়নি।', 'warning');
+      showToast('অ্যাকাউন্ট আনলক হয়েছে, তবে তালিকা রিফ্রেশ হয়নি।', 'warning');
+    }
+    reloadData();
+  };
+
+  const handleAssignRole = async (upazilaCode: string, role: UserRole) => {
+    if (!supabase) {
+      showToast('Supabase Auth সংযোগ প্রস্তুত নয়; ভূমিকা পরিবর্তন করা যায়নি।', 'error');
+      return;
+    }
+    const label = role === 'super_admin' ? 'সুপার এডমিন' : 'উপজেলা ইউজার';
+    if (!window.confirm(`${upazilaCode} এর ভূমিকা "${label}" করা হবে? নিশ্চিত হলে এগিয়ে যান `)) return;
+    try {
+      await assignUpazilaRoleOnServer(upazilaCode, role);
+    } catch (roleError) {
+      showToast((roleError as Error).message || 'ভূমিকা পরিবর্তন করা যায়নি।', 'error');
+      return;
+    }
+    showToast(`ভূমিকা পরিবর্তন সম্পন্ন: ${label}`, 'success');
+    try {
+      await onRefreshUsers?.();
+    } catch {
+      showToast('ভূমিকা বদলেছে, তবে তালিকা রিফ্রেশ হয়নি।', 'warning');
     }
     reloadData();
   };
@@ -243,17 +304,135 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
   // Central Claims Actions (মডিউল ২)
   // -------------------------------------------------------------------------
   const handleDeleteClaim = async (id: string, name: string) => {
-    if (window.confirm(`আপনি কি নিশ্চিত যে "${name}"-এর এই রেকর্ডটি সেন্ট্রাল ডেটাবেজ থেকে মুছে ফেলতে চান?`)) {
+    if (!window.confirm(`দাবিটি ট্র্যাশে নেওয়া হবে: "${name}"। প্রয়োজনে ব্যাকআপ ও রিস্টোর ট্যাব থেকে ফিরিয়ে আনা যাবে। এগিয়ে যাবেন?`)) {
+      return;
+    }
+    try {
+      await trashCentralClaim(id);
+    } catch {
+      showToast('দাবিটি ট্র্যাশে নেওয়া যায়নি।', 'error');
+      return;
+    }
+    showToast('দাবিটি ট্র্যাশে নেওয়া হয়েছে।', 'warning');
+    reloadData();
+  };
+
+  const handleRestoreTrashedClaim = async (id: string, name: string) => {
+    if (!window.confirm(`ট্র্যাশ থেকে ফিরিয়ে আনা হবে: "${name}"। এগিয়ে যাবেন?`)) {
+      return;
+    }
+    try {
+      await restoreTrashedClaim(id);
+    } catch {
+      showToast('দাবিটি পুনরুদ্ধার করা যায়নি।', 'error');
+      return;
+    }
+    showToast('দাবিটি কেন্দ্রীয় হাবে ফিরিয়ে আনা হয়েছে।', 'success');
+    reloadData();
+  };
+
+  const handleEmptyTrash = async () => {
+    if (!window.confirm('সাবধান! ট্র্যাশ খালি করলে দাবিগুলো স্থায়ীভাবে মুছে যাবে; শুধু ব্যাকআপ ফাইল থেকে ফেরানো যাবে। এগিয়ে যাবেন?')) {
+      return;
+    }
+    let destroyed = 0;
+    try {
+      destroyed = await purgeClaimTrash();
+    } catch {
+      showToast('ট্র্যাশ খালি করা যায়নি।', 'error');
+      return;
+    }
+    showToast(`${destroyed} টি দাবি স্থায়ীভাবে মুছে ফেলা হয়েছে।`, 'warning');
+    reloadData();
+  };
+
+  // -------------------------------------------------------------------------
+  // Encrypted backup & recovery (মডিউল ৬)
+  // -------------------------------------------------------------------------
+  const downloadTextFile = (content: string, fileName: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadEncryptedBackup = async () => {
+    if (!(await reloadData())) return;
+    setIsBackupBusy(true);
+    try {
+      const sealed = await encryptBackup(JSON.stringify(buildBackupPayload(users)), backupPassword);
+      downloadTextFile(
+        sealed,
+        `GPF_Encrypted_Backup_${new Date().toISOString().slice(0, 10)}.json`,
+        'application/json;charset=utf-8;',
+      );
+      showToast('এনক্রিপ্টেড (AES-256) ব্যাকআপ ডাউনলোড হয়েছে।', 'success');
+    } catch (err) {
+      showToast(describeBackupError(err), 'error');
+    } finally {
+      setIsBackupBusy(false);
+    }
+  };
+
+  const handleRestoreFileChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setRestoreFileText(await file.text());
+    setRestoreFileName(file.name);
+  };
+
+  const handleRestoreBackup = async () => {
+    if (!restoreFileText.trim()) {
+      showToast('প্রথমে একটি ব্যাকআপ ফাইল বেছে নিন।', 'error');
+      return;
+    }
+
+    let json = restoreFileText;
+    if (isEncryptedBackupFile(restoreFileText)) {
       try {
-        await deleteCentralClaimFromServer(id);
-      } catch {
-        showToast('কেন্দ্রীয় ডেটাবেজ থেকে ফাইলটি মোছা যায়নি।', 'error');
+        json = await decryptBackup(restoreFileText, restorePassword);
+      } catch (err) {
+        showToast(describeBackupError(err), 'error');
         return;
       }
-      deleteCentralClaim(id);
-      showToast('দাবি রেকর্ড সফলভাবে মুছে ফেলা হয়েছে।', 'warning');
-      reloadData();
     }
+
+    let payload: BackupPayload;
+    try {
+      payload = parseBackupPayload<BackupPayload>(json);
+    } catch {
+      showToast('ফাইলটি এই পোর্টালের ব্যাকআপ ফাইল নয়।', 'error');
+      return;
+    }
+
+    const claimNote = restoreIncludesClaims
+      ? ` ${payload.centralClaims?.length || 0} টি দাবি সহ (বর্তমান তালিকা প্রতিস্থাপিত হবে)`
+      : ' দাবির তালিকা বাদ দিয়ে';
+    if (!window.confirm(`ব্যাকআপ (${payload.exportedAt}) থেকে রিস্টোর করবেন${claimNote}?`)) {
+      return;
+    }
+
+    setIsBackupBusy(true);
+    try {
+      applyBackupSnapshot(payload, { includeClaims: restoreIncludesClaims });
+      if (restoreIncludesClaims && supabase && payload.centralClaims?.length) {
+        await replayClaimsToServer(payload.centralClaims, payload.claimTrash || []);
+      }
+    } catch {
+      setIsBackupBusy(false);
+      showToast('ব্যাকআপ পুনরুদ্ধার সম্পূর্ণ হয়নি।', 'error');
+      return;
+    }
+
+    setIsBackupBusy(false);
+    setRestoreFileText('');
+    setRestoreFileName('');
+    setRestorePassword('');
+    showToast('ব্যাকআপ থেকে সিস্টেম পুনরুদ্ধার হয়েছে।', 'success');
+    reloadData();
   };
 
   // -------------------------------------------------------------------------
@@ -363,29 +542,23 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
   // -------------------------------------------------------------------------
   const handleDownloadBackup = async () => {
     if (!(await reloadData())) return;
-    const jsonStr = generateFullBackupJson(users);
-    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `GPF_Full_Backup_${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    showToast('সম্পূর্ণ ডাটাবেজ ব্যাকআপ সফলভাবে ডাউনলোড হয়েছে।', 'success');
+    downloadTextFile(
+      generateFullBackupJson(users),
+      `GPF_Full_Backup_${new Date().toISOString().slice(0, 10)}.json`,
+      'application/json;charset=utf-8;',
+    );
+    showToast('সম্পূর্ণ ডাটাবেজ ব্যাকআপ সফলভাবে ডাউনলোড হয়েছে।', 'success');
     reloadData();
   };
 
   const handleDownloadCsv = async () => {
     if (!(await reloadData())) return;
-    const csvStr = generateClaimsCsv();
-    const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `GPF_Claims_Report_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-    showToast('সকল জিপিএফ দাবি CSV এক্সপোর্ট ডাউনলোড হয়েছে।', 'success');
+    downloadTextFile(
+      generateClaimsCsv(),
+      `GPF_Claims_Report_${new Date().toISOString().slice(0, 10)}.csv`,
+      'text/csv;charset=utf-8;',
+    );
+    showToast('সকল জিপিএফ দাবি CSV এক্সপোর্ট ডাউনলোড হয়েছে।', 'success');
     reloadData();
   };
 
@@ -746,8 +919,9 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-800/80">
                 {filteredUsers.map((u) => {
-                  const currentStatus = u.account_status || userStatusMap[u.upazila_code]?.status || 'active';
-                  const isLockedDueToFailures = userStatusMap[u.upazila_code]?.suspendedReason?.includes('ভুল পাসওয়ার্ড');
+                  const security = loginSecurity[u.upazila_code];
+                  const currentStatus = security?.accountStatus || u.account_status || userStatusMap[u.upazila_code]?.status || 'active';
+                  const lockAlert = securityAlertFor(security);
 
                   return (
                     <tr key={u.id} className="hover:bg-slate-800/40 transition">
@@ -801,14 +975,24 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                       </td>
 
                       <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                        {lockAlert && (
+                          <button
+                            type="button"
+                            onClick={() => handleUnlockUser(u.upazila_code)}
+                            title="ব্যর্থ লগইন গণনা রিসেট করে অ্যাকাউন্ট সক্রিয় করুন"
+                            className="px-2 py-1 rounded bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-700 text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <Unlock className="w-3 h-3" />
+                            <span>আনলক</span>
+                          </button>
+                        )}
                         {u.role !== 'super_admin' && (
                           <>
-                            {/* Status Changer Toggle */}
                             {currentStatus === 'active' ? (
                               <button
                                 type="button"
                                 onClick={() => handleToggleStatus(u.upazila_code, 'suspended')}
-                                title="অ্যাকাউন্টটি সাময়িক স্থগিত করুন"
+                                title="অ্যাকাউন্টটি সাময়িক স্থগিত করুন"
                                 className="px-2 py-1 rounded bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-700/60 text-[11px] font-semibold cursor-pointer"
                               >
                                 স্থগিত করুন
@@ -817,35 +1001,35 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleToggleStatus(u.upazila_code, 'active')}
-                                title="অ্যাকাউন্টটি সক্রিয় করুন"
+                                title="অ্যাকাউন্টটি সক্রিয় করুন"
                                 className="px-2 py-1 rounded bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 text-[11px] font-semibold cursor-pointer"
                               >
-                                সক্রিয় করুন
+                                সক্রিয় করুন
                               </button>
                             )}
 
-                            {/* OTP Generator button */}
                             <button
                               type="button"
                               onClick={() => handleGenerateOtp(u.upazila_code, u.email)}
-                              title="ব্যবহারকারীর জন্য ওয়ান-টাইম OTP কোড জেনারেট করুন"
+                              title="নিবন্ধিত ইমেইলে রিকভারি OTP পাঠান"
                               className="px-2 py-1 rounded bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60 text-[11px] font-semibold cursor-pointer inline-flex items-center gap-1"
                             >
                               <KeyRound className="w-3 h-3" />
                               <span>OTP দিন</span>
                             </button>
-
-                            {/* Unlock Button if locked */}
-                            {isLockedDueToFailures && (
-                              <button
-                                type="button"
-                                onClick={() => handleUnlockUser(u.upazila_code)}
-                                className="px-2 py-1 rounded bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-700 text-[11px] font-bold cursor-pointer"
-                              >
-                                আনলক
-                              </button>
-                            )}
                           </>
+                        )}
+
+                        {currentUser.upazila_code !== u.upazila_code && (
+                          <button
+                            type="button"
+                            onClick={() => handleAssignRole(u.upazila_code, u.role === 'super_admin' ? 'upazila_user' : 'super_admin')}
+                            title={u.role === 'super_admin' ? 'এই অ্যাকাউন্টকে উপজেলা ইউজারে নামান' : 'এই অ্যাকাউন্টকে সুপার এডমিন করুন'}
+                            className="px-2 py-1 rounded bg-purple-950/80 hover:bg-purple-900 text-purple-300 border border-purple-700/60 text-[11px] font-semibold cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <ShieldCheck className="w-3 h-3" />
+                            <span>{u.role === 'super_admin' ? 'ইউজারে নামান' : 'সুপার এডমিন করুন'}</span>
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -1411,6 +1595,149 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                 <span>টেস্ট ডেটা ক্লিনআপ করুন</span>
               </button>
             </div>
+          </div>
+
+          {/* Encrypted backup + restore + trash (মডিউল ৬) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2 border-t border-slate-800">
+            {/* Encrypted JSON backup */}
+            <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="w-9 h-9 rounded-xl bg-violet-900/60 flex items-center justify-center text-violet-300">
+                  <Lock className="w-4 h-4" />
+                </span>
+                <h4 className="font-bold text-white text-sm">এনক্রিপ্টেড ব্যাকআপ (AES-256)</h4>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                কর্মচারীর নাম ও জিপিএফ হিসাব নম্বর সংবেদনশীল তথ্য, তাই পাসওয়ার্ড দিয়ে সিল করা ব্যাকআপ ফাইল তৈরি করুন। ভুল পাসওয়ার্ডে ফাইল খুলবে না।
+              </p>
+              <input
+                type="password"
+                value={backupPassword}
+                onChange={(e) => setBackupPassword(e.target.value)}
+                placeholder="ব্যাকআপ পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-violet-500"
+              />
+              <button
+                type="button"
+                onClick={handleDownloadEncryptedBackup}
+                disabled={isBackupBusy}
+                className="w-full py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                <span>এনক্রিপ্টেড ব্যাকআপ ডাউনলোড</span>
+              </button>
+            </div>
+
+            {/* Restore from backup */}
+            <div className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="w-9 h-9 rounded-xl bg-emerald-900/60 flex items-center justify-center text-emerald-300">
+                  <RotateCcw className="w-4 h-4" />
+                </span>
+                <h4 className="font-bold text-white text-sm">ব্যাকআপ থেকে পুনরুদ্ধার (Recovery)</h4>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                সাধারণ বা এনক্রিপ্টেড ব্যাকআপ ফাইল বেছে নিন। এনক্রিপ্টেড ফাইলের পাসওয়ার্ডও দিন।
+              </p>
+              <input
+                type="file"
+                accept=".json,.txt,application/json"
+                onChange={handleRestoreFileChosen}
+                className="w-full text-xs text-slate-300 file:mr-3 file:px-3 file:py-2 file:rounded-xl file:border-0 file:bg-slate-800 file:text-white file:cursor-pointer bg-slate-900 border border-slate-700 rounded-xl py-2 px-2"
+              />
+              {restoreFileName && (
+                <p className="text-[11px] text-slate-400 font-mono truncate">নির্বাচিত ফাইল: {restoreFileName}</p>
+              )}
+              <input
+                type="password"
+                value={restorePassword}
+                onChange={(e) => setRestorePassword(e.target.value)}
+                placeholder="ফাইলের পাসওয়ার্ড (এনক্রিপ্টেড হলে)"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              />
+              <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={restoreIncludesClaims}
+                  onChange={(e) => setRestoreIncludesClaims(e.target.checked)}
+                  className="w-4 h-4 accent-emerald-600"
+                />
+                <span>দাবির ডেটাও ফিরিয়ে আনুন (সার্ভারের বর্তমান দাবির তালিকা প্রতিস্থাপিত হবে)</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleRestoreBackup}
+                disabled={isBackupBusy || !restoreFileName}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>ব্যাকআপ থেকে রিস্টোর করুন</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Claim trash */}
+          <div className="pt-2 border-t border-slate-800 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                  <Trash2 className="w-4 h-4 text-rose-400" />
+                  <span>ডিলিট করা দাবির ট্র্যাশ ({claimTrash.length})</span>
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  হাব থেকে মুছে যাওয়া প্রতিটি দাবি এখানে থাকে; খালি করার আগে পর্যন্ত যেকোনো সময় ফেরানো যায়।
+                </p>
+              </div>
+              {claimTrash.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleEmptyTrash}
+                  className="px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>ট্র্যাশ স্থায়ীভাবে খালি করুন</span>
+                </button>
+              )}
+            </div>
+
+            {claimTrash.length === 0 ? (
+              <p className="text-xs text-slate-500 bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3">
+                ট্র্যাশ খালি আছে।
+              </p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-slate-800">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950 text-slate-400">
+                    <tr>
+                      <th className="px-4 py-2 font-semibold">ট্র্যাকিং নং</th>
+                      <th className="px-4 py-2 font-semibold">কর্মচারী</th>
+                      <th className="px-4 py-2 font-semibold">এ্যাপ</th>
+                      <th className="px-4 py-2 font-semibold">উপজেলা</th>
+                      <th className="px-4 py-2 font-semibold text-right">ক্রিয়া</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {claimTrash.map((item) => (
+                      <tr key={item.id} className="bg-slate-900/50">
+                        <td className="px-4 py-2 font-mono text-indigo-300">{item.trackingNo}</td>
+                        <td className="px-4 py-2 text-white">{item.employeeName}</td>
+                        <td className="px-4 py-2 text-slate-300">{item.appTitle}</td>
+                        <td className="px-4 py-2 text-slate-300">{item.upazilaNameBn || item.upazilaCode}</td>
+                        <td className="px-4 py-2 text-right">
+                          <button
+                            type="button"
+                            onClick={() => void handleRestoreTrashedClaim(item.id, item.employeeName)}
+                            className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold cursor-pointer"
+                          >
+                            ফিরিয়ে আনুন
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
 import { CentralClaimRecord, SystemAnnouncement, AppMaintenanceControl, AuditLogEntry, ActiveSession, UserAccountStatus, UserSession } from '../types';
 import { supabase } from './supabase';
+import { findUpazilaByDefaultId } from '../data/upazilaData';
 
 // Storage keys
 const STORAGE_KEY_CENTRAL_CLAIMS = 'gpf_central_claims_v1';
@@ -53,20 +54,40 @@ export const getCentralClaims = (): CentralClaimRecord[] => {
   return claims;
 };
 
+/**
+ * Pulls the hub's claim list from Supabase into the local mirror.
+ *
+ * `deleted_at` only exists once the trash migration has been applied, so the
+ * filtered query is retried without the filter: an un-migrated project must still
+ * show its claims instead of failing the whole panel.
+ */
 export const hydrateCentralClaims = async (): Promise<CentralClaimRecord[]> => {
   if (!supabase) return getCentralClaims();
-  const records: CentralClaimRecord[] = [];
+  const client = supabase;
   const pageSize = 1000;
-  for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
-      .from('central_claims')
-      .select('record')
-      .order('created_at', { ascending: false })
-      .range(from, from + pageSize - 1);
-    if (error) throw error;
-    const page = (data || []).map((row) => row.record as CentralClaimRecord);
-    records.push(...page);
-    if (page.length < pageSize) break;
+
+  const collect = async (skipTrashed: boolean): Promise<CentralClaimRecord[]> => {
+    const records: CentralClaimRecord[] = [];
+    for (let from = 0; ; from += pageSize) {
+      const base = client
+        .from('central_claims')
+        .select('record')
+        .order('created_at', { ascending: false })
+        .range(from, from + pageSize - 1);
+      const { data, error } = await (skipTrashed ? base.is('deleted_at', null) : base);
+      if (error) throw error;
+      const page = (data || []).map((row) => row.record as CentralClaimRecord);
+      records.push(...page);
+      if (page.length < pageSize) break;
+    }
+    return records;
+  };
+
+  let records: CentralClaimRecord[];
+  try {
+    records = await collect(true);
+  } catch {
+    records = await collect(false);
   }
   setLocal(STORAGE_KEY_CENTRAL_CLAIMS, records);
   return records;
@@ -192,28 +213,7 @@ export const saveCentralClaim = (record: CentralClaimRecord): void => {
   });
 };
 
-export const deleteCentralClaim = (id: string): void => {
-  const claims = getCentralClaims();
-  const target = claims.find((c) => c.id === id);
-  const filtered = claims.filter((c) => c.id !== id);
-  setLocal(STORAGE_KEY_CENTRAL_CLAIMS, filtered);
 
-  if (target) {
-    addAuditLog({
-      eventType: 'claim_deleted',
-      upazilaCode: target.upazilaCode,
-      email: 'admin@dpe.gov.bd',
-      description: `সেন্ট্রাল ফাইল হাব থেকে ফাইল ডিলিট করা হয়েছে: ${target.trackingNo} (${target.employeeName})`,
-      status: 'warning',
-    });
-  }
-};
-
-export const deleteCentralClaimFromServer = async (id: string): Promise<void> => {
-  if (!supabase) throw new Error('Supabase Auth is not configured.');
-  const { error } = await supabase.from('central_claims').delete().eq('id', id);
-  if (error) throw error;
-};
 
 export const getClaimsStats = () => {
   const claims = getCentralClaims();
@@ -251,69 +251,96 @@ export const getClaimsStats = () => {
   return { totalClaims, totalAmount, byApp, byDistrict, byStatus };
 };
 
-// Scan localStorage for any existing claims from App1, App2, App3, App4
+// Scan this browser's localStorage for claims saved by App 1-4 so the hub is not
+// empty when Supabase is unavailable. Records are described only by their own
+// fields: nothing is invented, and a missing value stays missing.
+const SUB_APP_CLAIM_SOURCES: { appType: CentralClaimRecord['appType']; baseKey: string; appTitle: string }[] = [
+  { appType: 'app1', baseKey: 'gpf_advance_saved_records_v2', appTitle: '১. ফেরতযোগ্য অগ্রিম' },
+  { appType: 'app2', baseKey: 'gpf_nonrefundable_records_v2', appTitle: '২. অফেরতযোগ্য অগ্রিম' },
+  { appType: 'app3', baseKey: 'gpf_final_applet_records_v2', appTitle: '৩. চূড়ান্ত উত্তোলন' },
+  { appType: 'app4', baseKey: 'gpf_death_claims_data_v3', appTitle: '৪. জিপিএফ মৃত্যুদাবী নিষ্পত্তি' },
+];
+
+const CLAIM_STATUS_VALUES: CentralClaimRecord['status'][] = ['খসড়া', 'যাচাইকৃত', 'অনুমোদিত', 'বাতিল', 'প্রস্তুত'];
+
+/** First non-empty value among `keys`; camelCase and snake_case both accepted. */
+const pickField = (item: Record<string, any>, keys: string[]): string => {
+  for (const key of keys) {
+    const value = item[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+    if (typeof value === 'number') return String(value);
+  }
+  return '';
+};
+
+const pickAmount = (item: Record<string, any>, keys: string[]): number =>
+  Number(pickField(item, keys).replace(/[^\d.]/g, '')) || 0;
+
+/** `gpf~~<scope>~~<baseKey>` -> scope + base key; unscoped legacy keys get a null scope. */
+const splitStorageKey = (key: string): { scope: string | null; baseKey: string } | null => {
+  if (key.startsWith('gpf~~')) {
+    const parts = key.split('~~');
+    if (parts.length < 3) return null;
+    return { scope: parts[1], baseKey: parts.slice(2).join('~~') };
+  }
+  return { scope: null, baseKey: key };
+};
+
 function discoverExistingSubAppClaims(): CentralClaimRecord[] {
   if (typeof window === 'undefined') return [];
+
+  const activeScope = window.localStorage.getItem('gpf-active-upazila-code') || '';
   const found: CentralClaimRecord[] = [];
 
-  try {
-    // App 1 (Refundable)
-    const app1Raw = window.localStorage.getItem('gpf_advance_saved_records_v2');
-    if (app1Raw) {
-      const arr = JSON.parse(app1Raw);
-      if (Array.isArray(arr)) {
-        arr.forEach((item: any, i: number) => {
-          found.push({
-            id: item.id || `app1-${i}`,
-            appType: 'app1',
-            appTitle: '১. ফেরতযোগ্য অগ্রিম',
-            upazilaCode: item.upazila_code || '10101',
-            upazilaNameBn: item.upazilaName || 'বিয়ানীবাজার',
-            districtNameBn: item.districtName || 'সিলেট',
-            trackingNo: item.trackingNo || `REF-${item.year || '2026'}-${i + 101}`,
-            employeeName: item.applicantName || 'মো: আব্দুল মতিন',
-            designation: item.designation || 'প্রধান শিক্ষক',
-            gpfAccNo: item.gpfAccNo || 'SYL-45892',
-            amount: parseFloat(item.requestedAmount || '180000') || 180000,
-            status: 'অনুমোদিত',
-            applyDate: item.applyDate || '১৫/০৯/২০২৬',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            details: item,
-          });
-        });
-      }
-    }
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const storageKey = window.localStorage.key(index);
+    if (!storageKey) continue;
+    const split = splitStorageKey(storageKey);
+    if (!split) continue;
+    const source = SUB_APP_CLAIM_SOURCES.find((item) => item.baseKey === split.baseKey);
+    if (!source) continue;
+    // An unscoped legacy key belongs to whichever upazila is using this browser now.
+    const upazilaCode = split.scope && split.scope !== 'shared' ? split.scope : activeScope;
+    const scopeUpazila = findUpazilaByDefaultId(upazilaCode);
 
-    // App 4 (Death Claim)
-    const app4Raw = window.localStorage.getItem('gpf_death_claims_v1');
-    if (app4Raw) {
-      const arr = JSON.parse(app4Raw);
-      if (Array.isArray(arr)) {
-        arr.forEach((item: any, i: number) => {
-          found.push({
-            id: item.id || `app4-${i}`,
-            appType: 'app4',
-            appTitle: '৪. জিপিএফ মৃত্যুদাবী নিষ্পত্তি',
-            upazilaCode: item.upazilaCode || '10101',
-            upazilaNameBn: item.upazilaName || 'বিয়ানীবাজার',
-            districtNameBn: item.districtName || 'সিলেট',
-            trackingNo: item.trackingNo || `DTH-${item.year || '2026'}-${i + 201}`,
-            employeeName: item.deceasedEmployeeName || 'মরহুম রমিজ উদ্দিন',
-            designation: item.deceasedDesignation || 'প্রাক্তন সহকারী শিক্ষক',
-            gpfAccNo: item.gpfAccountNo || 'SYL-33109',
-            amount: parseFloat(item.depositedAmount || '300000') || 300000,
-            status: item.status || 'অনুমোদিত',
-            applyDate: item.applicationDate || '১০/১০/২০২৬',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            details: item,
-          });
-        });
-      }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(window.localStorage.getItem(storageKey) || 'null');
+    } catch {
+      continue;
     }
-  } catch {
-    // Ignore parse errors
+    const rows: Record<string, any>[] = Array.isArray(parsed)
+      ? parsed as Record<string, any>[]
+      : parsed && typeof parsed === 'object' && Array.isArray((parsed as any).records)
+        ? (parsed as any).records
+        : [];
+
+    rows.forEach((item, i) => {
+      if (!item || typeof item !== 'object') return;
+      const id = pickField(item, ['id']);
+      const status = pickField(item, ['status']);
+      const resolvedStatus = CLAIM_STATUS_VALUES.includes(status as CentralClaimRecord['status'])
+        ? (status as CentralClaimRecord['status'])
+        : 'প্রস্তুত';
+      found.push({
+        id: id || `local-${source.appType}-${upazilaCode || 'shared'}-${i}`,
+        appType: source.appType,
+        appTitle: source.appTitle,
+        upazilaCode,
+        upazilaNameBn: pickField(item, ['upazilaName', 'upazila_name', 'upazila_name_bn']) || scopeUpazila?.upazilaBn || '',
+        districtNameBn: pickField(item, ['districtName', 'district_name', 'district_name_bn']) || scopeUpazila?.districtBn || '',
+        trackingNo: pickField(item, ['trackingNo', 'tracking_no']) || id,
+        employeeName: pickField(item, ['applicantName', 'applicant_name', 'deceasedEmployeeName', 'employeeName']),
+        designation: pickField(item, ['designation', 'post']),
+        gpfAccNo: pickField(item, ['gpfAccNo', 'gpf_acc_no', 'gpfAccountNo', 'gpf_account_no']),
+        amount: pickAmount(item, ['requestedAmount', 'amount', 'depositedAmount', 'finalAmount', 'sanctionedAmount']),
+        status: resolvedStatus,
+        applyDate: pickField(item, ['applyDate', 'apply_date', 'applicationDate', 'application_date']),
+        createdAt: pickField(item, ['createdAt', 'created_at']) || new Date().toISOString(),
+        updatedAt: pickField(item, ['updatedAt', 'updated_at']) || new Date().toISOString(),
+        details: item,
+      });
+    });
   }
 
   return found;
@@ -688,33 +715,134 @@ export const setAppMaintenanceState = (
 // ---------------------------------------------------------------------------
 // 9. Backup, Export & Purge System (এক ক্লিকে ফুল ব্যাকআপ ও ক্লিনআপ)
 // ---------------------------------------------------------------------------
-export const generateFullBackupJson = (registeredUsers: UserSession[]): string => {
-  const backupData = {
-    exportedAt: new Date().toISOString(),
-    version: '2.0.0-PROD',
-    authority: 'Government of the People\'s Republic of Bangladesh',
-    portal: 'GPF Online File Processing Hub',
-    superAdmin: 'রফিকুল ইসলাম',
-    statistics: getClaimsStats(),
-    registeredUsers,
-    userStatuses: getUserStatuses(),
-    centralClaims: getCentralClaims(),
-    announcements: getAnnouncements(),
-    appMaintenance: getAppMaintenanceStates(),
-    auditLogs: getAuditLogs(),
-    activeSessions: getActiveSessions(),
-  };
+/**
+ * The one shape every backup (plain or encrypted) is written from, and the shape
+ * a restore reads back. Defining it once is what keeps the two in agreement.
+ */
+export interface BackupPayload {
+  exportedAt: string;
+  version: string;
+  authority: string;
+  portal: string;
+  statistics: ReturnType<typeof getClaimsStats>;
+  registeredUsers: UserSession[];
+  userStatuses: UserStatusMap;
+  centralClaims: CentralClaimRecord[];
+  claimTrash: CentralClaimRecord[];
+  announcements: SystemAnnouncement[];
+  appMaintenance: AppMaintenanceControl[];
+  auditLogs: AuditLogEntry[];
+  activeSessions: ActiveSession[];
+}
+
+export const buildBackupPayload = (registeredUsers: UserSession[]): BackupPayload => ({
+  exportedAt: new Date().toISOString(),
+  version: '2.1.0-PROD',
+  authority: "Government of the People's Republic of Bangladesh",
+  portal: 'GPF Online File Processing Hub',
+  statistics: getClaimsStats(),
+  registeredUsers,
+  userStatuses: getUserStatuses(),
+  centralClaims: getCentralClaims(),
+  claimTrash: getTrashedClaims(),
+  announcements: getAnnouncements(),
+  appMaintenance: getAppMaintenanceStates(),
+  auditLogs: getAuditLogs(),
+  activeSessions: getActiveSessions(),
+});
+
+/**
+ * Writes a backup payload back into every local store.
+ *
+ * `centralClaims` and `claimTrash` are the lists a caller may choose to skip:
+ * restoring them overwrites work that happened after the backup was taken, so
+ * the panel asks for that decision instead of assuming it.
+ */
+export const applyBackupSnapshot = (
+  payload: BackupPayload,
+  options: { includeClaims?: boolean } = {},
+): void => {
+  const includeClaims = options.includeClaims !== false;
+
+  setLocal(STORAGE_KEY_USER_STATUSES, payload.userStatuses || {});
+  setLocal(STORAGE_KEY_ANNOUNCEMENTS, payload.announcements || []);
+  setLocal(STORAGE_KEY_APP_MAINTENANCE, payload.appMaintenance?.length ? payload.appMaintenance : DEFAULT_APP_MAINTENANCE);
+  setLocal(STORAGE_KEY_AUDIT_LOGS, payload.auditLogs || []);
+  setLocal(STORAGE_KEY_ACTIVE_SESSIONS, payload.activeSessions || []);
+
+  if (includeClaims) {
+    setLocal(STORAGE_KEY_CENTRAL_CLAIMS, payload.centralClaims || []);
+    setLocal(STORAGE_KEY_CLAIM_TRASH, payload.claimTrash || []);
+  }
 
   addAuditLog({
     eventType: 'backup',
     upazilaCode: '00000',
     email: 'admin@dpe.gov.bd',
-    description: 'সারাদেশের সকল উপজেলার সম্পূর্ণ ডাটা ব্যাকআপ ডাউনলোড করা হয়েছে।',
+    description: `ব্যাকআপ ফাইল থেকে সিস্টেম পুনরুদ্ধার করা হয়েছে (ব্যাকআপের তারিখ: ${payload.exportedAt})${includeClaims ? '' : ' - দাবি ডাটা বাদ দেওয়া হয়েছে'}।`,
+    status: 'warning',
+  });
+};
+
+/**
+ * Writes one claim row back to the central database.
+ *
+ * `deleted_at` only exists after the trash migration, so a rejected write is
+ * retried without that column instead of failing the restore.
+ */
+const upsertClaimRow = async (claim: CentralClaimRecord, deletedAt: string | null): Promise<void> => {
+  if (!supabase) throw new Error('Supabase Auth is not configured.');
+  const base = {
+    id: claim.id,
+    app_type: claim.appType,
+    upazila_code: claim.upazilaCode,
+    tracking_no: claim.trackingNo,
+    record: claim,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabase.from('central_claims').upsert({ ...base, deleted_at: deletedAt }, { onConflict: 'id' });
+  if (!error) return;
+  const retry = await supabase.from('central_claims').upsert(base, { onConflict: 'id' });
+  if (retry.error) throw retry.error;
+};
+
+/**
+ * Pushes the claims inside a backup file back into the central database.
+ *
+ * A plain upsert would resurrect trashed rows, so those keep their `deleted_at`
+ * timestamp and the live ones have it cleared.
+ */
+export const replayClaimsToServer = async (
+  liveClaims: CentralClaimRecord[],
+  trashedClaims: CentralClaimRecord[],
+): Promise<number> => {
+  if (!supabase) throw new Error('Supabase Auth is not configured.');
+  let replayed = 0;
+  for (const claim of liveClaims) {
+    await upsertClaimRow(claim, null);
+    replayed += 1;
+  }
+  for (const claim of trashedClaims) {
+    await upsertClaimRow(claim, claim.updatedAt || new Date().toISOString());
+    replayed += 1;
+  }
+  return replayed;
+};
+
+export const generateFullBackupJson = (registeredUsers: UserSession[]): string => {
+  const backupData = buildBackupPayload(registeredUsers);
+
+  addAuditLog({
+    eventType: 'backup',
+    upazilaCode: '00000',
+    email: 'admin@dpe.gov.bd',
+    description: 'সারাদেশের সকল উপজেলার সম্পূর্ণ ডাটা ব্যাকআপ ডাউনলোড করা হয়েছে।',
     status: 'success',
   });
 
   return JSON.stringify(backupData, null, 2);
 };
+
 
 export const generateClaimsCsv = (): string => {
   const claims = getCentralClaims();
@@ -792,4 +920,119 @@ export const purgeTestDataOnServer = async (): Promise<{ claimsRemoved: number; 
     if (error) throw error;
   }
   return { claimsRemoved: testIds.length, logsRemoved: logIds.length };
+};
+
+/**
+ * Trash API (মডিউল ৬) - deleting a claim must be reversible.
+ *
+ * A claim is an everyday government document, so removal parks it in
+ * `deleted_at` on the server and in a local trash mirror. Only an explicit purge
+ * destroys rows, and anything purged is still recoverable from a backup file.
+ *
+ * Every call degrades when the schema has not been migrated yet: the panel keeps
+ * working the old way (hard delete) instead of blocking the operator.
+ */
+const STORAGE_KEY_CLAIM_TRASH = 'gpf_central_claims_trash_v1';
+
+export const getTrashedClaims = (): CentralClaimRecord[] =>
+  getLocal<CentralClaimRecord[]>(STORAGE_KEY_CLAIM_TRASH, []);
+
+/** Server-side trash list; the hub query hides those rows, so this is the only view of them. */
+export const hydrateClaimTrash = async (): Promise<CentralClaimRecord[]> => {
+  if (!supabase) return getTrashedClaims();
+  try {
+    const { data, error } = await supabase
+      .from('central_claims')
+      .select('record')
+      .not('deleted_at', 'is', null)
+      .order('updated_at', { ascending: false });
+    if (error) throw error;
+    const trashed = (data || []).map((row) => row.record as CentralClaimRecord);
+    setLocal(STORAGE_KEY_CLAIM_TRASH, trashed);
+    return trashed;
+  } catch {
+    // No trash column yet: keep whatever the local mirror holds.
+    return getTrashedClaims();
+  }
+};
+
+const moveToTrash = (record: CentralClaimRecord): void => {
+  setLocal(STORAGE_KEY_CENTRAL_CLAIMS, getCentralClaims().filter((c) => c.id !== record.id));
+  setLocal(STORAGE_KEY_CLAIM_TRASH, [record, ...getTrashedClaims().filter((c) => c.id !== record.id)]);
+};
+
+/** True when the server rejected a trash RPC because the column/function is missing. */
+const isMissingTrashSchema = (error: { code?: string; message?: string } | null): boolean => {
+  const text = `${error?.code || ''} ${error?.message || ''}`.toLowerCase();
+  return text.includes('deleted_at') || text.includes('does not exist') || text.includes('could not find the function');
+};
+
+/** Moves one claim out of the hub, on the server and in the local mirror. */
+export const trashCentralClaim = async (id: string): Promise<void> => {
+  const target = getCentralClaims().find((c) => c.id === id);
+  if (!target) throw new Error('CLAIM_NOT_FOUND');
+
+  if (supabase) {
+    const { error } = await supabase.rpc('admin_soft_delete_central_claim', { requested_id: id });
+    if (error) {
+      if (!isMissingTrashSchema(error)) throw error;
+      // Un-migrated project: fall back to the old hard delete, nothing else to try.
+      const fallback = await supabase.from('central_claims').delete().eq('id', id);
+      if (fallback.error) throw fallback.error;
+    }
+  }
+
+  moveToTrash(target);
+  addAuditLog({
+    eventType: 'claim_deleted',
+    upazilaCode: target.upazilaCode,
+    email: 'admin@dpe.gov.bd',
+    description: `সেন্ট্রাল ফাইল হাব থেকে দাবি ট্র্যাশে নেওয়া হয়েছে: ${target.trackingNo} (${target.employeeName})। প্রয়োজনে পুনরুদ্ধার করা যাবে।`,
+    status: 'warning',
+  });
+};
+
+/** Brings a trashed claim back into the hub, locally and on the server. */
+export const restoreTrashedClaim = async (id: string): Promise<void> => {
+  const target = getTrashedClaims().find((c) => c.id === id);
+  if (!target) throw new Error('CLAIM_NOT_IN_TRASH');
+
+  if (supabase) {
+    const { error } = await supabase.rpc('admin_restore_central_claim', { requested_id: id });
+    // Restoring from a pre-migration project re-inserts the row through the
+    // upsert path, which clears `deleted_at` when the column does exist.
+    if (error) {
+      if (!isMissingTrashSchema(error)) throw error;
+      await upsertClaimRow(target, null);
+    }
+  }
+
+  setLocal(STORAGE_KEY_CLAIM_TRASH, getTrashedClaims().filter((c) => c.id !== id));
+  setLocal(STORAGE_KEY_CENTRAL_CLAIMS, [target, ...getCentralClaims().filter((c) => c.id !== target.id)]);
+  addAuditLog({
+    eventType: 'claim_saved',
+    upazilaCode: target.upazilaCode,
+    email: 'admin@dpe.gov.bd',
+    description: `ট্র্যাশ থেকে দাবি পুনরুদ্ধার করা হয়েছে: ${target.trackingNo} (${target.employeeName})`,
+    status: 'success',
+  });
+};
+
+/** Empties the trash. Returns how many records the operator lost. */
+export const purgeClaimTrash = async (): Promise<number> => {
+  let destroyed = getTrashedClaims().length;
+  if (supabase) {
+    const { data, error } = await supabase.rpc('admin_purge_trashed_central_claims');
+    if (error && !isMissingTrashSchema(error)) throw error;
+    if (!error) destroyed = Number(data) || destroyed;
+  }
+  setLocal(STORAGE_KEY_CLAIM_TRASH, []);
+  addAuditLog({
+    eventType: 'backup',
+    upazilaCode: '00000',
+    email: 'admin@dpe.gov.bd',
+    description: `ট্র্যাশ খালি করা হয়েছে: ${destroyed} টি দাবি স্থায়ীভাবে মুছে ফেলা হয়েছে।`,
+    status: 'danger',
+  });
+  return destroyed;
 };

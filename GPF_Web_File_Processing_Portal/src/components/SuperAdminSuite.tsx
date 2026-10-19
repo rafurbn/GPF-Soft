@@ -79,6 +79,7 @@ import {
   securityAlertFor,
   unlockUpazilaOnServer,
   assignUpazilaRoleOnServer,
+  describeRpcError,
   LoginSecurityRow,
 } from '../lib/adminSecurity';
 
@@ -218,7 +219,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
   // -------------------------------------------------------------------------
   const handleToggleStatus = async (upazilaCode: string, newStatus: UserAccountStatus) => {
     if (!supabase) {
-      showToast('Supabase Auth সংযোগ প্রস্তুত নয়; অ্যাকাউন্টের স্ট্যাটাস বদলানো যায়নি।', 'error');
+      showToast('Supabase Auth সংযোগ প্রস্তুত নয়; অ্যাকাউন্টের স্ট্যাটাস বদলানো যায়নি।', 'error');
       return;
     }
     const { error } = await supabase.rpc('set_upazila_account_status', {
@@ -226,16 +227,31 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
       requested_status: newStatus,
     });
     if (error) {
-      showToast('সার্ভারে অ্যাকাউন্টের স্ট্যাটাস বদলানো যায়নি। আপনার সুপার অ্যাডমিন অনুমতি যাচাই করুন।', 'error');
+      showToast(`সার্ভারে স্ট্যাটাস সংরক্ষিত হয়নি: ${describeRpcError(error)}`, 'error');
       return;
     }
     setUserAccountStatus(upazilaCode, newStatus);
     setUserStatusMap(getUserStatuses());
-    showToast(`উপজেলা (${upazilaCode}) এর স্ট্যাটাস '${newStatus.toUpperCase()}' করা হয়েছে।`, newStatus === 'active' ? 'success' : 'warning');
     try {
       await onRefreshUsers?.();
     } catch {
-      showToast('স্ট্যাটাস বদলেছে, তবে অ্যাকাউন্ট তালিকা রিফ্রেশ হয়নি।', 'warning');
+      showToast('স্ট্যাটাস বদলেছে, তবে অ্যাকাউন্ট তালিকা রিফ্রেশ হয়নি।', 'warning');
+    }
+
+    // The RPC answers with void, so re-read the row from the database: if the
+    // deployed schema differs from this repo the status would silently stay put.
+    let confirmed: UserAccountStatus | undefined;
+    try {
+      const rows = await fetchLoginSecurity();
+      setLoginSecurity(Object.fromEntries(rows.map((row) => [row.upazilaCode, row])));
+      confirmed = rows.find((row) => row.upazilaCode === upazilaCode)?.accountStatus;
+    } catch {
+      confirmed = undefined;
+    }
+    if (confirmed && confirmed !== newStatus) {
+      showToast(`সার্ভার এখনও '${confirmed}' দেখাচ্ছে; '${newStatus}' প্রয়োগ হয়নি। Supabase-এর schema আবার প্রয়োগ করুন।`, 'warning');
+    } else {
+      showToast(`উপজেলা (${upazilaCode}) এর স্ট্যাটাস '${newStatus.toUpperCase()}' করা হয়েছে।`, newStatus === 'active' ? 'success' : 'warning');
     }
     reloadData();
   };
@@ -580,10 +596,21 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
   // -------------------------------------------------------------------------
   // Filtered lists
   // -------------------------------------------------------------------------
+  // The badge and the filter must resolve a status the same way, otherwise the
+  // table can list an account as active while the suspended filter hides it.
+  const accountStatusFor = (
+    upazilaCode: string,
+    fallback: UserAccountStatus | undefined,
+  ): UserAccountStatus =>
+    loginSecurity[upazilaCode]?.accountStatus
+    || fallback
+    || userStatusMap[upazilaCode]?.status
+    || 'active';
+
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       if (u.role === 'super_admin' && activeTab === 'users') return true; // show admin too
-      const status = u.account_status || userStatusMap[u.upazila_code]?.status || 'active';
+      const status = accountStatusFor(u.upazila_code, u.account_status);
       if (statusFilter !== 'all' && status !== statusFilter) return false;
       if (divisionFilter !== 'all' && u.division_name_bn !== divisionFilter) return false;
       if (userSearch.trim()) {
@@ -596,7 +623,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
       }
       return true;
     });
-  }, [users, userStatusMap, statusFilter, divisionFilter, userSearch, activeTab]);
+  }, [users, userStatusMap, loginSecurity, statusFilter, divisionFilter, userSearch, activeTab]);
 
   const filteredClaims = useMemo(() => {
     return claims.filter((c) => {
@@ -920,7 +947,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
               <tbody className="divide-y divide-slate-800/80">
                 {filteredUsers.map((u) => {
                   const security = loginSecurity[u.upazila_code];
-                  const currentStatus = security?.accountStatus || u.account_status || userStatusMap[u.upazila_code]?.status || 'active';
+                  const currentStatus = accountStatusFor(u.upazila_code, u.account_status);
                   const lockAlert = securityAlertFor(security);
 
                   return (

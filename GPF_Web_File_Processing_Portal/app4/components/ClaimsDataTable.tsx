@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import { ActionButton, RowDeleteButton } from '../../app-shared/ui/ActionButton';
+import { LABELS } from '../../app-shared/ui/tokens';
 import { GpfDeathClaim } from '../types/gpf';
 import {
   toBengaliNumber,
@@ -6,17 +8,7 @@ import {
 } from '../utils/bengaliWords';
 import { printClaimDocument, downloadClaimDocument } from '../utils/printAndDownload';
 import { toBn, date } from '../../src/lib/format';
-import {
-  Search,
-  Edit2,
-  Trash2,
-  Printer,
-  Download,
-  Plus,
-  FileDown,
-  Upload,
-  FileSpreadsheet,
-} from 'lucide-react';
+import { Search, FileDown, Upload } from 'lucide-react';
 
 interface ClaimsDataTableProps {
   claims: GpfDeathClaim[];
@@ -237,14 +229,13 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
           </button>
 
           {/* Export CSV */}
-          <button
-            onClick={handleExportCSV}
-            className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-600/30 hover:border-amber-500/50 flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="সকল ক্লেইম এক্সেল (CSV) ফরম্যাটে ডাউনলোড করুন"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">এক্সেল</span>
-          </button>
+                    <ActionButton
+  kind="neutral"
+  id="btn-export-csv"
+  label={LABELS.excel}
+  title={LABELS.exportCsv}
+  onClick={handleExportCSV}
+/>
 
           {/* Search box */}
           <div className="relative min-w-[170px] sm:min-w-[210px]">
@@ -285,13 +276,13 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
           </select>
 
           {/* New entry button */}
-          <button
-            onClick={onNewClaim}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1 transition-colors border border-emerald-500 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ নতুন এন্ট্রি</span>
-          </button>
+                    <ActionButton
+  kind="new"
+  id="btn-new-application-header"
+  label={LABELS.new}
+  title={LABELS.new}
+  onClick={onNewClaim}
+/>
         </div>
       </div>
 
@@ -385,44 +376,10 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
                   <td className="py-3 px-3 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       {/* 1. Print Button */}
-                      <button
-                        onClick={() => handlePrint(claim)}
-                        className="p-1.5 rounded-lg text-amber-300 hover:text-amber-200 hover:bg-amber-950/70 border border-amber-500/40 hover:border-amber-400 transition-colors"
-                        title="৭টি পেজ সরকারি ফাইল সরাসরি প্রিন্ট করুন"
-                      >
-                        <Printer className="w-4 h-4" />
-                      </button>
-
-                      {/* 2. Edit Button */}
-                      <button
-                        onClick={() => onEditClaim(claim)}
-                        className="p-1.5 rounded-lg text-blue-300 hover:text-blue-200 hover:bg-blue-950/60 border border-transparent hover:border-blue-700/50 transition-colors"
-                        title="ফর্মে সম্পাদনা করুন"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-
-                      {/* 3. Delete Button */}
-                      <button
-                        onClick={() => {
-                          if (confirm(`আপনি কি নিশ্চিত যে "${claim.applicantName}" এর আবেদনটি মুছতে চান?`)) {
-                            onDeleteClaim(claim.id);
-                          }
-                        }}
-                        className="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-950/60 border border-transparent hover:border-rose-700/50 transition-colors"
-                        title="মুছে ফেলুন"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-
-                      {/* 4. Download Button (After Delete Button as requested) */}
-                      <button
-                        onClick={() => handleDownload(claim)}
-                        className="p-1.5 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/70 border border-emerald-600/40 hover:border-emerald-500 transition-colors"
-                        title="৭টি পেজ অফিশিয়াল ফাইল ডাউনলোড করুন"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
+                      <ActionButton kind="print" title={LABELS.print} onClick={() => handlePrint(claim)} />
+                      <ActionButton kind="edit" title={LABELS.edit} onClick={() => onEditClaim(claim)} />
+                      <RowDeleteButton onConfirm={() => onDeleteClaim(claim.id)} />
+                      <ActionButton kind="download" title={LABELS.download} onClick={() => handleDownload(claim)} />
                     </div>
                   </td>
                 </tr>

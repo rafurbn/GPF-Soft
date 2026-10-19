@@ -22,6 +22,7 @@ import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
+import { Toast, useToast } from '../app-shared/ui/Toast';
 
 // localStorage key that app1 mirrors its records into (see src/utils/storage.ts).
 const RECORDS_STORAGE_KEY = 'gpf_advance_saved_records_v2';
@@ -29,13 +30,11 @@ const RECORDS_STORAGE_KEY = 'gpf_advance_saved_records_v2';
 interface GpfRefundableAppProps {
   currentUser: UserSession;
   onBack: () => void;
-  onSaveApplication: (app: GpfApplication) => void;
 }
 
 export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
   currentUser,
   onBack,
-  onSaveApplication,
 }) => {
   // উপজেলা ও জেলার নাম উপজেলা আইডি খোলার সময়েই স্থায়ীভাবে ফিক্সড হয়ে যায়
   const [lockedConfig, setLockedConfig] = useState<LockedFieldsConfig>(() => ({
@@ -83,14 +82,7 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
   const [isHtmlEditorOpen, setIsHtmlEditorOpen] = useState(false);
   const [previewData, setPreviewData] = useState<GpfFormData>(formData);
   const [isDesktopGuideOpen, setIsDesktopGuideOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
-
-  const showToast = (text: string, type: 'success' | 'info' | 'error' = 'success') => {
-    setToastMessage({ text, type });
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3500);
-  };
+  const { toast, showToast } = useToast();
 
   // Sync locked values to persistent storage
   useEffect(() => {
@@ -206,7 +198,6 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
       gpf_type: 'refundable',
       reason: recordToSave.purpose || 'গৃহমেরামত'
     };
-    onSaveApplication(parentApp);
     void syncClaimToCentral('app1', {
       id: parentApp.id,
       trackingNo: parentApp.tracking_no,
@@ -273,12 +264,11 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
   };
 
   const handleDeleteRecord = (id: string) => {
-    if (confirm('আপনি কি এই আবেদনটি মুছে ফেলতে চান?')) {
-      const updated = records.filter((r) => r.id !== id);
-      setRecords(updated);
-      persistRecords(updated);
-      showToast('আবেদনটি তালিকা থেকে মুছে ফেলা হয়েছে', 'info');
-    }
+    // বাটন নিজেই মুছুন/না জিজ্ঞেস করে, তাই এখানে confirm() নেই।
+    const updated = records.filter((r) => r.id !== id);
+    setRecords(updated);
+    persistRecords(updated);
+    showToast('আবেদনটি তালিকা থেকে মুছে ফেলা হয়েছে', 'info');
   };
 
   const handleExportCSV = () => {
@@ -318,28 +308,7 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col">
       {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-2 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md border text-sm font-semibold transition-all">
-          {toastMessage.type === 'success' && (
-            <div className="flex items-center space-x-2 text-emerald-300 bg-slate-950/95 border-emerald-500/50 p-2 rounded-lg">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              <span>{toastMessage.text}</span>
-            </div>
-          )}
-          {toastMessage.type === 'error' && (
-            <div className="flex items-center space-x-2 text-rose-300 bg-slate-950/95 border-rose-500/50 p-2 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-rose-400" />
-              <span>{toastMessage.text}</span>
-            </div>
-          )}
-          {toastMessage.type === 'info' && (
-            <div className="flex items-center space-x-2 text-sky-300 bg-slate-950/95 border-sky-500/50 p-2 rounded-lg">
-              <Info className="w-5 h-5 text-sky-400" />
-              <span>{toastMessage.text}</span>
-            </div>
-          )}
-        </div>
-      )}
+      <Toast toast={toast} />
 
       <SubAppHeader
         appNumber={1}

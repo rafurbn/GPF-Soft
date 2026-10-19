@@ -2,15 +2,11 @@ import React from 'react';
 import { GpfFormData, LockedFieldsConfig, LockableFieldKey } from '../../src/types';
 import { numberToBanglaWords, toBanglaDigits, cleanNumberString, formatBanglaCurrency } from '../../src/utils/numberToBanglaWords';
 import { deriveFormData } from '../../src/utils/deriveFormData';
-import {
-  Lock,
-  Unlock,
-  Save,
-  Sparkles,
-  Calendar,
-} from 'lucide-react';
+import { Sparkles, Calendar } from 'lucide-react';
 import dashboardLogo from '../../src/assets/images/rf-logo.svg';
-import { LockToggleButton } from './LockToggleButton';
+import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
+import { LABELS } from '../../app-shared/ui/tokens';
+import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
 
 interface InputFormTableProps {
   formData: GpfFormData;
@@ -113,81 +109,29 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
   const emptyCellClass =
     'border border-slate-800 bg-[#0c1427]/60 w-24 text-center text-xs text-slate-600';
 
-  // Renders the lock/unlock cells for a row.
-  // - combined: renders both buttons inside one colSpan=2 cell
-  // - lockedAlways: renders the "fixed" badge instead of buttons (permanently locked fields)
+  // One lock cell per row: a single toggle, or the fixed badge for the field names
+  // that come from the upazila session. The header keeps colSpan=2, so the table
+  // is exactly as wide as it was with the old two-button pair.
   const renderLockControls = (
     field: LockableFieldKey,
-    { combined = false, lockedAlways = false }: { combined?: boolean; lockedAlways?: boolean } = {}
-  ) => {
-    const isLocked = lockedAlways || !!lockedConfig[field];
-
-    if (lockedAlways) {
-      return (
-        <td colSpan={2} className={cellClass}>
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-800/60 bg-emerald-900/40 px-3 py-1.5 text-xs font-semibold text-emerald-200 whitespace-nowrap">
-            <Lock className="h-3.5 w-3.5" /> ফিক্সড
-          </span>
-        </td>
-      );
-    }
-
-    if (combined) {
-      return (
-        <td colSpan={2} className={cellClass}>
-          <div className="flex items-center justify-center gap-1">
-            <LockToggleButton
-              action="lock"
-              isLocked={isLocked}
-              onClick={() => toggleLock(field)}
-              title="তথ্য লক করে সংরক্ষণ করুন"
-            />
-            <LockToggleButton
-              action="unlock"
-              isLocked={isLocked}
-              onClick={() => toggleLock(field)}
-              title="তথ্য পরিবর্তনের জন্য আনলক করুন"
-            />
-          </div>
-        </td>
-      );
-    }
-
-    return (
-      <>
-        {/* Lock Cell */}
-        <td className={`${cellClass} w-24`}>
-          <LockToggleButton
-            action="lock"
-            isLocked={isLocked}
-            onClick={() => toggleLock(field)}
-            title="তথ্য লক করে সংরক্ষণ করুন"
-            fullWidth
-          />
-        </td>
-
-        {/* Unlock Cell */}
-        <td className={`${cellClass} w-24`}>
-          <LockToggleButton
-            action="unlock"
-            isLocked={isLocked}
-            onClick={() => toggleLock(field)}
-            title="তথ্য পরিবর্তনের জন্য আনলক করুন"
-            fullWidth
-          />
-        </td>
-      </>
-    );
-  };
-
-  // Empty Lock/Unlock cells for non-lockable rows
-  const renderEmptyLockCells = () => (
-    <>
-      <td className={emptyCellClass}>—</td>
-      <td className={emptyCellClass}>—</td>
-    </>
+    { lockedAlways = false }: { lockedAlways?: boolean } = {},
+  ) => (
+    <td colSpan={2} className={cellClass}>
+      {lockedAlways ? (
+        <FixedLockBadge />
+      ) : (
+        <LockToggle
+          id={`lock-btn-${field}`}
+          isLocked={!!lockedConfig[field]}
+          onToggle={() => toggleLock(field)}
+          fullWidth
+        />
+      )}
+    </td>
   );
 
+  // Empty lock cell for a row that cannot be locked
+  const renderEmptyLockCells = () => <td colSpan={2} className={emptyCellClass}>—</td>;
   return (
     <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8" id="input-dashboard-section">
       {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
@@ -231,11 +175,8 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
               <th className="bg-[#0f172a] text-slate-300 py-2.5 px-4 text-left font-bold text-xs sm:text-sm border-r border-slate-800">
                 এখানে তথ্য ইনপুট দিন
               </th>
-              <th className="bg-[#0f172a] text-slate-300 py-2.5 px-2 w-24 text-center font-bold text-xs sm:text-sm border-r border-slate-800">
-                লক
-              </th>
-              <th className="bg-[#0f172a] text-slate-300 py-2.5 px-2 w-24 text-center font-bold text-xs sm:text-sm">
-                আনলক
+              <th colSpan={2} className="bg-[#0f172a] text-slate-300 py-2.5 px-2 w-48 text-center font-bold text-xs sm:text-sm">
+                {`${LABELS.locked} / ${LABELS.unlocked}`}
               </th>
             </tr>
           </thead>
@@ -256,16 +197,10 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     placeholder="২০২৬"
                     className={`w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
                       lockedConfig.year
-                        ? 'bg-amber-950/20 border-amber-500/50 text-amber-200 cursor-not-allowed'
+                        ? 'bg-emerald-950/25 border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none'
                         : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:border-emerald-500'
                     }`}
-                  />
-                  {lockedConfig.year && (
-                    <span className="text-[11px] text-amber-300 bg-amber-950/60 border border-amber-600/40 px-2.5 py-0.5 rounded-lg font-medium whitespace-nowrap">
-                      লক করা আছে
-                    </span>
-                  )}
-                </div>
+                  />                </div>
             </FormRow>
 
             {/* ২। আবেদনের তারিখ */}
@@ -305,14 +240,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
               label="প্রাপক"
               hint="মাল্টি ডাটা এন্ট্রি / ড্রপডাউন সুবিধা"
               hintClassName="text-emerald-400 leading-tight"
-              labelExtra={
-                lockedConfig.receiverInfo ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-950/80 border border-emerald-600/40 px-2 py-0.5 rounded mt-1.5 font-medium">
-                    <Lock className="w-3 h-3" /> লকড (সুরক্ষিত)
-                  </span>
-                ) : null
-              }
-              lockCells={renderLockControls('receiverInfo', { combined: true })}
+              lockCells={renderLockControls('receiverInfo')}
             >
                 <div className="space-y-2">
                   <textarea
@@ -678,7 +606,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     placeholder=""
                     className={`w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
                       lockedConfig.ddoName
-                        ? 'bg-amber-950/20 border-amber-500/50 text-amber-200 cursor-not-allowed'
+                        ? 'bg-emerald-950/25 border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none'
                         : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:border-emerald-500'
                     }`}
                   />
@@ -699,7 +627,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                       placeholder=""
                       className={`flex-1 min-w-[200px] rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
                         lockedConfig.ddoDesignation
-                          ? 'bg-amber-950/20 border-amber-500/50 text-amber-200 cursor-not-allowed'
+                          ? 'bg-emerald-950/25 border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none'
                           : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:border-emerald-500'
                       }`}
                     />
@@ -760,34 +688,13 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
         </table>
       </div>
 
-      {/* Action Buttons Toolbar */}
-      <div className="bg-[#0b1329] border-t border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
-            <Save className="w-4 h-4" />
-          </div>
-          <div>
-            <span className="text-sm font-bold text-white block">আবেদন ডাটা সংরক্ষণ</span>
-            <p className="text-xs text-slate-400">
-              ২০টি রো-তে তথ্য ইনপুট সম্পন্ন হলে ডাটা সেইভ করুন
-            </p>
-          </div>
-        </div>
-
-        {/* Action Button: Only Save Data button */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onSaveRecord}
-            className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-sm font-bold flex items-center space-x-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer hover:scale-102 active:scale-98"
-            title="রেকর্ড সংরক্ষণ করুন"
-          >
-            <Save className="w-4 h-4" />
-            <span>ডাটা সেইভ করুন</span>
-          </button>
-        </div>
-      </div>
-
+      <DashboardActionBar
+        note="২০টি রো-তে তথ্য ইনপুট সম্পন্ন হলে সংরক্ষণ বাটনে চাপুন।"
+        onSave={onSaveRecord}
+        onNew={onResetUnlocked}
+        onPrint={onOpenPreview}
+        onHtmlEdit={onOpenHtmlEditor}
+      />
     </div>
   );
 };

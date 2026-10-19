@@ -18,6 +18,7 @@ import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimited
 import { CheckCircle2 } from 'lucide-react';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
+import { Toast, useToast } from '../app-shared/ui/Toast';
 
 const STORAGE_FORM_KEY = 'gpf_final_applet_draft_v3';
 const STORAGE_LOCKS_KEY = 'gpf_final_applet_locks_v3';
@@ -35,13 +36,11 @@ const DEFAULT_LOCKS: FinalFieldLocks = {
 interface GpfFinalWithdrawalAppProps {
   currentUser: UserSession;
   onBack: () => void;
-  onSaveApplication: (app: GpfApplication) => void;
 }
 
 export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   currentUser,
   onBack,
-  onSaveApplication,
 }) => {
   const defaultInitialData: GpfFinalFormData = {
     yearSession: '২০২৬',
@@ -122,9 +121,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [autoDownloadPdf, setAutoDownloadPdf] = useState(false);
   const [isHtmlEditModalOpen, setIsHtmlEditModalOpen] = useState(false);
-  const [activePrintData, setActivePrintData] = useState<GpfFinalFormData>(formData);
-  const [saveSuccessNotification, setSaveSuccessNotification] = useState(false);
-  const [saveSyncWarning, setSaveSyncWarning] = useState(false);
+  const [activePrintData, setActivePrintData] = useState<GpfFinalFormData>(formData);  const { toast, showToast } = useToast();
 
   const dashboardRef = useRef<HTMLDivElement>(null);
 
@@ -154,7 +151,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   useEffect(() => {
     void saveUnlimitedRecords(savedRecords, STORAGE_RECORDS_KEY).then((result) => {
       if (!result.ok) {
-        alert('সংরক্ষণ করা যায়নি — ব্রাউজার স্টোরেজ পূর্ণ। পুরনো আবেদন মুছে আবার চেষ্টা করুন।');
+        showToast('সংরক্ষণ করা যায়নি — ব্রাউজার স্টোরেজ পূর্ণ। পুরনো আবেদন মুছে আবার চেষ্টা করুন।', 'error');
       }
     });
   }, [savedRecords]);
@@ -236,7 +233,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   // Save current application to records list
   const handleSaveRecord = () => {
     if (!formData.applicantName && !formData.gpfAccountNo) {
-      alert('অনুগ্রহ করে আবেদনকারীর নাম অথবা জিপিএফ হিসাব নম্বর পূরণ করুন।');
+      showToast('অনুগ্রহ করে আবেদনকারীর নাম অথবা জিপিএফ হিসাব নম্বর পূরণ করুন।', 'error');
       return;
     }
 
@@ -264,8 +261,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
     });
 
     setFormData((prev) => ({ ...prev, id: recordId, requestedAmountWords: words }));
-    setSaveSuccessNotification(true);
-    setTimeout(() => setSaveSuccessNotification(false), 2500);
+    showToast('আবেদনটি সফলভাবে তালিকায় সংরক্ষণ করা হয়েছে!', 'success');
 
     // Sync to parent portal application tracking
     const cleanAmount = cleanNumberString(formData.requestedAmountNumber);
@@ -284,7 +280,6 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
       gpf_type: 'final',
       reason: 'চাকরি হতে অবসর (PRL) ও চূড়ান্ত নিষ্পত্তিকরণ'
     };
-    onSaveApplication(parentApp);
     void syncClaimToCentral('app3', {
       id: parentApp.id,
       trackingNo: parentApp.tracking_no,
@@ -300,8 +295,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
       rawDetails: newRecord,
     }).then((synced) => {
       if (synced) return;
-      setSaveSyncWarning(true);
-      window.setTimeout(() => setSaveSyncWarning(false), 6000);
+      showToast('আবেদনটি এই ডিভাইসে সেভ হয়েছে, তবে কেন্দ্রীয় ডেটাবেজে সিঙ্ক হয়নি।', 'warning');
     });
   };
 
@@ -360,19 +354,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
 
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col">
-      {/* Save Success Toast */}
-      {saveSuccessNotification && (
-        <div className="fixed top-20 right-5 z-50 bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 text-sm font-semibold animate-in slide-in-from-top duration-200">
-          <CheckCircle2 className="w-5 h-5 text-white" />
-          <span>আবেদনটি সফলভাবে তালিকায় সংরক্ষণ করা হয়েছে!</span>
-        </div>
-      )}
-      {saveSyncWarning && (
-        <div className="fixed top-20 left-5 z-50 bg-amber-700 text-white px-4 py-2.5 rounded-lg shadow-xl text-sm font-semibold">
-          আবেদনটি এই ডিভাইসে সেভ হয়েছে, তবে কেন্দ্রীয় ডেটাবেজে সিঙ্ক হয়নি।
-        </div>
-      )}
-
+      <Toast toast={toast} />
       <SubAppHeader
         appNumber={3}
         title="জিপিএফ চূড়ান্ত উত্তোলন ফাইল প্রসেসিং"
@@ -393,6 +375,8 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
             onAutoGenerateWords={handleAutoGenerateWords}
             onOpenPrintPreview={handlePrintCurrentDraft}
             onNewApplication={handleNewApplication}
+            onOpenHtmlEditor={handleOpenHtmlEdit}
+            onShowToast={showToast}
             onSaveRecord={handleSaveRecord}
           />
         </div>

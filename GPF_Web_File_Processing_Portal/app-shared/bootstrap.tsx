@@ -15,7 +15,6 @@ import { getRemoteMaintenanceState, isCurrentSessionTerminated, isCurrentAccount
 export interface SubAppProps {
   currentUser: UserSession;
   onBack: () => void;
-  onSaveApplication: (app: GpfApplication) => void;
 }
 
 export interface SubAppModule {
@@ -105,10 +104,7 @@ export const mountSubApp = async (
       <RootComponent
         currentUser={currentUser}
         onBack={handleBack}
-        onSaveApplication={() => {
-          // Each sub-app already keeps its own records in localStorage; the
-          // portal-wide tracking list is no longer part of this MPA page.
-        }}
+        
       />
     </StrictMode>,
   );

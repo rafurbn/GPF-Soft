@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { GpfFormData } from '../../src/types';
-import {
-  Search,
-  Printer,
-  Edit2,
-  Trash2,
-  Download,
-  FileSpreadsheet,
-  Plus
-} from 'lucide-react';
+import { Search } from 'lucide-react';
+import { ActionButton, RowDeleteButton } from '../../app-shared/ui/ActionButton';
 import { toBanglaDigits } from '../../src/utils/numberToBanglaWords';
 
 interface RecordsTableProps {
@@ -98,27 +91,22 @@ export const RecordsTable: React.FC<RecordsTableProps> = ({
           </div>
 
           {/* CSV export */}
-          <button
-            type="button"
+          <ActionButton
+            kind="neutral"
             id="btn-export-csv"
             onClick={handleExportCSVFallback}
             title="এক্সেলে এক্সপোর্ট করুন (CSV)"
-            className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">এক্সেল</span>
-          </button>
+            label="এক্সেল"
+          />
 
           {onNewRecord && (
-            <button
-              type="button"
+            <ActionButton
+              kind="new"
               id="btn-new-application-header"
               onClick={onNewRecord}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-500 text-white flex items-center gap-1 transition-colors shadow-xs cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>নতুন এন্ট্রি</span>
-            </button>
+              title="নতুন আবেদন এন্ট্রি শুরু করুন"
+              label="নতুন এন্ট্রি"
+            />
           )}
         </div>
       </div>
@@ -197,45 +185,25 @@ export const RecordsTable: React.FC<RecordsTableProps> = ({
                   {/* অ্যাকশন */}
                   <td className="py-3 px-4">
                     <div className="flex items-center justify-center gap-1.5">
-                      {/* Print Button */}
-                      <button
-                        type="button"
+                      <ActionButton
+                        kind="print"
                         onClick={() => onSelectRecordToPrint(record)}
                         title="আবেদনপত্র প্রিন্ট করুন"
-                        className="p-1.5 rounded bg-amber-900/40 hover:bg-amber-800/60 text-amber-300 border border-amber-700/40 transition-colors cursor-pointer"
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Edit Button */}
-                      <button
-                        type="button"
+                      />
+                      <ActionButton
+                        kind="edit"
                         onClick={() => onSelectRecordToEdit(record)}
                         title="তথ্য এডিট করুন"
-                        className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Delete Button */}
-                      <button
-                        type="button"
-                        onClick={() => record.id && onDeleteRecord(record.id)}
+                      />
+                      <RowDeleteButton
+                        onConfirm={() => record.id && onDeleteRecord(record.id)}
                         title="মুছে ফেলুন"
-                        className="p-1.5 rounded bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 hover:text-rose-300 border border-rose-800/40 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Download Button */}
-                      <button
-                        type="button"
+                      />
+                      <ActionButton
+                        kind="download"
                         onClick={() => onDownloadPdfRecord(record)}
                         title="এই আবেদনের PDF ডাউনলোড করুন"
-                        className="p-1.5 rounded bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 border border-emerald-700/40 transition-colors cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
+                      />
                     </div>
                   </td>
                 </tr>

@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  FileSpreadsheet, 
-  Printer, 
-  Edit3, 
-  Trash2, 
-  Search, 
-  Download, 
-  Plus
-} from 'lucide-react';
+import { Search, FileSpreadsheet } from 'lucide-react';
+import { ActionButton, RowDeleteButton } from '../../app-shared/ui/ActionButton';
+import { LABELS } from '../../app-shared/ui/tokens';
 import { FinalSavedApplicationRecord } from '../../src/types';
 import { toBengaliDigits, formatBanglaCurrency } from '../../src/utils/bengaliConverter';
 import { date } from '../../src/lib/format';
@@ -30,7 +24,6 @@ export const SavedRecordsTable: React.FC<SavedRecordsTableProps> = ({
   onNewApplication,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const filteredRecords = records.filter((r) => {
     const q = searchTerm.toLowerCase().trim();
@@ -124,26 +117,22 @@ export const SavedRecordsTable: React.FC<SavedRecordsTableProps> = ({
           </div>
 
           {/* Excel Export button */}
-          <button
-            type="button"
-            onClick={exportToCSV}
-            title="সকল তথ্য এক্সেল স্প্রেডশীটে ডাউনলোড করুন (CSV)"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#121c33] hover:bg-[#182645] text-slate-200 text-xs font-medium rounded-lg border border-[#233559] transition-colors cursor-pointer"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-            <span>এক্সেল</span>
-          </button>
+                    <ActionButton
+  kind="neutral"
+  id="btn-export-csv"
+  label={LABELS.excel}
+  title={LABELS.exportCsv}
+  onClick={exportToCSV}
+/>
 
           {/* New Entry button */}
-          <button
-            type="button"
-            onClick={onNewApplication}
-            title="নতুন এন্ট্রি শুরু করুন"
-            className="flex items-center gap-1 px-3.5 py-1.5 bg-[#4f46e5] hover:bg-[#4338ca] text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs shadow-emerald-500/20"
-          >
-            <Plus className="w-3.5 h-3.5 text-white" />
-            <span>নতুন এন্ট্রি</span>
-          </button>
+                    <ActionButton
+  kind="new"
+  id="btn-new-application-header"
+  label={LABELS.new}
+  title={LABELS.new}
+  onClick={onNewApplication}
+/>
 
         </div>
       </div>
@@ -219,66 +208,10 @@ export const SavedRecordsTable: React.FC<SavedRecordsTableProps> = ({
                   <td className="py-3 px-4 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       {/* Print */}
-                      <button
-                        type="button"
-                        onClick={() => onPrintRecord(rec)}
-                        title="আবেদনপত্র প্রিন্ট করুন"
-                        className="p-1.5 bg-[#121d36] hover:bg-[#1a2948] text-emerald-400 hover:text-emerald-300 rounded-md border border-[#233559] transition-colors cursor-pointer"
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Edit */}
-                      <button
-                        type="button"
-                        onClick={() => onEditRecord(rec)}
-                        title="ড্যাশবোর্ডে লোড করে এডিট করুন"
-                        className="p-1.5 bg-[#121d36] hover:bg-[#1a2948] text-emerald-400 hover:text-emerald-300 rounded-md border border-[#233559] transition-colors cursor-pointer"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Delete */}
-                      {deleteConfirmId === rec.id ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (rec.id) onDeleteRecord(rec.id);
-                              setDeleteConfirmId(null);
-                            }}
-                            className="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded text-[11px] font-bold cursor-pointer"
-                          >
-                            মুছুন
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteConfirmId(null)}
-                            className="px-1.5 py-1 bg-slate-700 text-slate-300 rounded text-[11px] cursor-pointer"
-                          >
-                            না
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setDeleteConfirmId(rec.id || null)}
-                          title="রেকর্ড তালিকা থেকে মুছে ফেলুন"
-                          className="p-1.5 bg-[#121d36] hover:bg-rose-950/60 text-rose-400 hover:text-rose-300 rounded-md border border-[#233559] hover:border-rose-700/60 transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-
-                      {/* Download */}
-                      <button
-                        type="button"
-                        onClick={() => onDownloadPdfRecord(rec)}
-                        title="এই আবেদনের PDF ডাউনলোড করুন"
-                        className="p-1.5 bg-[#121d36] hover:bg-emerald-950/60 text-emerald-400 hover:text-emerald-300 rounded-md border border-[#233559] hover:border-emerald-700/60 transition-colors cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
+                      <ActionButton kind="print" title={LABELS.print} onClick={() => onPrintRecord(rec)} />
+                      <ActionButton kind="edit" title={LABELS.edit} onClick={() => onEditRecord(rec)} />
+                      <RowDeleteButton onConfirm={() => rec.id && onDeleteRecord(rec.id)} />
+                      <ActionButton kind="download" title={LABELS.download} onClick={() => onDownloadPdfRecord(rec)} />
                     </div>
                   </td>
                 </tr>

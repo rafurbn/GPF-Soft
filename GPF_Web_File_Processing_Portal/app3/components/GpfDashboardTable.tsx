@@ -16,7 +16,10 @@ import {
   calculateBengaliAge,
   calculatePrlDate
 } from '../../src/utils/bengaliConverter';
-import { LockToggleButton } from '../components/LockToggleButton';
+import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
+import { LOCKED_FIELD_TOAST, LABELS } from '../../app-shared/ui/tokens';
+import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
+import type { ToastKind } from '../../app-shared/ui/Toast';
 
 interface GpfDashboardTableProps {
   formData: GpfFinalFormData;
@@ -27,6 +30,8 @@ interface GpfDashboardTableProps {
   onOpenPrintPreview?: () => void;
   onNewApplication?: () => void;
   onSaveRecord?: () => void;
+  onOpenHtmlEditor?: () => void;
+  onShowToast?: (text: string, kind?: ToastKind) => void;
 }
 
 const DESIGNATION_PRESETS = [
@@ -44,13 +49,13 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
   onOpenPrintPreview,
   onNewApplication,
   onSaveRecord,
+  onOpenHtmlEditor,
+  onShowToast,
 }) => {
   const [showDesignationPopup, setShowDesignationPopup] = useState(false);
-  const [lockedNotice, setLockedNotice] = useState<string | null>(null);
 
   const handleLockedFieldNotice = (fieldName: string) => {
-    setLockedNotice(`🔒 "${fieldName}" ফিল্ডটি লক করা আছে। তথ্য পরিবর্তন করতে ডানপাশে "লকড" বাটনে ক্লিক করে আনলক করুন।`);
-    setTimeout(() => setLockedNotice(null), 4000);
+    onShowToast?.(LOCKED_FIELD_TOAST.replace('{label}', fieldName), 'warning');
   };
 
   // Set today's date in Bengali DD/MM/YYYY format
@@ -76,18 +81,11 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
   const renderLockCell = (fieldKey: FinalLockableFieldKey) => {
     const isLocked = locks[fieldKey];
     return (
-      <div className="flex items-center justify-center gap-1">
-        <LockToggleButton
-          action="lock"
+      <div className="flex items-center justify-center">
+        <LockToggle
+          id={`lock-btn-${fieldKey}`}
           isLocked={isLocked}
-          onClick={() => onToggleLock(fieldKey, true)}
-          title={isLocked ? 'ফিল্ডটি লক করা আছে' : 'ফিল্ডটি লক করুন'}
-        />
-        <LockToggleButton
-          action="unlock"
-          isLocked={isLocked}
-          onClick={() => onToggleLock(fieldKey, false)}
-          title={isLocked ? 'ফিল্ডটি আনলক করুন' : 'ফিল্ডটি আনলক আছে'}
+          onToggle={() => onToggleLock(fieldKey, !isLocked)}
         />
       </div>
     );
@@ -122,23 +120,6 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Locked Data Protection Notice Banner */}
-      {lockedNotice && (
-        <div className="bg-emerald-950/80 border-b border-emerald-500/50 px-4 py-2 flex items-center justify-between text-emerald-200 text-xs font-medium animate-fadeIn">
-          <div className="flex items-center gap-2">
-            <Lock className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-            <span>{lockedNotice}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setLockedNotice(null)}
-            className="text-emerald-400 hover:text-white text-xs px-2 py-0.5 rounded cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       {/* Main Table 16 Rows */}
       <div className="overflow-x-auto">
@@ -177,11 +158,6 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                     }`}
                   />
                   <div className="absolute right-2 flex items-center gap-1.5 pointer-events-none">
-                    {locks.yearSession && (
-                      <span className="flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-950/70 px-1.5 py-0.5 rounded border border-emerald-500/40 font-semibold">
-                        <Lock className="w-2.5 h-2.5" /> রক্ষিত
-                      </span>
-                    )}
                     {formData.yearSession && (
                       <span className="px-2 py-0.5 text-xs rounded bg-[#09152b] text-emerald-400 border border-emerald-500/30 font-semibold">
                         {toBengaliDigits(formData.yearSession)}
@@ -228,11 +204,6 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
               <td className="py-3 px-4 font-semibold text-white">
                 প্রাপক
                 <span className="block text-[11px] font-normal text-emerald-400">(মাল্টি ডাটা এন্ট্রি / ড্রপডাউন সুবিধা)</span>
-                {locks.recipient && (
-                  <span className="mt-1.5 inline-flex items-center gap-1 rounded border border-emerald-600/40 bg-emerald-950/80 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
-                    <Lock className="h-3 w-3" /> লকড (সুরক্ষিত)
-                  </span>
-                )}
               </td>
               <td className="py-3 px-4">
                 <div className="w-full max-w-xl relative">
@@ -525,11 +496,6 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                         : 'bg-[#10192e] border border-[#1f3052] text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500'
                     }`}
                   />
-                  {locks.ddoName && (
-                    <span className="absolute right-2 flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-950/70 px-1.5 py-0.5 rounded border border-emerald-500/40 font-semibold pointer-events-none">
-                      <Lock className="w-2.5 h-2.5" /> রক্ষিত
-                    </span>
-                  )}
                 </div>
               </td>
               <td className="py-3 px-3">{renderLockCell('ddoName')}</td>
@@ -558,11 +524,6 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                         : 'bg-[#10192e] border border-[#1f3052] text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500'
                     }`}
                   />
-                  {locks.ddoDesignation && (
-                    <span className="absolute right-2 flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-950/70 px-1.5 py-0.5 rounded border border-emerald-500/40 font-semibold pointer-events-none">
-                      <Lock className="w-2.5 h-2.5" /> রক্ষিত
-                    </span>
-                  )}
                 </div>
               </td>
               <td className="py-3 px-3">{renderLockCell('ddoDesignation')}</td>
@@ -573,7 +534,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
               <td className="py-3 px-3 text-center font-bold text-slate-400">১৫</td>
               <td className="py-3 px-4 font-semibold text-white">
                 উপজেলার নাম
-                <span className="block text-[11px] font-normal text-slate-400">(স্থায়ীভাবে ফিক্সড)</span>
+                <span className="block text-[11px] font-normal text-slate-400">({LABELS.fixed})</span>
               </td>
               <td className="py-3 px-4">
                 <div className="relative w-full max-w-xl flex items-center">
@@ -589,16 +550,9 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                         : 'bg-[#10192e] border border-[#1f3052] text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500'
                     }`}
                   />
-                  {locks.upazila && (
-                    <span className="absolute right-2 flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-950/70 px-1.5 py-0.5 rounded border border-emerald-500/40 font-semibold pointer-events-none">
-                      <Lock className="w-2.5 h-2.5" /> রক্ষিত
-                    </span>
-                  )}
                 </div>
               </td>
-              <td className="py-3 px-3"><span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/60 px-3 py-1.5 text-xs font-semibold text-emerald-300 whitespace-nowrap">
-                    <Lock className="w-3.5 h-3.5" /> ফিক্সড
-                  </span></td>
+              <td className="py-3 px-3"><FixedLockBadge /></td>
             </tr>
 
             {/* ১৬. জেলার নাম */}
@@ -606,7 +560,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
               <td className="py-3 px-3 text-center font-bold text-slate-400">১৬</td>
               <td className="py-3 px-4 font-semibold text-white">
                 জেলার নাম
-                <span className="block text-[11px] font-normal text-slate-400">(স্থায়ীভাবে ফিক্সড)</span>
+                <span className="block text-[11px] font-normal text-slate-400">({LABELS.fixed})</span>
               </td>
               <td className="py-3 px-4">
                 <div className="relative w-full max-w-xl flex items-center">
@@ -622,47 +576,22 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                         : 'bg-[#10192e] border border-[#1f3052] text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500'
                     }`}
                   />
-                  {locks.district && (
-                    <span className="absolute right-2 flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-950/70 px-1.5 py-0.5 rounded border border-emerald-500/40 font-semibold pointer-events-none">
-                      <Lock className="w-2.5 h-2.5" /> রক্ষিত
-                    </span>
-                  )}
                 </div>
               </td>
-              <td className="py-3 px-3"><span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/60 px-3 py-1.5 text-xs font-semibold text-emerald-300 whitespace-nowrap">
-                    <Lock className="w-3.5 h-3.5" /> ফিক্সড
-                  </span></td>
+              <td className="py-3 px-3"><FixedLockBadge /></td>
             </tr>
 
           </tbody>
         </table>
       </div>
 
-      {/* Bottom Footer Action Bar matching image.png */}
-      <div className="bg-[#080f20] px-4 sm:px-6 py-3.5 border-t border-[#182642] flex flex-wrap items-center justify-between gap-3">
-        
-        {/* Left helper note */}
-        <div className="flex items-center gap-2 text-xs text-emerald-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>লক করা রো-এর ডাটা যে পর্যন্ত পুনরায় আনলক না করা হবে, সে পর্যন্ত অপরিবর্তিত ও সুরক্ষিত থাকবে।</span>
-        </div>
-
-        {/* Right Action button */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          {onSaveRecord && (
-            <button
-              type="button"
-              onClick={onSaveRecord}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer shadow-md shadow-emerald-950/50 hover:scale-[1.02] active:scale-98"
-            >
-              <Save className="w-4 h-4 text-white" />
-              <span>ডাটা সেইভ করুন</span>
-            </button>
-          )}
-        </div>
-
-      </div>
-
+      <DashboardActionBar
+        note="লক করা রো-এর ডাটা আনলক না করা পর্যন্ত অপরিবর্তিত ও সুরক্ষিত থাকবে।"
+        onSave={onSaveRecord}
+        onNew={onNewApplication}
+        onPrint={onOpenPrintPreview}
+        onHtmlEdit={onOpenHtmlEditor}
+      />
     </div>
   );
 };

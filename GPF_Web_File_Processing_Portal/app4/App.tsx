@@ -3,6 +3,7 @@ import { GpfDeathClaim, LockSettings, LockableField } from './types/gpf';
 import { INITIAL_CLAIMS, INITIAL_LOCKS } from './utils/initialData';
 import { PlusCircle } from 'lucide-react';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
+import { Toast, useToast } from '../app-shared/ui/Toast';
 import { DeathClaimForm } from './components/DeathClaimForm';
 import { ClaimsDataTable } from './components/ClaimsDataTable';
 import { PrintDocumentEngine } from './components/PrintDocumentEngine';
@@ -76,12 +77,8 @@ export default function App({ currentUser, onBack }: SubAppProps) {
   });
 
   // Notification toast
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
-  };
 
   // Sync claims to localStorage (upazila-scoped)
   useEffect(() => {
@@ -329,14 +326,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
         }
       />
 
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 bg-emerald-700 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-semibold flex items-center gap-2 border border-emerald-500 animate-in fade-in slide-in-from-bottom-2 print:hidden">
-          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
+      <Toast toast={toast} />
       {/* Main content area. The header is sticky, so no top padding offset is needed. */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6 space-y-6 print:hidden">
         <section id="input-dashboard">
@@ -347,6 +337,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
             onSaveClaim={handleSaveClaim}
             onReset={handleResetForm}
             isEditing={isEditing}
+            onShowToast={showToast}
           />
         </section>
 

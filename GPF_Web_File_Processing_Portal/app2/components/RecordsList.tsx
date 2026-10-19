@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Printer, Edit, Trash2, Download, FileSpreadsheet, Plus } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { ActionButton, RowDeleteButton } from '../../app-shared/ui/ActionButton';
+import { LABELS } from '../../app-shared/ui/tokens';
 import { GpfNonRefundableFormData } from '../../src/types';
 import { toBanglaNumber } from '../../src/utils/numberToBanglaWords';
 
@@ -62,26 +64,21 @@ export const RecordsList: React.FC<RecordsListProps> = ({
           </div>
 
           {/* CSV export */}
-          <button
-            type="button"
-            id="btn-export-csv"
-            onClick={onExportCSV}
-            title="এক্সেলে এক্সপোর্ট করুন (CSV)"
-            className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">এক্সেল</span>
-          </button>
+                    <ActionButton
+  kind="neutral"
+  id="btn-export-csv"
+  label={LABELS.excel}
+  title={LABELS.exportCsv}
+  onClick={onExportCSV}
+/>
 
-          <button
-            type="button"
-            id="btn-new-application-header"
-            onClick={onNewRecord}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1 transition-colors shadow-xs cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>নতুন এন্ট্রি</span>
-          </button>
+                    <ActionButton
+  kind="new"
+  id="btn-new-application-header"
+  label={LABELS.new}
+  title={LABELS.new}
+  onClick={onNewRecord}
+/>
         </div>
       </div>
 
@@ -139,45 +136,28 @@ export const RecordsList: React.FC<RecordsListProps> = ({
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center justify-center gap-1.5">
-                      <button
-                        type="button"
+                      <ActionButton
                         id={`btn-record-print-${rec.id}`}
+                        kind="print"
+                        title={LABELS.print}
                         onClick={() => onPrintRecord(rec)}
-                        title="আবেদনপত্র প্রিন্ট করুন"
-                        className="p-1.5 rounded bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 border border-emerald-700/40 transition-colors cursor-pointer"
-                      >
-                        <Printer className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
+                      />
+                      <ActionButton
                         id={`btn-record-edit-${rec.id}`}
+                        kind="edit"
+                        title={LABELS.edit}
                         onClick={() => onEditRecord(rec)}
-                        title="তথ্য এডিট করুন"
-                        className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
+                      />
+                      <RowDeleteButton
                         id={`btn-record-delete-${rec.id}`}
-                        onClick={() => onDeleteRecord(rec.id)}
-                        title="মুছে ফেলুন"
-                        className="p-1.5 rounded bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 hover:text-rose-300 border border-rose-800/40 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
+                        onConfirm={() => onDeleteRecord(rec.id)}
+                      />
+                      <ActionButton
                         id={`btn-record-download-${rec.id}`}
+                        kind="download"
+                        title={LABELS.download}
                         onClick={() => onDownloadPdfRecord(rec)}
-                        title="এই আবেদনের PDF ডাউনলোড করুন"
-                        className="p-1.5 rounded bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 border border-emerald-700/40 transition-colors cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
+                      />
                     </div>
                   </td>
                 </tr>

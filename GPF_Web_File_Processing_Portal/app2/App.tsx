@@ -17,6 +17,8 @@ import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimited
 import { readScoped, writeScoped, scopedKey } from '../src/lib/scopedStorage';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
+import { Toast, useToast } from '../app-shared/ui/Toast';
+import { LABELS, LOCKED_FIELD_TOAST } from '../app-shared/ui/tokens';
 
 // Base keys; `scopedStorage` prefixes them with the upazila code at call time so
 // two upazilas on the same browser never share records or lock settings.
@@ -49,13 +51,11 @@ const LOCKABLE_FIELD_LABELS: Record<NonRefundableLockableKey, string> = {
 interface GpfNonRefundableAppProps {
   currentUser: UserSession;
   onBack: () => void;
-  onSaveApplication: (app: GpfApplication) => void;
 }
 
 export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   currentUser,
   onBack,
-  onSaveApplication,
 }) => {
   const defaultInitialData: GpfNonRefundableFormData = {
     id: 'nonref-init-1',
@@ -172,7 +172,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [autoDownloadPdf, setAutoDownloadPdf] = useState(false);
   const [isDesktopModalOpen, setIsDesktopModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
   const [printPageFilter, setPrintPageFilter] = useState<number | 'all'>('all');
   const [isEditingExisting, setIsEditingExisting] = useState(false);
 
@@ -211,17 +211,11 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [records]);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 4000);
-  };
 
   // Field change handler: strictly protects locked fields from being modified
   const handleFieldChange = (field: keyof GpfNonRefundableFormData, value: string) => {
     if (lockedState[field as NonRefundableLockableKey]) {
-      showToast(`'${LOCKABLE_FIELD_LABELS[field as NonRefundableLockableKey] || field}' ফিল্ডটি লক করা রয়েছে। পরিবর্তন করতে প্রথমে আনলক করুন।`);
+      showToast(LOCKED_FIELD_TOAST.replace('{label}', LOCKABLE_FIELD_LABELS[field as NonRefundableLockableKey] || field), 'warning');
       return;
     }
 
@@ -291,7 +285,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   // Save Record - ensures locked values are preserved
   const handleSaveRecord = () => {
     if (!formData.applicant_name && !formData.school_name) {
-      showToast('দয়া করে অন্তত আবেদনকারীর নাম বা বিদ্যালয় ইনপুট দিন!');
+      showToast(LABELS.needIdentity, 'warning');
       return;
     }
 
@@ -342,7 +336,6 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
       gpf_type: 'non_refundable',
       reason: '৫২ বছর বয়স পূর্ণ হওয়া জনিত অফেরতযোগ্য অগ্রিম'
     };
-    onSaveApplication(parentApp);
     void syncClaimToCentral('app2', {
       id: parentApp.id,
       trackingNo: parentApp.tracking_no,
@@ -457,13 +450,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col">
       {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-950 border border-emerald-500 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-bounce no-print">
-          <Check className="w-5 h-5 text-emerald-300" />
-          <span className="text-sm font-semibold">{toastMessage}</span>
-        </div>
-      )}
-
+      <Toast toast={toast} />
       <SubAppHeader
         appNumber={2}
         title="জিপিএফ অফেরতযোগ্য অগ্রিম উত্তোলন ফাইল প্রসেসিং"

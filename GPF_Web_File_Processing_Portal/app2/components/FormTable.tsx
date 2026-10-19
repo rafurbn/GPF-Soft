@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Lock, Unlock, CheckCircle2, Save, Sparkles } from 'lucide-react';
+import { CheckCircle2, Save, Sparkles } from 'lucide-react';
 import { GpfNonRefundableFormData, NonRefundableLockableKey, NonRefundableLockedState } from '../../src/types';
 import { numberToBanglaWords, toBanglaNumber } from '../../src/utils/numberToBanglaWords';
 import { calculateAge } from '../../src/utils/dateUtils';
 import dashboardLogo from '../../src/assets/images/rf-logo.svg';
-import { LockToggleButton } from '../components/LockToggleButton';
+import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
+import { LABELS } from '../../app-shared/ui/tokens';
+import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
 
 interface FormTableProps {
   formData: GpfNonRefundableFormData;
@@ -50,30 +52,15 @@ export const FormTable: React.FC<FormTableProps> = ({
 
   const ageInfo = calculateAge(formData.date_of_birth, formData.apply_date);
 
-  const renderLockBtn = (field: NonRefundableLockableKey) => {
-    const isLocked = !!lockedState[field];
-    return (
-      <div className="flex items-center justify-center gap-1">
-        {/* লক বাটন */}
-        <LockToggleButton
-          action="lock"
-          id={`lock-btn-${field}`}
-          isLocked={isLocked}
-          onClick={() => onToggleLock(field)}
-          title={isLocked ? 'ফিল্ডটি লক করা রয়েছে' : 'এই ফিল্ডের তথ্য স্থায়ীভাবে লক করুন'}
-        />
-
-        {/* আনলক বাটন */}
-        <LockToggleButton
-          action="unlock"
-          id={`unlock-btn-${field}`}
-          isLocked={isLocked}
-          onClick={() => onToggleLock(field)}
-          title={!isLocked ? 'ফিল্ডটি আনলক রয়েছে' : 'তথ্য পরিবর্তন করতে আনলক করুন'}
-        />
-      </div>
-    );
-  };
+  const renderLockBtn = (field: NonRefundableLockableKey) => (
+    <div className="flex items-center justify-center">
+      <LockToggle
+        id={`lock-btn-${field}`}
+        isLocked={!!lockedState[field]}
+        onToggle={() => onToggleLock(field)}
+      />
+    </div>
+  );
 
   return (
     <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8" id="input-dashboard-section">
@@ -143,11 +130,6 @@ export const FormTable: React.FC<FormTableProps> = ({
                       </span>
                     )}
                   </div>
-                  {lockedState.year && (
-                    <span className="text-[11px] text-emerald-400 bg-emerald-950/80 border border-emerald-600/40 px-2 py-1 rounded flex items-center gap-1 font-medium whitespace-nowrap">
-                      <Lock className="w-3 h-3" /> লকড
-                    </span>
-                  )}
                 </div>
               </td>
               <td className="py-3 px-4 text-center">
@@ -199,11 +181,6 @@ export const FormTable: React.FC<FormTableProps> = ({
                 <span className="block text-[11px] text-emerald-400 font-normal">
                   (মাল্টি ডাটা এন্ট্রি / ড্রপডাউন সুবিধা)
                 </span>
-                {lockedState.receiver_info && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-950/80 border border-emerald-600/40 px-2 py-0.5 rounded mt-1.5 font-medium">
-                    <Lock className="w-3 h-3" /> লকড (সুরক্ষিত)
-                  </span>
-                )}
               </td>
               <td className="py-3 px-4">
                 <div className="space-y-2">
@@ -513,11 +490,6 @@ export const FormTable: React.FC<FormTableProps> = ({
                         : 'bg-slate-950 border border-slate-700 text-white focus:outline-hidden focus:border-emerald-500'
                     }`}
                   />
-                  {lockedState.ddo_name && (
-                    <span className="text-[11px] text-emerald-400 bg-emerald-950/80 border border-emerald-600/40 px-2 py-1 rounded flex items-center gap-1 font-medium whitespace-nowrap">
-                      <Lock className="w-3 h-3" /> লকড
-                    </span>
-                  )}
                 </div>
               </td>
               <td className="py-3 px-4 text-center">
@@ -547,11 +519,6 @@ export const FormTable: React.FC<FormTableProps> = ({
                         : 'bg-slate-950 border border-slate-700 text-white focus:outline-hidden focus:border-emerald-500'
                     }`}
                   />
-                  {lockedState.ddo_designation && (
-                    <span className="text-[11px] text-emerald-400 bg-emerald-950/80 border border-emerald-600/40 px-2 py-1 rounded flex items-center gap-1 font-medium whitespace-nowrap">
-                      <Lock className="w-3 h-3" /> লকড
-                    </span>
-                  )}
                 </div>
               </td>
               <td className="py-3 px-4 text-center">
@@ -564,7 +531,7 @@ export const FormTable: React.FC<FormTableProps> = ({
               <td className="py-3 px-4 text-center font-semibold text-slate-400">১৫</td>
               <td className="py-3 px-4 font-medium text-slate-200">
                 <span>উপজেলার নাম</span>
-                <span className="block text-[11px] text-slate-500">(স্থায়ীভাবে ফিক্সড)</span>
+                <span className="block text-[11px] text-slate-500">(স্থায়ী)</span>
               </td>
               <td className="py-3 px-4">
                 <div className="flex items-center gap-2 w-full max-w-xl">
@@ -581,17 +548,10 @@ export const FormTable: React.FC<FormTableProps> = ({
                         : 'bg-slate-950 border border-slate-700 text-white focus:outline-hidden focus:border-emerald-500'
                     }`}
                   />
-                  {lockedState.upazila_name && (
-                    <span className="text-[11px] text-emerald-400 bg-emerald-950/80 border border-emerald-600/40 px-2 py-1 rounded flex items-center gap-1 font-medium whitespace-nowrap">
-                      <Lock className="w-3 h-3" /> লকড
-                    </span>
-                  )}
                 </div>
               </td>
               <td className="py-3 px-4 text-center">
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600/50 bg-emerald-950/60 px-3 py-1.5 text-xs font-semibold text-emerald-300 whitespace-nowrap">
-                  <Lock className="w-3.5 h-3.5" /> ফিক্সড
-                </span>
+                <FixedLockBadge />
               </td>
             </tr>
 
@@ -600,7 +560,7 @@ export const FormTable: React.FC<FormTableProps> = ({
               <td className="py-3 px-4 text-center font-semibold text-slate-400">১৬</td>
               <td className="py-3 px-4 font-medium text-slate-200">
                 <span>জেলার নাম</span>
-                <span className="block text-[11px] text-slate-500">(স্থায়ীভাবে ফিক্সড)</span>
+                <span className="block text-[11px] text-slate-500">(স্থায়ী)</span>
               </td>
               <td className="py-3 px-4">
                 <div className="flex items-center gap-2 w-full max-w-xl">
@@ -617,42 +577,24 @@ export const FormTable: React.FC<FormTableProps> = ({
                         : 'bg-slate-950 border border-slate-700 text-white focus:outline-hidden focus:border-emerald-500'
                     }`}
                   />
-                  {lockedState.district_name && (
-                    <span className="text-[11px] text-emerald-400 bg-emerald-950/80 border border-emerald-600/40 px-2 py-1 rounded flex items-center gap-1 font-medium whitespace-nowrap">
-                      <Lock className="w-3 h-3" /> লকড
-                    </span>
-                  )}
                 </div>
               </td>
               <td className="py-3 px-4 text-center">
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600/50 bg-emerald-950/60 px-3 py-1.5 text-xs font-semibold text-emerald-300 whitespace-nowrap">
-                  <Lock className="w-3.5 h-3.5" /> ফিক্সড
-                </span>
+                <FixedLockBadge />
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      {/* Footer action bar */}
-      <div className="p-4 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span>লক করা ফিল্ডসমূহ পরবর্তী যেকোনো নতুন আবেদনের জন্য সংরক্ষিত থাকবে।</span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            id="btn-save-record"
-            onClick={onSave}
-            className="px-6 py-2.5 rounded-xl text-xs md:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 transition-all shadow-md shadow-emerald-900/30 cursor-pointer hover:scale-102 active:scale-98"
-          >
-            <Save className="w-4 h-4" />
-            <span>{isEditingExisting ? 'ডাটা আপডেট করুন' : 'ডাটা সেইভ করুন'}</span>
-          </button>
-        </div>
-      </div>
+      <DashboardActionBar
+        note="লক করা ফিল্ডসমূহ পরবর্তী যেকোনো নতুন আবেদনের জন্য সংরক্ষিত থাকবে।"
+        onSave={onSave}
+        saveLabel={isEditingExisting ? LABELS.update : LABELS.save}
+        onNew={onReset}
+        onPreview={onPreview}
+        onPrint={onPrint}
+      />
     </div>
   );
 };

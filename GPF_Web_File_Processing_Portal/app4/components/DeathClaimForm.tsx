@@ -16,7 +16,6 @@ import {
   parseBengaliNumber,
 } from '../utils/bengaliWords';
 import {
-  Lock,
   Save,
   RotateCcw,
   Sparkles,
@@ -24,7 +23,9 @@ import {
   PlusCircle,
 } from 'lucide-react';
 import dashboardLogo from '../../src/assets/images/rf-logo.svg';
-import { LockToggleButton } from './LockToggleButton';
+import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
+import type { ToastKind } from '../../app-shared/ui/Toast';
+import { LABELS } from '../../app-shared/ui/tokens';
 
 interface FormRowProps {
   /** Row number shown in the "ক্র: নং" column, e.g. '১' */
@@ -77,6 +78,7 @@ interface DeathClaimFormProps {
     forceNew?: boolean
   ) => void;
   onReset: () => void;
+  onShowToast: (text: string, kind?: ToastKind) => void;
   isEditing?: boolean;
 }
 
@@ -86,6 +88,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   onToggleLock,
   onSaveClaim,
   onReset,
+  onShowToast,
   isEditing = false,
 }) => {
     // 1. সন: 2026, 2027, 2028
@@ -282,7 +285,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!deceasedEmployeeName || !applicantName || !schoolName || !gpfAccountNo) {
-      alert('অনুগ্রহ করে মৃত কর্মচারীর নাম, বিদ্যালয়, আবেদনকারী ও জিপিএফ হিসাব নম্বর পূরণ করুন।');
+      onShowToast('অনুগ্রহ করে মৃত কর্মচারীর নাম, বিদ্যালয়, আবেদনকারী ও জিপিএফ হিসাব নম্বর পূরণ করুন।', 'error');
       return;
     }
 
@@ -320,83 +323,35 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   const emptyCellClass =
     'border border-slate-800 bg-[#0c1427]/60 w-24 text-center text-xs text-slate-600';
 
-  // Renders the lock/unlock cells for a row.
-  //  - combined: both buttons in one colSpan=2 cell (used by multi-line rows)
-  //  - lockedAlways: a permanent "ফিক্সড" badge instead of buttons
+  // One lock cell per row: a single toggle, or the fixed badge for the field names
+  // that come from the upazila session. The header keeps colSpan=2, so the table
+  // is exactly as wide as it was with the old two-button pair.
   const renderLockControls = (
     field: LockableField,
-    { combined = false, lockedAlways = false }: { combined?: boolean; lockedAlways?: boolean } = {},
-  ) => {
-    const isLocked = lockedAlways || !!lockSettings[field];
-
-    if (lockedAlways) {
-      return (
-        <td colSpan={2} className={cellClass}>
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-800/60 bg-emerald-900/40 px-3 py-1.5 text-xs font-semibold text-emerald-200 whitespace-nowrap">
-            <Lock className="h-3.5 w-3.5" /> ফিক্সড
-          </span>
-        </td>
-      );
-    }
-
-    if (combined) {
-      return (
-        <td colSpan={2} className={cellClass}>
-          <div className="flex items-center justify-center gap-1">
-            <LockToggleButton
-              action="lock"
-              isLocked={isLocked}
-              onClick={() => onToggleLock(field)}
-              title="তথ্য লক করে সংরক্ষণ করুন"
-            />
-            <LockToggleButton
-              action="unlock"
-              isLocked={isLocked}
-              onClick={() => onToggleLock(field)}
-              title="তথ্য পরিবর্তনের জন্য আনলক করুন"
-            />
-          </div>
-        </td>
-      );
-    }
-
-    return (
-      <>
-        <td className={`${cellClass} w-24`}>
-          <LockToggleButton
-            action="lock"
-            isLocked={isLocked}
-            onClick={() => onToggleLock(field)}
-            title="তথ্য লক করে সংরক্ষণ করুন"
-            fullWidth
-          />
-        </td>
-        <td className={`${cellClass} w-24`}>
-          <LockToggleButton
-            action="unlock"
-            isLocked={isLocked}
-            onClick={() => onToggleLock(field)}
-            title="তথ্য পরিবর্তনের জন্য আনলক করুন"
-            fullWidth
-          />
-        </td>
-      </>
-    );
-  };
-
-  // Empty Lock/Unlock cells for non-lockable rows
-  const renderEmptyLockCells = () => (
-    <>
-      <td className={emptyCellClass}>—</td>
-      <td className={emptyCellClass}>—</td>
-    </>
+    { lockedAlways = false }: { lockedAlways?: boolean } = {},
+  ) => (
+    <td colSpan={2} className={cellClass}>
+      {lockedAlways ? (
+        <FixedLockBadge />
+      ) : (
+        <LockToggle
+          id={`lock-btn-${field}`}
+          isLocked={!!lockSettings[field]}
+          onToggle={() => onToggleLock(field)}
+          fullWidth
+        />
+      )}
+    </td>
   );
+
+  // Empty lock cell for a row that cannot be locked
+  const renderEmptyLockCells = () => <td colSpan={2} className={emptyCellClass}>—</td>;
 
   // Locked-input styling: completely disables cursor, caret and selection
   const fieldClass = (locked: boolean) =>
     `w-full max-w-sm rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden transition-colors ${
       locked
-        ? 'bg-amber-950/20 border-amber-500/40 text-amber-200 cursor-not-allowed select-none caret-transparent pointer-events-none'
+        ? 'bg-emerald-950/25 border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none caret-transparent pointer-events-none'
         : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:border-emerald-500'
     }`;
 
@@ -418,7 +373,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   return (
     <div className="bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl print:hidden">
       {/* Top Banner - Sticky Freeze Pane right below the top navigation Header */}
-      <div className="sticky top-[48px] sm:top-[52px] z-30 px-5 py-3.5 bg-[#0e1628]/95 backdrop-blur-md border-b border-emerald-900/50 shadow-lg shadow-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-t-2xl">
+      <div className="px-5 py-3.5 bg-[#0e1628]/95 backdrop-blur-md border-b border-emerald-900/50 shadow-lg shadow-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-t-2xl">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
             <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
@@ -455,7 +410,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
       <form onSubmit={handleSave}>
         <div className="p-2 sm:p-4 bg-[#080d1e]">
         <table className="w-full border-collapse text-sm border border-slate-800 rounded-xl">
-          <thead className="sticky top-[106px] sm:top-[112px] z-20 shadow-md">
+          <thead className="shadow-md">
             <tr>
               <th
                 colSpan={5}
@@ -474,11 +429,8 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               <th className="bg-[#0f172a] text-slate-300 py-2.5 px-4 text-left font-bold text-xs sm:text-sm border-r border-slate-800">
                 এখানে তথ্য ইনপুট দিন
               </th>
-              <th className="bg-[#0f172a] text-slate-300 py-2.5 px-2 w-24 text-center font-bold text-xs sm:text-sm border-r border-slate-800">
-                লক
-              </th>
-              <th className="bg-[#0f172a] text-slate-300 py-2.5 px-2 w-24 text-center font-bold text-xs sm:text-sm">
-                আনলক
+              <th colSpan={2} className="bg-[#0f172a] text-slate-300 py-2.5 px-2 w-48 text-center font-bold text-xs sm:text-sm">
+                {`${LABELS.locked} / ${LABELS.unlocked}`}
               </th>
             </tr>
           </thead>
@@ -494,13 +446,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
                 {...lockProps(lockSettings.year)}
                 placeholder="২০২৬"
                 className={fieldClass(lockSettings.year)}
-              />
-              {lockSettings.year && (
-                <span className="text-[11px] text-amber-300 bg-amber-950/60 border border-amber-600/40 px-2.5 py-0.5 rounded-lg font-medium whitespace-nowrap">
-                  লক করা আছে
-                </span>
-              )}
-            </div>
+              />            </div>
           </FormRow>
 
           {/* Row 2: আবেদনের তারিখ */}
@@ -522,14 +468,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
             label="প্রাপক"
             hint="মাল্টি ডাটা এন্ট্রি / ড্রপডাউন সুবিধা"
             hintClassName="text-emerald-400 leading-tight"
-            labelExtra={
-              lockSettings.recipient ? (
-                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-950/80 border border-emerald-600/40 px-2 py-0.5 rounded mt-1.5 font-medium">
-                  <Lock className="w-3 h-3" /> লকড (সুরক্ষিত)
-                </span>
-              ) : null
-            }
-            lockCells={renderLockControls('recipient', { combined: true })}
+            lockCells={renderLockControls('recipient')}
           >
             <textarea
               rows={2}
@@ -885,7 +824,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
                 type="button"
                 onClick={() => {
                   if (!deceasedEmployeeName || !applicantName || !schoolName || !gpfAccountNo) {
-                    alert('অনুগ্রহ করে মৃত কর্মচারীর নাম, বিদ্যালয়, আবেদনকারী ও জিপিএফ হিসাব নম্বর পূরণ করুন।');
+                    onShowToast('অনুগ্রহ করে মৃত কর্মচারীর নাম, বিদ্যালয়, আবেদনকারী ও জিপিএফ হিসাব নম্বর পূরণ করুন।', 'error');
                     return;
                   }
                   onSaveClaim(getFormDataObject(), true);
@@ -912,7 +851,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  <span>{isEditing ? 'আপডেট সম্পন্ন করুন' : 'তথ্য সেভ করুন'}</span>
+                  <span>{isEditing ? LABELS.update : LABELS.save}</span>
                 </>
               )}
             </button>

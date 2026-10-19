@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { GpfDeathClaim, LockSettings, LockableField } from './types/gpf';
 import { INITIAL_CLAIMS, INITIAL_LOCKS } from './utils/initialData';
-import { Header } from './components/Header';
+import { PlusCircle } from 'lucide-react';
+import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 import { DeathClaimForm } from './components/DeathClaimForm';
 import { ClaimsDataTable } from './components/ClaimsDataTable';
 import { PrintDocumentEngine } from './components/PrintDocumentEngine';
@@ -310,16 +311,23 @@ export default function App({ currentUser, onBack }: SubAppProps) {
 
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col print:block print:min-h-0 print:h-auto print:bg-white print:text-black print:p-0 print:m-0">
-      {/* App Header (Screen only) - fixed at the top so it never scrolls away */}
-      <div className="print:hidden">
-        <Header
-          onBack={onBack}
-          onNewEntry={handleNewEntry}
-          claimCount={claims.length}
-          upazilaName={currentUser.upazila_name_bn}
-          districtName={currentUser.district_name_bn}
-        />
-      </div>
+      <SubAppHeader
+        appNumber={4}
+        title="জিপিএফ চূড়ান্ত উত্তোলন ফাইল প্রসেসিং (ডেথ ক্লেইম)"
+        onBack={onBack}
+        currentUser={currentUser}
+        savedCount={claims.length}
+        savedCountUnit="টি ফাইল সংরক্ষিত"
+        actions={
+          <button
+            onClick={handleNewEntry}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-900/40 transition-colors border border-emerald-500"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>নতুন ক্লেইম ফর্ম</span>
+          </button>
+        }
+      />
 
       {/* Toast Notification */}
       {toastMessage && (
@@ -329,9 +337,8 @@ export default function App({ currentUser, onBack }: SubAppProps) {
         </div>
       )}
 
-      {/* Main Content Area (Screen only).
-          `pt-28 sm:pt-20` clears the fixed header so nothing hides behind it. */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-28 sm:pt-20 pb-6 space-y-6 print:hidden">
+      {/* Main content area. The header is sticky, so no top padding offset is needed. */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6 space-y-6 print:hidden">
         <section id="input-dashboard">
           <DeathClaimForm
             initialData={currentClaim}
@@ -359,17 +366,8 @@ export default function App({ currentUser, onBack }: SubAppProps) {
       {/* Print Document Engine */}
       <PrintDocumentEngine claim={printTargetClaim} />
 
-      {/* Footer (Screen only) */}
-      <footer className="border-t border-slate-800/80 bg-[#0a0f1d] py-6 text-center text-xs text-slate-500 print:hidden">
-        <div className="max-w-7xl mx-auto px-4 space-y-1">
-          <p className="font-medium text-slate-400">
-            জিপিএফ চূড়ান্ত উত্তোলন ফাইল প্রসেসিং সিস্টেম (ডেথ ক্লেইম ড্যাশবোর্ড)
-          </p>
-          <p>
-            উপজেলা শিক্ষা অফিসারের কার্যালয়, {currentUser.upazila_name_bn}, {currentUser.district_name_bn} · প্রাথমিক শিক্ষা অধিদপ্তর (ডিপিই)
-          </p>
-        </div>
-      </footer>
+      <SubAppFooter appNumber={4} appShortName="ডেথ ক্লেইম চূড়ান্ত উত্তোলন" currentUser={currentUser} />
+
     </div>
   );
 }

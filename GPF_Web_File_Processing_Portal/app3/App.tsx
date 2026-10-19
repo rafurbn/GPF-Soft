@@ -7,7 +7,6 @@ import {
   FinalFieldLocks, 
   FinalSavedApplicationRecord 
 } from '../src/types';
-import { DesktopHeader } from './components/DesktopHeader';
 import { GpfDashboardTable } from './components/GpfDashboardTable';
 import { OfficialPrintPreview } from './components/OfficialPrintPreview';
 import { PreviewModal } from './components/PreviewModal';
@@ -18,6 +17,7 @@ import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { CheckCircle2 } from 'lucide-react';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
+import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 
 const STORAGE_FORM_KEY = 'gpf_final_applet_draft_v3';
 const STORAGE_LOCKS_KEY = 'gpf_final_applet_locks_v3';
@@ -373,17 +373,16 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
         </div>
       )}
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6 space-y-6 print:hidden">
-        {/* Top Header Navigation matching image.png */}
-        <DesktopHeader
-          onBack={onBack}
-          onNewApplication={handleNewApplication}
-          onSave={handleSaveRecord}
-          onOpenPrint={handlePrintCurrentDraft}
-          onOpenHtmlEdit={handleOpenHtmlEdit}
-          savedCount={savedRecords.length}
-        />
+      <SubAppHeader
+        appNumber={3}
+        title="জিপিএফ চূড়ান্ত উত্তোলন ফাইল প্রসেসিং"
+        onBack={onBack}
+        currentUser={currentUser}
+        savedCount={savedRecords.length}
+        savedCountUnit="টি আবেদন সংরক্ষিত"
+      />
 
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-6 space-y-6 print:hidden">
         {/* Section 1: Dashboard Table Card */}
         <div ref={dashboardRef} className="w-full">
           <GpfDashboardTable
@@ -411,17 +410,8 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
         </div>
       </main>
 
-      {/* Footer matching App 4 */}
-      <footer className="border-t border-slate-800/80 bg-[#0a0f1d] py-6 text-center text-xs text-slate-500 print:hidden">
-        <div className="max-w-7xl mx-auto px-4 space-y-1">
-          <p className="font-medium text-slate-400">
-            উপজেলা প্রাথমিক শিক্ষা জিপিএফ পোর্টাল • এ্যাপ ৩ (চূড়ান্ত উত্তোলন ও অদাবী)
-          </p>
-          <p className="text-[11px] text-slate-600">
-            সর্বস্বত্ব সংরক্ষিত © ২০২৬ • সার্বক্ষণিক তদারকি ও প্রধান এডমিন: রফিকুল ইসলাম
-          </p>
-        </div>
-      </footer>
+      <SubAppFooter appNumber={3} appShortName="চূড়ান্ত উত্তোলন ও অদাবী" currentUser={currentUser} />
+
 
       {/* 5-Page Official Print Preview Modal */}
       <PreviewModal

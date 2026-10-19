@@ -2,6 +2,7 @@ import { CentralClaimRecord, SystemAnnouncement, AppMaintenanceControl, AuditLog
 import { supabase } from './supabase';
 import { findUpazilaByDefaultId } from '../data/upazilaData';
 import { toBn, moneyCompact } from './format';
+import { APP_VERSION } from './portalMeta';
 
 // Storage keys
 const STORAGE_KEY_CENTRAL_CLAIMS = 'gpf_central_claims_v1';
@@ -738,7 +739,7 @@ export interface BackupPayload {
 
 export const buildBackupPayload = (registeredUsers: UserSession[]): BackupPayload => ({
   exportedAt: new Date().toISOString(),
-  version: '2.1.0-PROD',
+  version: APP_VERSION,
   authority: "Government of the People's Republic of Bangladesh",
   portal: 'GPF Online File Processing Hub',
   statistics: getClaimsStats(),

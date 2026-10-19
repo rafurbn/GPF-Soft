@@ -36,6 +36,7 @@ import { RegionSettingsModal } from './RegionSettingsModal';
 import { OfficialDashboard } from './OfficialDashboard';
 import { persistUpazilaContext } from '../lib/upazilaSession';
 import { toBn } from '../lib/format';
+import { APP_VERSION, SUPPORT_PHONE, VERSION_LABEL } from '../lib/portalMeta';
 import {
   getAllDivisions,
   getDistrictsByDivision,
@@ -441,7 +442,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                 <span className="text-emerald-400 font-semibold">উপজেলা প্রাথমিক শিক্ষা অফিসারের কার্যালয়</span>
               </p>
               <span className="mt-1 inline-flex text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-2xs">
-                v2.6 প্রো সংস্করণ
+                {VERSION_LABEL}
               </span>
             </div>
           </div>
@@ -900,7 +901,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 transition font-mono font-bold shadow-xs hover:scale-105"
           >
             <Phone className="w-3.5 h-3.5" />
-            <span>WhatsApp+Mobile: 01732-679551</span>
+            <span>WhatsApp+Mobile: {toBn(SUPPORT_PHONE)}</span>
           </a>
         </div>
       </footer>

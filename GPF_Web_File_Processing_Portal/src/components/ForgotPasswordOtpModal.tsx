@@ -13,6 +13,8 @@ import {
   EyeOff
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { toBn } from '../lib/format';
+import { ADMIN_NAME, SUPPORT_PHONE } from '../lib/portalMeta';
 
 interface ForgotPasswordOtpModalProps {
   initialEmail?: string;

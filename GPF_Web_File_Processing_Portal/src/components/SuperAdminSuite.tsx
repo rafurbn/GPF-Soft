@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { UserSession, CentralClaimRecord, SystemAnnouncement, AppMaintenanceControl, AuditLogEntry, ActiveSession, UserAccountStatus, UserRole } from '../types';
 import { toBn, moneyCompact, date, dateTime } from '../lib/format';
+import { APP_VERSION, VERSION_LABEL } from '../lib/portalMeta';
 import {
   getCentralClaims,
   hydrateCentralClaims,
@@ -677,7 +678,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
               <span>Super Admin Control Suite</span>
             </span>
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 text-[11px] font-mono border border-emerald-700/60">
-              v2.0 PROD
+              {VERSION_LABEL}
             </span>
             <span className="text-slate-400 text-xs font-mono">
               সার্ভার স্ট্যাটাস: <span className="text-emerald-400 font-semibold">সক্রিয় ও সুরক্ষিত ●</span>

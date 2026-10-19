@@ -232,7 +232,9 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
 
         <div className="mb-2 text-left space-y-0.5 leading-[1.25]">
           <div>বরাবর</div>
-          <div>জেলা প্রাথমিক শিক্ষা অফিসার</div>
+          <div>
+            <Value>{claim.recipient}।</Value>
+          </div>
           <div>
             <Value>{claim.districtName}।</Value>
           </div>

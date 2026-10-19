@@ -359,7 +359,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col font-['Hind_Siliguri',sans-serif]">
+    <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col">
       {/* Save Success Toast */}
       {saveSuccessNotification && (
         <div className="fixed top-20 right-5 z-50 bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 text-sm font-semibold animate-in slide-in-from-top duration-200">

@@ -309,7 +309,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col font-['Hind_Siliguri',sans-serif] print:block print:min-h-0 print:h-auto print:bg-white print:text-black print:p-0 print:m-0">
+    <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col print:block print:min-h-0 print:h-auto print:bg-white print:text-black print:p-0 print:m-0">
       {/* App Header (Screen only) - fixed at the top so it never scrolls away */}
       <div className="print:hidden">
         <Header

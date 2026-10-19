@@ -96,7 +96,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
   const calculatedAge = formData.birthDate ? calculateBengaliAge(formData.birthDate) : '';
 
   return (
-    <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden font-['Hind_Siliguri',sans-serif] mb-8">
+    <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8">
       
       {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
           Same title, "আনলিমিটেড সেইভ ফাইল" badge and subtitle so all four GPF

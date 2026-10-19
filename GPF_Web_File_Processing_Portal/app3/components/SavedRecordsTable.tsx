@@ -97,7 +97,7 @@ export const SavedRecordsTable: React.FC<SavedRecordsTableProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#0b1328] rounded-xl border border-[#1a2845] shadow-2xl overflow-hidden font-['Hind_Siliguri',sans-serif]">
+    <div className="w-full bg-[#0b1328] rounded-xl border border-[#1a2845] shadow-2xl overflow-hidden">
       
       {/* Table Header Bar matching image.png */}
       <div className="bg-[#080f20] px-4 sm:px-6 py-3.5 border-b border-[#182642] flex flex-wrap items-center justify-between gap-3">

@@ -57,14 +57,14 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         @media print {
           @page {
             size: A4 portrait;
-            margin: 20mm 20mm 15mm 20mm;
+            margin: 25mm 20mm 15mm 20mm;
           }
           html, body {
             margin: 0 !important;
             padding: 0 !important;
             background: #ffffff !important;
             color: #000000 !important;
-            font-family: 'SolaimanLipi', 'Nikosh', 'NikoshBAN', 'Kalpurush', 'Hind Siliguri', sans-serif !important;
+            font-family: 'Noto Serif Bengali', 'Tiro Bangla', 'Kalpurush', 'SolaimanLipi', serif !important;
             font-weight: 400 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -77,12 +77,12 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
             color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
-            font-family: 'SolaimanLipi', 'Nikosh', 'NikoshBAN', 'Kalpurush', 'Hind Siliguri', sans-serif !important;
+            font-family: 'Noto Serif Bengali', 'Tiro Bangla', 'Kalpurush', 'SolaimanLipi', serif !important;
           }
           #gpf-print-document * {
             box-sizing: border-box !important;
             -moz-box-sizing: border-box !important;
-            font-family: 'SolaimanLipi', 'Nikosh', 'NikoshBAN', 'Kalpurush', 'Hind Siliguri', sans-serif !important;
+            font-family: 'Noto Serif Bengali', 'Tiro Bangla', 'Kalpurush', 'SolaimanLipi', serif !important;
             font-weight: 400 !important;
           }
           header, main, footer, .print-hidden, nav {

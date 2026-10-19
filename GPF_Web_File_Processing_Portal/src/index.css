@@ -75,13 +75,12 @@
 }
 
 @media print {
-  /* margin must stay 0: Chrome only suppresses its own print header/footer
-     (date, title, URL, page number) when the page margins are set to "None".
-     Any non-zero value here brings that extra text back on every sheet.
-     The white space it used to provide is moved onto .print-page/.a4-page. */
+  /* One page box, one margin set — the same values the four apps and app4's
+     inline print engine now use. The top 25mm leaves room for the office
+     stamp and the file number; the sheet itself carries no extra padding. */
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 25mm 20mm 15mm 20mm !important;
   }
 
   body {
@@ -90,6 +89,28 @@
     font-family: 'Noto Serif Bengali', 'Tiro Bangla', 'Kalpurush', 'SolaimanLipi', serif !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* হেডার, বাটন ও মডালের ডার্ক ব্যাকড্রপ সম্পূর্ণ হাইড */
+  header,
+  nav,
+  button,
+  .no-print,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* মডাল যেন প্রিন্টকে আটকে না রাখে */
+  .fixed,
+  .overflow-hidden,
+  .overflow-y-auto {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
   }
 
   .app-shell {
@@ -128,20 +149,13 @@
     font-family: 'Noto Serif Bengali', 'Tiro Bangla', 'Kalpurush', 'SolaimanLipi', serif !important;
   }
 
-  .print\:hidden,
-  .no-print {
-    display: none !important;
-  }
-
   /* Each app renders a `print-only` container as a sibling of its own content.
      Hide every sibling of that container so the dashboard, the preview modal
-     and the HTML editor never reach the printed page. The selector matches a
-     `.print-only` child at any depth below the app root. */
+     and the HTML editor never reach the printed page. */
   *:has(> .print-only) > *:not(.print-only) {
     display: none !important;
   }
 
-  /* The app root itself may carry no padding/margin we want on paper. */
   *:has(> .print-only) {
     padding: 0 !important;
     margin: 0 !important;
@@ -156,17 +170,18 @@
     padding: 0 !important;
   }
 
-  /* Every printed sheet is exactly one A4 page: the browser margin is gone
-     (@page margin: 0), so the print padding now lives on the page element. */
+  /* এক পাতা = একটি sheet: sheet-এর ভেতরে কোনো অতিরিক্ত padding নেই,
+     margin পুরোপুরি @page-এর (উপরের নিয়ম)। ফলে ৪ এ্যাপ ও app4 একই
+     মার্জিনে ছাপে। */
   .print-page,
-  .a4-page {
+  .a4-page,
+  section[id^="print-page"] {
     box-shadow: none !important;
-    margin: 0 auto !important;
-    width: 210mm !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
     max-width: 100% !important;
-    padding: 18mm 16mm !important;
-    /* auto height: a fixed 297mm box pushed the overflowing tail of a page
-       onto a fresh sheet, which is what produced blank/duplicated pages. */
     min-height: 0 !important;
     height: auto !important;
     background: #ffffff !important;
@@ -176,10 +191,12 @@
     break-after: page !important;
   }
 
+  /* শেষ পাতার পর অতিরিক্ত খালি পাতা যেন একদম না আসে */
   .print-page:last-child,
-  .a4-page:last-child {
-    page-break-after: auto !important;
-    break-after: auto !important;
+  .a4-page:last-child,
+  section[id^="print-page"]:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   /* Long tables/blocks inside a page may exceed one sheet. Allow them to flow
@@ -205,10 +222,12 @@
     display: none !important;
   }
 
-  /* The bill/summary tables draw their own black grid. Some print engines
-     drop collapsed borders on a fixed-layout table, leaving the outer frame
-     and column separators blank. Restate width/style/colour explicitly so the
-     sides, top and bottom lines survive every print engine. */
+  /* টেবিলের গ্রিড লাইন স্পষ্টভাবে প্রিন্ট করা: কিছু প্রিন্ট ইঞ্জিন collapsed
+     border ফেলে দেয়, তাই border আবার স্পষ্ট করে বলা হয়। */
+  table {
+    border-collapse: collapse !important;
+  }
+
   .a4-page table[style*="borderCollapse"],
   .print-page table[style*="borderCollapse"] {
     border: 1px solid #000000 !important;
@@ -221,76 +240,8 @@
   .print-page table[style*="borderCollapse"] td {
     border: 1px solid #000000 !important;
   }
-}
-/* ================= GPF PRINT ENGINE FIX ================= */
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 25mm 20mm 15mm 20mm !important;
-  }
 
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-    font-family: 'Noto Serif Bengali', 'Tiro Bangla', 'Kalpurush', 'SolaimanLipi', serif !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* হেডার, বাটন ও মডালের ডার্ক ব্যাকড্রপ সম্পূর্ণ হাইড */
-  header, 
-  nav, 
-  button, 
-  .no-print, 
-  .print\:hidden {
-    display: none !important;
-  }
-
-  /* মডাল যেন প্রিন্টকে আটকে না রাখে */
-  .fixed, 
-  .overflow-hidden, 
-  .overflow-y-auto {
-    position: static !important;
-    overflow: visible !important;
-    height: auto !important;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-  }
-
-  /* ভেতরের সব ২৯৭মিমি এবং প্যাডিং স্বয়ংক্রিয়ভাবে ক্লিন করে এক পাতায় সীমাবদ্ধ করা */
-  .print-page,
-  .a4-page,
-  section[id^="print-page"] {
-    box-shadow: none !important;
-    border: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 0 !important;
-    height: auto !important;
-    background: #ffffff !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    page-break-after: always !important;
-    break-after: page !important;
-  }
-
-  /* শেষ পাতার পর অতিরিক্ত খালি পাতা যেন একদম না আসে */
-  section[id^="print-page"]:last-child,
-  .print-page:last-child,
-  .a4-page:last-child {
-    page-break-after: avoid !important;
-    break-after: avoid !important;
-  }
-
-  /* টেবিলের গ্রিড লাইন স্পষ্টভাবে প্রিন্ট করা */
-  table {
-    border-collapse: collapse !important;
-  }
-  table th, 
+  table th,
   table td {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

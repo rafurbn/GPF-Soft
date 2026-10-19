@@ -315,7 +315,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
                 <p>{upazilaName}, {districtName} এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অগ্রিম উত্তোলন এর বিল।</p>
                 <p className="mt-1 whitespace-nowrap">মঞ্জুরী নং-.................  তারিখ:...............</p>
               </div>
-              <div className="col-span-3 border-r border-black p-2 text-center font-normal flex items-center justify-center font-serif text-sm">
+              <div className="col-span-3 border-r border-black p-2 text-center font-normal flex items-center justify-center font-bangla-serif text-sm">
                 {gpfAccNo}
               </div>
               <div className="col-span-2 border-r border-black p-2 text-center font-normal flex items-center justify-center">
@@ -450,7 +450,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
                 <p>{schoolName}</p>
                 <p>{upazilaName}, {districtName}।</p>
               </div>
-              <div className="w-[14%] border-r border-black p-1 text-center flex flex-col items-center justify-center font-normal font-serif text-xs break-all">
+              <div className="w-[14%] border-r border-black p-1 text-center flex flex-col items-center justify-center font-normal font-bangla-serif text-xs break-all">
                 <span>{gpfAccNo}</span>
               </div>
               <div className="w-[13%] border-r border-black p-1 text-center flex flex-col items-center justify-center font-normal text-xs">

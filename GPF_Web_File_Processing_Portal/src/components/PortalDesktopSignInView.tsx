@@ -434,7 +434,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
           <div className="flex items-center gap-3.5 relative z-10">
 
             <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-black tracking-tight text-white">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bangla-serif font-black tracking-tight text-white">
                 GPF File Processing Portal
               </h1>
               <p className="text-xs sm:text-sm text-slate-400 font-medium mt-0.5 flex items-center gap-2">
@@ -466,7 +466,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
               <Lock className={isLoggedIn ? 'w-4 h-4' : 'w-6 h-6'} />
             </div>
             <div>
-              <h2 className={`font-bold leading-tight text-white font-serif ${isLoggedIn ? 'text-base sm:text-lg' : 'text-2xl sm:text-3xl'}`}>
+              <h2 className={`font-bold leading-tight text-white font-bangla-serif ${isLoggedIn ? 'text-base sm:text-lg' : 'text-2xl sm:text-3xl'}`}>
                 {isLoggedIn ? 'ব্যবহারকারী ড্যাশবোর্ড' : 'সাইন ইন উইন্ডো'}
               </h2>
               <p className={`text-slate-400 ${isLoggedIn ? 'text-[11px]' : 'text-sm sm:text-base'}`}>

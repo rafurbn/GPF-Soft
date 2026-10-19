@@ -291,7 +291,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
   </div>
 
   {/* ভবিষ্য তহবিলের হিসাব নং */}
-  <div className="col-span-3 border-r border-black p-2 text-center flex items-center justify-center font-serif text-[13px] font-normal">
+  <div className="col-span-3 border-r border-black p-2 text-center flex items-center justify-center font-bangla-serif text-[13px] font-normal">
     {data?.gpf_acc_no || '....................'}
   </div>
 

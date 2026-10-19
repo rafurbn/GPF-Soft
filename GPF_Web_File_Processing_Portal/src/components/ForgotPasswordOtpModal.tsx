@@ -176,7 +176,7 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs font-['Hind_Siliguri',sans-serif]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs">
       <div className="bg-white max-w-lg w-full rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-scaleIn">
         
         {/* Top Header */}

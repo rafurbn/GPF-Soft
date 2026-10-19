@@ -455,7 +455,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col font-['Hind_Siliguri',sans-serif]">
+    <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-emerald-950 border border-emerald-500 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-bounce no-print">

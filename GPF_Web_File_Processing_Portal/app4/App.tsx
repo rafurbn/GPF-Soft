@@ -8,6 +8,7 @@ import { PrintDocumentEngine } from './components/PrintDocumentEngine';
 import { readScoped, writeScoped } from '../src/lib/scopedStorage';
 import type { SubAppProps } from '../app-shared/bootstrap';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
+import { toBn } from '../src/lib/format';
 
 // Base keys; every read/write is scoped to the signed-in upazila so two upazilas
 // sharing one browser never see or overwrite each other's death-claim records.
@@ -304,7 +305,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
     });
     const merged = [...renumbered, ...claims];
     setClaims(merged);
-    showToast(`${renumbered.length}টি ক্লেইম ফাইল সফলভাবে ইমপোর্ট করা হয়েছে।`);
+    showToast(`${toBn(renumbered.length)}টি ক্লেইম ফাইল সফলভাবে ইমপোর্ট করা হয়েছে।`);
   };
 
   return (

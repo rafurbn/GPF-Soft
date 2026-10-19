@@ -3,6 +3,7 @@ import { Radio, AlertTriangle, Info, Bell, X, Sparkles } from 'lucide-react';
 import { getActiveAnnouncementsForUser, hydrateAnnouncements } from '../lib/centralAdminStore';
 import { supabase } from '../lib/supabase';
 import type { SystemAnnouncement } from '../types';
+import { toBn } from '../lib/format';
 
 interface BroadcastNoticeMarqueeProps {
   userUpazilaCode?: string;
@@ -98,7 +99,7 @@ export const BroadcastNoticeMarquee: React.FC<BroadcastNoticeMarqueeProps> = ({ 
             className="text-[10px] font-mono px-2 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-white cursor-pointer"
             title="পরবর্তী নোটিশ দেখুন"
           >
-            {currentIndex + 1}/{announcements.length} &rarr;
+            {toBn(currentIndex + 1)}/{toBn(announcements.length)} &rarr;
           </button>
         )}
 

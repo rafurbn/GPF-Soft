@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    এ্যাপ 4
+                    এ্যাপ ৪
                   </span>
                   <h1 className="text-sm sm:text-base font-bold text-white tracking-tight">
                     জিপিএফ চূড়ান্ত উত্তোলন ফাইল প্রসেসিং (ডেথ ক্লেইম)

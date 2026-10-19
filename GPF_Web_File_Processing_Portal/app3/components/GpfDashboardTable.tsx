@@ -417,7 +417,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                     type="text"
                     value={formData.totalDepositedAmount}
                     onChange={(e) => onChange('totalDepositedAmount', e.target.value)}
-                    placeholder="1200000"
+                    placeholder="১২০০০০০"
                     className="w-full pl-3 pr-28 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
                   />
                   {formData.totalDepositedAmount && (
@@ -442,7 +442,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                     type="text"
                     value={formData.requestedAmountNumber}
                     onChange={(e) => handleAmountChange(e.target.value)}
-                    placeholder="1480000"
+                    placeholder="১৪৮০০০০"
                     className="w-full pl-3 pr-28 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
                   />
                   {formData.requestedAmountNumber && (
@@ -489,7 +489,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                     type="text"
                     value={formData.basicSalary}
                     onChange={(e) => onChange('basicSalary', e.target.value)}
-                    placeholder="34500"
+                    placeholder="৩৪৫০০"
                     className="w-full pl-3 pr-28 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
                   />
                   {formData.basicSalary && (

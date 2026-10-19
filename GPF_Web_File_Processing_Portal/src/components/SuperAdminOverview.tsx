@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldCheck, Users, KeyRound, Building2, FileCheck, CheckCircle2, RotateCcw } from 'lucide-react';
 import { UserSession, GpfApplication } from '../types';
+import { toBn } from '../lib/format';
 
 interface SuperAdminOverviewProps {
   users: UserSession[];
@@ -33,7 +34,7 @@ export const SuperAdminOverview: React.FC<SuperAdminOverviewProps> = ({
 
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 text-xs text-center shrink-0">
           <div className="text-2xl font-bold font-mono text-purple-200">
-            {users.filter(u => u.role !== 'super_admin').length}
+            {toBn(users.filter((u) => u.role !== 'super_admin').length)}
           </div>
           <div className="text-purple-300 text-[11px] mt-0.5">নিবন্ধিত উপজেলা</div>
         </div>

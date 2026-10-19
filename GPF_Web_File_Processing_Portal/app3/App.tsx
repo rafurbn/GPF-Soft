@@ -13,6 +13,7 @@ import { OfficialPrintPreview } from './components/OfficialPrintPreview';
 import { PreviewModal } from './components/PreviewModal';
 import { SavedRecordsTable } from './components/SavedRecordsTable';
 import { numberToBengaliWords, cleanNumberString, calculatePrlDate } from '../src/utils/bengaliConverter';
+import { getCurrentBengaliDate } from '../src/utils/dateUtils';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { CheckCircle2 } from 'lucide-react';
@@ -44,7 +45,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
 }) => {
   const defaultInitialData: GpfFinalFormData = {
     yearSession: '২০২৬',
-    applicationDate: '২১/০৯/২০২৬',
+    applicationDate: getCurrentBengaliDate(),
     recipient: '',
     applicantName: '',
     designation: 'প্রধান শিক্ষক (অবসরপ্রাপ্ত)',
@@ -278,7 +279,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
       nid_no: formData.nidNumber || 'N/A',
       amount: cleanAmount,
       status: 'অনুমোদিত',
-      apply_date: formData.applicationDate || '২০২৬-০৯-২৩',
+      apply_date: formData.applicationDate || getCurrentBengaliDate(),
       upazila_code: currentUser.upazila_code,
       gpf_type: 'final',
       reason: 'চাকরি হতে অবসর (PRL) ও চূড়ান্ত নিষ্পত্তিকরণ'

@@ -14,6 +14,7 @@ import {
   BookOpenCheck
 } from 'lucide-react';
 import { ActiveAppTab } from '../types';
+import { toBn } from '../lib/format';
 
 interface OfficialBulletNoticeBodyProps {
   onNavigateToApp: (tab: ActiveAppTab) => void;
@@ -255,7 +256,7 @@ export const OfficialBulletNoticeBody: React.FC<OfficialBulletNoticeBodyProps> =
             />
           </div>
           <div className="text-xs font-semibold text-slate-500">
-            মোট শর্ত: {filteredPoints.length} টি
+            মোট শর্ত: {toBn(filteredPoints.length)} টি
           </div>
         </div>
 

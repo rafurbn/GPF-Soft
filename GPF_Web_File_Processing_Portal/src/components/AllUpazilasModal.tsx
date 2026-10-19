@@ -16,6 +16,7 @@ import {
   filterUpazilas,
   UpazilaRecord,
 } from '../data/upazilaData';
+import { toBn } from '../lib/format';
 
 interface AllUpazilasModalProps {
   isOpen: boolean;
@@ -138,7 +139,7 @@ export const AllUpazilasModal: React.FC<AllUpazilasModalProps> = ({
                 onChange={(e) => setSelectedDistrict(e.target.value)}
                 className="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 shadow-2xs text-slate-800 font-medium"
               >
-                <option value="ALL">সকল জেলা ({availableDistricts.length}টি)</option>
+                <option value="ALL">সকল জেলা ({toBn(availableDistricts.length)}টি)</option>
                 {availableDistricts.map((d) => (
                   <option key={d.en} value={d.en}>
                     {d.bn} ({d.en})
@@ -191,7 +192,7 @@ export const AllUpazilasModal: React.FC<AllUpazilasModalProps> = ({
           <div className="flex items-center gap-2 font-medium">
             <span>প্রদর্শিত উপজেলা:</span>
             <strong className="text-slate-900 font-bold bg-white px-2 py-0.5 rounded border border-slate-200">
-              {filteredList.length}টি
+              {toBn(filteredList.length)}টি
             </strong>
             <span className="text-slate-400">(সর্বমোট ৫০৪টি থেকে)</span>
           </div>

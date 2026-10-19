@@ -31,6 +31,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { UserSession, CentralClaimRecord, SystemAnnouncement, AppMaintenanceControl, AuditLogEntry, ActiveSession, UserAccountStatus, UserRole } from '../types';
+import { toBn, moneyCompact, date, dateTime } from '../lib/format';
 import {
   getCentralClaims,
   hydrateCentralClaims,
@@ -425,7 +426,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
     }
 
     const claimNote = restoreIncludesClaims
-      ? ` ${payload.centralClaims?.length || 0} টি দাবি সহ (বর্তমান তালিকা প্রতিস্থাপিত হবে)`
+      ? ` ${toBn(payload.centralClaims?.length || 0)} টি দাবি সহ (বর্তমান তালিকা প্রতিস্থাপিত হবে)`
       : ' দাবির তালিকা বাদ দিয়ে';
     if (!window.confirm(`ব্যাকআপ (${payload.exportedAt}) থেকে রিস্টোর করবেন${claimNote}?`)) {
       return;
@@ -744,7 +745,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                     isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300'
                   }`}
                 >
-                  {tab.badge}
+                  {toBn(tab.badge)}
                 </span>
               )}
             </button>
@@ -763,7 +764,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                 <FileCheck2 className="w-5 h-5" />
               </div>
               <div className="text-3xl font-black font-mono text-white tracking-tight">
-                {stats.totalClaims} <span className="text-sm font-normal text-slate-400 font-sans">টি ফাইল</span>
+                {toBn(stats.totalClaims)} <span className="text-sm font-normal text-slate-400 font-sans">টি ফাইল</span>
               </div>
               <p className="text-[11px] text-indigo-300/80 mt-1">সারাদেশের ৪টি এ্যাপে প্রস্তুতকৃত</p>
             </div>
@@ -774,7 +775,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                 <span className="text-base font-bold">৳</span>
               </div>
               <div className="text-3xl font-black font-mono text-white tracking-tight">
-                ৳{stats.totalAmount.toLocaleString('en-US')}
+                ৳{moneyCompact(stats.totalAmount)}
               </div>
               <p className="text-[11px] text-emerald-300/80 mt-1">সর্বমোট জিপিএফ নিষ্পত্তিকৃত অর্থ</p>
             </div>
@@ -785,7 +786,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                 <Users className="w-5 h-5" />
               </div>
               <div className="text-3xl font-black font-mono text-white tracking-tight">
-                {users.length} <span className="text-sm font-normal text-slate-400 font-sans">উপজেলা</span>
+                {toBn(users.length)} <span className="text-sm font-normal text-slate-400 font-sans">উপজেলা</span>
               </div>
               <p className="text-[11px] text-purple-300/80 mt-1">সক্রিয় ইউজার অ্যাকাউন্ট</p>
             </div>
@@ -796,7 +797,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                 <Activity className="w-5 h-5" />
               </div>
               <div className="text-3xl font-black font-mono text-white tracking-tight">
-                {activeSessions.length} <span className="text-sm font-normal text-slate-400 font-sans">ডিভাইস</span>
+                {toBn(activeSessions.length)} <span className="text-sm font-normal text-slate-400 font-sans">ডিভাইস</span>
               </div>
               <p className="text-[11px] text-amber-300/80 mt-1">বর্তমানে অনলাইনে কর্মরত</p>
             </div>
@@ -821,11 +822,11 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                   <div key={app.id} className={`p-4 rounded-xl border ${app.color} space-y-2`}>
                     <div className="text-xs font-bold text-slate-200">{app.name}</div>
                     <div className="flex items-baseline justify-between">
-                      <span className="text-2xl font-black font-mono text-white">{data.count}</span>
-                      <span className="text-xs font-mono font-bold text-slate-300">৳{data.amount.toLocaleString('en-US')}</span>
+                      <span className="text-2xl font-black font-mono text-white">{toBn(data.count)}</span>
+                      <span className="text-xs font-mono font-bold text-slate-300">৳{moneyCompact(data.amount)}</span>
                     </div>
                     <div className="text-[11px] text-slate-400">
-                      গড় নিষ্পত্তিকৃত অর্থ: ৳{data.count > 0 ? Math.round(data.amount / data.count).toLocaleString('en-US') : '০'}
+                      গড় নিষ্পত্তিকৃত অর্থ: ৳{data.count > 0 ? moneyCompact(Math.round(data.amount / data.count)) : '০'}
                     </div>
                   </div>
                 );
@@ -1157,7 +1158,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
 
                       <td className="p-3.5 font-mono text-slate-300">{c.gpfAccNo}</td>
                       <td className="p-3.5 font-mono font-bold text-emerald-400">
-                        ৳{Number(c.amount).toLocaleString('en-US')}
+                        ৳{moneyCompact(c.amount)}
                       </td>
 
                       <td className="p-3.5 text-slate-300">
@@ -1285,7 +1286,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
                   {auditLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-800/30 transition text-[11px]">
                       <td className="p-3 text-slate-400 whitespace-nowrap">
-                        {new Date(log.timestamp).toLocaleString('bn-BD')}
+                        {dateTime(log.timestamp)}
                       </td>
                       <td className="p-3 uppercase font-bold text-indigo-300">{log.eventType}</td>
                       <td className="p-3 text-slate-300">
@@ -1399,7 +1400,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
           <div className="lg:col-span-2 bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-amber-400" />
-              <span>চলমান নোটিশ ও ব্রডকাস্টের তালিকা ({announcements.length})</span>
+              <span>চলমান নোটিশ ও ব্রডকাস্টের তালিকা ({toBn(announcements.length)})</span>
             </h3>
 
             <div className="space-y-3">
@@ -1709,7 +1710,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
               <div>
                 <h4 className="font-bold text-white text-sm flex items-center gap-2">
                   <Trash2 className="w-4 h-4 text-rose-400" />
-                  <span>ডিলিট করা দাবির ট্র্যাশ ({claimTrash.length})</span>
+                  <span>ডিলিট করা দাবির ট্র্যাশ ({toBn(claimTrash.length)})</span>
                 </h4>
                 <p className="text-xs text-slate-400 mt-0.5">
                   হাব থেকে মুছে যাওয়া প্রতিটি দাবি এখানে থাকে; খালি করার আগে পর্যন্ত যেকোনো সময় ফেরানো যায়।
@@ -1835,7 +1836,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
               <div className="flex justify-between py-1 border-b border-slate-800/60">
                 <span className="text-slate-400">দাবীকৃত টাকার পরিমাণ:</span>
                 <span className="font-bold font-mono text-emerald-400">
-                  ৳{Number(selectedClaimDetail.amount).toLocaleString('en-US')}
+                  ৳{moneyCompact(selectedClaimDetail.amount)}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/60">
@@ -1844,7 +1845,7 @@ export const SuperAdminSuite: React.FC<SuperAdminSuiteProps> = ({
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/60">
                 <span className="text-slate-400">আবেদনের তারিখ:</span>
-                <span>{selectedClaimDetail.applyDate}</span>
+                <span>{date(selectedClaimDetail.applyDate)}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-800/60">
                 <span className="text-slate-400">স্ট্যাটাস:</span>

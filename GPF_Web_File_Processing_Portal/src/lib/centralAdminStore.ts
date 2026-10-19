@@ -1,6 +1,7 @@
 import { CentralClaimRecord, SystemAnnouncement, AppMaintenanceControl, AuditLogEntry, ActiveSession, UserAccountStatus, UserSession } from '../types';
 import { supabase } from './supabase';
 import { findUpazilaByDefaultId } from '../data/upazilaData';
+import { toBn, moneyCompact } from './format';
 
 // Storage keys
 const STORAGE_KEY_CENTRAL_CLAIMS = 'gpf_central_claims_v1';
@@ -208,7 +209,7 @@ export const saveCentralClaim = (record: CentralClaimRecord): void => {
     eventType: 'claim_saved',
     upazilaCode: record.upazilaCode,
     email: record.details?.email || 'upazila@dpe.gov.bd',
-    description: `${record.appTitle}-এ কর্মচারীর (${record.employeeName}, জিপিএফ: ${record.gpfAccNo}) দাবি ফাইল সংরক্ষিত হয়েছে। পরিমাণ: ৳${record.amount.toLocaleString('en-US')}`,
+    description: `${record.appTitle}-এ কর্মচারীর (${record.employeeName}, জিপিএফ: ${record.gpfAccNo}) দাবি ফাইল সংরক্ষিত হয়েছে। পরিমাণ: ৳${moneyCompact(record.amount)}`,
     status: 'success',
   });
 };
@@ -478,7 +479,7 @@ export const hydrateActiveSessions = async (): Promise<ActiveSession[]> => {
     const minutes = Math.max(0, Math.floor((Date.now() - new Date(row.last_seen_at).getTime()) / 60000));
     return {
       ...(row.record as ActiveSession),
-      lastActiveTime: minutes === 0 ? 'এখনই সক্রিয়' : `${minutes} মিনিট আগে`,
+      lastActiveTime: minutes === 0 ? 'এখনই সক্রিয়' : `${toBn(minutes)} মিনিট আগে`,
     };
   });
   setLocal(STORAGE_KEY_ACTIVE_SESSIONS, sessions);

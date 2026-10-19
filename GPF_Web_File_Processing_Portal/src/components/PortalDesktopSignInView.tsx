@@ -35,6 +35,7 @@ import { ForgotPasswordOtpModal } from './ForgotPasswordOtpModal';
 import { RegionSettingsModal } from './RegionSettingsModal';
 import { OfficialDashboard } from './OfficialDashboard';
 import { persistUpazilaContext } from '../lib/upazilaSession';
+import { toBn } from '../lib/format';
 import {
   getAllDivisions,
   getDistrictsByDivision,
@@ -595,7 +596,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
           {/* Bottom Info Bar */}
           <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
             <span className="font-semibold text-slate-300">
-              মোট শর্তাবলী: ১৪টি • প্রদর্শিত হচ্ছে: {filteredBullets.length} টি
+              মোট শর্তাবলী: ১৪টি • প্রদর্শিত হচ্ছে: {toBn(filteredBullets.length)} টি
             </span>
             <span className="text-emerald-400 font-medium">
               সর্বশেষ সরকারি প্রজ্ঞাপন ও বিধিমালা অনুযায়ী হালনাগাদকৃত

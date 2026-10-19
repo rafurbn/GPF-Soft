@@ -5,6 +5,7 @@ import {
   formatBangladeshiCurrency,
 } from '../utils/bengaliWords';
 import { printClaimDocument, downloadClaimDocument } from '../utils/printAndDownload';
+import { toBn, date } from '../../src/lib/format';
 import {
   Search,
   Edit2,
@@ -51,7 +52,7 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
-      onShowToast(`সকল (${claims.length}টি) ফাইলের ব্যাকআপ JSON ডাউনলোড সম্পন্ন হয়েছে।`);
+      onShowToast(`সকল (${toBn(claims.length)}টি) ফাইলের ব্যাকআপ JSON ডাউনলোড সম্পন্ন হয়েছে।`);
     } catch {
       onShowToast('ফাইল ব্যাকআপ তৈরিতে ত্রুটি হয়েছে।');
     }
@@ -365,8 +366,8 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
 
                   {/* Date */}
                   <td className="py-3 px-3 text-center text-slate-300 tabular-nums">
-                    <div>{claim.applicationDate}</div>
-                    <div className="text-[10px] text-slate-500">মৃত্যু: {claim.deathDate}</div>
+                    <div>{date(claim.applicationDate)}</div>
+                    <div className="text-[10px] text-slate-500">মৃত্যু: {date(claim.deathDate)}</div>
                   </td>
 
                   {/* Status Badge */}

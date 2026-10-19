@@ -2,22 +2,17 @@
  * Bengali numbers and currency in words converter
  */
 
+import { toBn, toEn } from '../../src/lib/format';
+
 export const BENGALI_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 export const ENGLISH_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 export function toBengaliNumber(num: number | string | undefined | null): string {
-  if (num === undefined || num === null) return '';
-  const str = String(num);
-  return str.replace(/[0-9]/g, (digit) => BENGALI_DIGITS[parseInt(digit, 10)]);
+  return toBn(num);
 }
 
 export function toEnglishNumber(str: string): string {
-  if (!str) return '';
-  let res = str;
-  BENGALI_DIGITS.forEach((bDigit, idx) => {
-    res = res.replaceAll(bDigit, String(idx));
-  });
-  return res;
+  return toEn(str);
 }
 
 /**

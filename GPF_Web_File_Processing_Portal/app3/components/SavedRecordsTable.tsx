@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { FinalSavedApplicationRecord } from '../../src/types';
 import { toBengaliDigits, formatBanglaCurrency } from '../../src/utils/bengaliConverter';
+import { date } from '../../src/lib/format';
 
 interface SavedRecordsTableProps {
   records: FinalSavedApplicationRecord[];
@@ -211,7 +212,7 @@ export const SavedRecordsTable: React.FC<SavedRecordsTableProps> = ({
 
                   {/* আবেদনের তারিখ */}
                   <td className="py-3 px-4 text-center text-slate-300 text-xs">
-                    {rec.applicationDate || '—'}
+                    {rec.applicationDate ? date(rec.applicationDate) : '—'}
                   </td>
 
                   {/* অ্যাকশন */}

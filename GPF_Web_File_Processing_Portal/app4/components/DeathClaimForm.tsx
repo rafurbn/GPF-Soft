@@ -310,7 +310,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   ];
 
   // Attachment options: strictly 01(এক) খানা and 02(দুই) খানা
-  const attachmentOptions = ['01(এক) খানা', '02(দুই) খানা'];
+  const attachmentOptions = ['০১(এক) খানা', '০২(দুই) খানা'];
 
   // Year quick options
   const yearOptions = ['2026', '2027', '2028', '2029', '2030'];
@@ -484,7 +484,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
           </thead>
           <tbody className="text-xs sm:text-sm">
           {/* Row 1: সন */}
-          <FormRow index="১" label="সন" hint="2026, 2027, 2028" lockCells={renderLockControls('year')}>
+          <FormRow index="১" label="সন" hint="২০২৬, ২০২৭, ২০২৮" lockCells={renderLockControls('year')}>
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -749,7 +749,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
           </FormRow>
 
           {/* Row 17: সংযুক্তি (01(এক) খানা / 02(দুই) খানা) */}
-          <FormRow index="১৭" label={<>সংযুক্তি <span className="text-rose-400">*</span></>} hint="01(এক) খানা / 02(দুই) খানা" hintClassName="text-teal-400/90" lockCells={renderLockControls('attachmentsCount')}>
+          <FormRow index="১৭" label={<>সংযুক্তি <span className="text-rose-400">*</span></>} hint="০১(এক) খানা / ০২(দুই) খানা" hintClassName="text-teal-400/90" lockCells={renderLockControls('attachmentsCount')}>
             <div className="flex gap-2 items-center">
               {attachmentOptions.map((opt) => {
                 // The state holds the value exactly as chosen, but an imported

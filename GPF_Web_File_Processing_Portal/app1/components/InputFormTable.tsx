@@ -253,7 +253,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     value={formData.year}
                     onChange={(e) => handleChange('year', e.target.value)}
                     readOnly={lockedConfig.year}
-                    placeholder="2026"
+                    placeholder="২০২৬"
                     className={`w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
                       lockedConfig.year
                         ? 'bg-amber-950/20 border-amber-500/50 text-amber-200 cursor-not-allowed'

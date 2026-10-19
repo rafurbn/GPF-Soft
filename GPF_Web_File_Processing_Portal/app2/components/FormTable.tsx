@@ -130,7 +130,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                       value={formData.year}
                       readOnly={lockedState.year}
                       onChange={(e) => onChange('year', e.target.value)}
-                      placeholder="২০২৬ বা 2026"
+                      placeholder="২০২৬"
                       className={`w-full px-3 py-2 rounded-lg text-sm ${
                         lockedState.year
                           ? 'bg-emerald-950/25 border border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none'
@@ -169,7 +169,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                     id="input-apply-date"
                     value={formData.apply_date}
                     onChange={(e) => onChange('apply_date', e.target.value)}
-                    placeholder="যেমন: ২০/০৯/২০২৬ বা 20-09-2026"
+                    placeholder="যেমন: ২০/০৯/২০২৬"
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white focus:outline-hidden focus:border-emerald-500 text-sm"
                   />
                   <button
@@ -332,7 +332,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                       id="input-dob"
                       value={formData.date_of_birth}
                       onChange={(e) => onChange('date_of_birth', e.target.value)}
-                      placeholder="যেমন: 02/01/1970 বা 02-01-1970"
+                      placeholder="যেমন: ০২/০১/১৯৭০"
                       className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white focus:outline-hidden focus:border-emerald-500 text-sm"
                     />
                   </div>
@@ -410,7 +410,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                     id="input-requested-amount"
                     value={formData.requested_amount}
                     onChange={(e) => onChange('requested_amount', e.target.value)}
-                    placeholder="যেমন: 500000"
+                    placeholder="যেমন: ৫০০০০০"
                     className="w-full px-3 py-2 bg-slate-950 border border-emerald-700/60 rounded-lg text-emerald-300 focus:outline-hidden focus:border-emerald-400 text-base font-bold font-mono"
                   />
                   {formData.requested_amount && (
@@ -478,7 +478,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                     id="input-basic-salary"
                     value={formData.basic_salary}
                     onChange={(e) => onChange('basic_salary', e.target.value)}
-                    placeholder="যেমন: 24220"
+                    placeholder="যেমন: ২৪২২০"
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white focus:outline-hidden focus:border-emerald-500 text-sm font-mono"
                   />
                   {formData.basic_salary && (

@@ -11,6 +11,7 @@ import React from 'react';
 import { BookmarkCheck, Sparkles, ChevronRight, Clock, Plus, Activity, ShieldCheck, Lock } from 'lucide-react';
 import { ActiveAppTab, UserSession } from '../types';
 import { getAppMaintenanceStates, getRemoteMaintenanceState, hydrateMaintenanceStates } from '../lib/centralAdminStore';
+import { toBn } from '../lib/format';
 
 // ৪টি সক্রিয় এ্যাপ + ১টি খালি স্লট (ভবিষ্যতে এখানে নতুন এ্যাপ যোগ করা হবে)।
 type LauncherApp = {
@@ -205,7 +206,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
                 <div key={stat.id} className="flex items-center gap-2">
                   <span className={`w-1.5 h-6 rounded-full ${stat.dotClass}`} />
                   <div className="leading-tight">
-                    <div className="text-xl font-black text-white font-mono">{stat.value}</div>
+                    <div className="text-xl font-black text-white font-mono">{toBn(stat.value)}</div>
                     <div className="text-[10px] font-semibold text-slate-400 whitespace-nowrap">{stat.label}</div>
                   </div>
                 </div>

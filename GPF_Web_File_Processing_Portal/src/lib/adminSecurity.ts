@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { toBn } from './format';
 import type { UserAccountStatus, UserRole } from '../types';
 
 /**
@@ -65,7 +66,7 @@ export const securityAlertFor = (row: LoginSecurityRow | undefined): string | nu
       : 'অ্যাডমিন কর্তৃক সাময়িকভাবে স্থগিত';
   }
   if (row.accountStatus === 'deactivated') return 'স্থায়ীভাবে নিষ্ক্রিয় করা হয়েছে';
-  if (row.failedAttempts > 0) return `ব্যর্থ লগইন চেষ্টা: ${row.failedAttempts}/৫`;
+  if (row.failedAttempts > 0) return `ব্যর্থ লগইন চেষ্টা: ${toBn(row.failedAttempts)}/৫`;
   return null;
 };
 

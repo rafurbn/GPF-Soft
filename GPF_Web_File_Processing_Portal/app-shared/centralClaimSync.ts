@@ -1,5 +1,5 @@
-import type { CentralClaimRecord, SystemAnnouncement } from '../src/types';
-import { saveCentralClaim, isAppLocked, getActiveAnnouncementsForUser } from '../src/lib/centralAdminStore';
+import type { CentralClaimRecord } from '../src/types';
+import { saveCentralClaim } from '../src/lib/centralAdminStore';
 import { supabase } from '../src/lib/supabase';
 
 /**
@@ -74,18 +74,4 @@ export const syncClaimToCentral = async (
     console.warn('[centralClaimSync] Failed to sync claim:', err);
     return false;
   }
-};
-
-/**
- * Checks if the given app is currently locked / under maintenance.
- */
-export const checkAppMaintenanceStatus = (appId: 'app1' | 'app2' | 'app3' | 'app4') => {
-  return isAppLocked(appId);
-};
-
-/**
- * Gets announcements applicable to the current upazila.
- */
-export const getUpazilaAnnouncements = (upazilaCode?: string): SystemAnnouncement[] => {
-  return getActiveAnnouncementsForUser(upazilaCode);
 };

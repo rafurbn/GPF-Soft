@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LABELS } from '../app-shared/ui/tokens';
 import { Code2, CheckCircle2, AlertCircle, Info, Sparkles, FileText, Layers } from 'lucide-react';
 import { UserSession, GpfApplication, GpfFormData, LockedFieldsConfig, LockableFieldKey } from '../src/types';
 import {
@@ -100,7 +101,7 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
   // Toggle lock for a specific field
   const toggleLock = (field: LockableFieldKey) => {
     if (field === 'upazilaName' || field === 'districtName') {
-      showToast('উপজেলা ও জেলার নাম স্থায়ীভাবে ফিক্সড করা আছে।', 'info');
+      showToast(LABELS.fixedFieldToast, 'info');
       return;
     }
 

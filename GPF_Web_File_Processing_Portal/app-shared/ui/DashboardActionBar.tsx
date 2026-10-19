@@ -36,13 +36,13 @@ export const DashboardActionBar: React.FC<DashboardActionBarProps> = ({
 }) => (
   <div className="p-4 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
     {note && (
-      <div className="flex items-center gap-2 text-xs text-slate-400">
+      <div className="flex min-w-0 items-center gap-2 text-xs text-slate-400">
         <span className="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
         <span>{note}</span>
       </div>
     )}
 
-    <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+    <div className="flex flex-wrap items-center justify-end gap-2 w-full shrink-0 sm:w-auto">
       {extra}
       {onNew && <ActionButton kind="new" title={LABELS.new} onClick={onNew} id="btn-new-in-dashboard" />}
       {onPreview && <ActionButton kind="neutral" title={LABELS.preview} onClick={onPreview} id="btn-preview-draft" />}

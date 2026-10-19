@@ -3,7 +3,6 @@ import { CheckCircle2, Save, Sparkles } from 'lucide-react';
 import { GpfNonRefundableFormData, NonRefundableLockableKey, NonRefundableLockedState } from '../../src/types';
 import { numberToBanglaWords, toBanglaNumber } from '../../src/utils/numberToBanglaWords';
 import { calculateAge } from '../../src/utils/dateUtils';
-import dashboardLogo from '../../src/assets/images/rf-logo.svg';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { LABELS } from '../../app-shared/ui/tokens';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
@@ -64,30 +63,6 @@ export const FormTable: React.FC<FormTableProps> = ({
 
   return (
     <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8" id="input-dashboard-section">
-      {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
-          Same card shell, title, count badge and "আনলিমিটেড সেইভ ফাইল" badge so
-          all four GPF apps present one identical input dashboard. */}
-      <div className="px-4 sm:px-5 py-4 border-b border-slate-800/90">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
-            <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-base font-bold text-white tracking-tight">
-                জিপিএফ অফেরতযোগ্য অগ্রিম উত্তোলন-ইনপুট ড্যাশবোর্ড
-              </h2>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                আনলিমিটেড সেইভ ফাইল
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              নিবন্ধিত শিক্ষক ও কর্মচারীর অফেরতযোগ্য অগ্রিম উত্তোলন ফাইল প্রস্তুত ও সংরক্ষণ
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* Main Form Table */}
       <div className="overflow-x-auto">
@@ -97,7 +72,7 @@ export const FormTable: React.FC<FormTableProps> = ({
               <th className="py-3 px-4 w-14 text-center font-semibold">ক্র:</th>
               <th className="py-3 px-4 w-60 md:w-72 font-semibold">ফিল্ডের নাম</th>
               <th className="py-3 px-4 font-semibold">এখানে তথ্য ইনপুট দিন</th>
-              <th className="py-3 px-4 w-28 md:w-36 text-center font-semibold">লক / আনলক</th>
+              <th className="py-3 px-4 w-28 md:w-36 text-center font-semibold">{LABELS.lockColumn}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60 font-sans">

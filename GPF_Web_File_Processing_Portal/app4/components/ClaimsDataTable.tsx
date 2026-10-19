@@ -188,10 +188,6 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
             <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 tabular-nums">
               {toBengaliNumber(claims.length)} টি আবেদন
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-              আনলিমিটেড সেইভ ফাইল
-            </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
             নিবন্ধিত সকল মৃত সরকারি শিক্ষক ও কর্মচারীর সাধারণ ভবিষ্যৎ তহবিল চূড়ান্ত নিষ্পত্তি ফাইল

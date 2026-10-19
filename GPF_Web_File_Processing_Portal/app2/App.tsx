@@ -228,7 +228,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   // Toggle Lock: locks current value permanently into storage, or unlocks to allow modification
   const handleToggleLock = (field: NonRefundableLockableKey) => {
     if (field === 'upazila_name' || field === 'district_name') {
-      showToast('উপজেলা ও জেলার নাম স্থায়ীভাবে ফিক্সড করা আছে।');
+      showToast(LABELS.fixedFieldToast, 'info');
       return;
     }
 

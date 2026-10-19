@@ -3,7 +3,6 @@ import { GpfFormData, LockedFieldsConfig, LockableFieldKey } from '../../src/typ
 import { numberToBanglaWords, toBanglaDigits, cleanNumberString, formatBanglaCurrency } from '../../src/utils/numberToBanglaWords';
 import { deriveFormData } from '../../src/utils/deriveFormData';
 import { Sparkles, Calendar } from 'lucide-react';
-import dashboardLogo from '../../src/assets/images/rf-logo.svg';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { LABELS } from '../../app-shared/ui/tokens';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
@@ -134,30 +133,6 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
   const renderEmptyLockCells = () => <td colSpan={2} className={emptyCellClass}>—</td>;
   return (
     <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8" id="input-dashboard-section">
-      {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
-          Same card shell, title, count badge and "আনলিমিটেড সেইভ ফাইল" badge so
-          all four GPF apps present one identical input dashboard. */}
-      <div className="px-4 sm:px-5 py-4 border-b border-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
-            <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-base font-bold text-white tracking-tight">
-                জিপিএফ ফেরতযোগ্য অগ্রিম উত্তোলন-ইনপুট ড্যাশবোর্ড
-              </h2>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                আনলিমিটেড সেইভ ফাইল
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              নিবন্ধিত শিক্ষক ও কর্মচারীর ফেরতযোগ্য অগ্রিম উত্তোলন ফাইল প্রস্তুত ও সংরক্ষণ
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* Main Table */}
       <div className="overflow-x-auto p-2 sm:p-4 bg-[#080d1e]">
@@ -176,7 +151,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                 এখানে তথ্য ইনপুট দিন
               </th>
               <th colSpan={2} className="bg-[#0f172a] text-slate-300 py-2.5 px-2 w-48 text-center font-bold text-xs sm:text-sm">
-                {`${LABELS.locked} / ${LABELS.unlocked}`}
+                {LABELS.lockColumn}
               </th>
             </tr>
           </thead>
@@ -656,7 +631,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
             <FormRow
               index="১৯"
               label="উপজেলার নাম"
-              hint="উপজেলা আইডি খোলার সময় নিশ্চিত করা নাম স্থায়ীভাবে ফিক্সড"
+              hint={`(${LABELS.fixed})`}
               lockCells={renderLockControls('upazilaName', { lockedAlways: true })}
             >
                   <input
@@ -672,7 +647,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
             <FormRow
               index="২০"
               label="জেলার নাম"
-              hint="উপজেলা আইডি খোলার সময় নিশ্চিত করা নাম স্থায়ীভাবে ফিক্সড"
+              hint={`(${LABELS.fixed})`}
               lockCells={renderLockControls('districtName', { lockedAlways: true })}
             >
                   <input

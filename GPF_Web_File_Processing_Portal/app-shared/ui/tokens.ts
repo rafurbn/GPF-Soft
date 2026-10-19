@@ -50,7 +50,9 @@ export const LABELS = {
   cancel: 'না',
   locked: 'লক করা আছে',
   unlocked: 'আনলক',
+  lockColumn: 'লক / আনলক',
   fixed: 'স্থায়ী',
+  fixedFieldToast: 'উপজেলা ও জেলার নাম স্থায়ী — পরিবর্তন করা যাবে না।',
   preview: 'প্রিভিউ',
   htmlEdit: 'এইচটিএমএল সম্পাদনা',
   needIdentity: 'অনুগ্রহ করে আবেদনকারীর নাম অথবা জিপিএফ হিসাব নম্বর পূরণ করুন।',
@@ -58,7 +60,7 @@ export const LABELS = {
 
 /** The one save call-to-action used by every input dashboard. */
 export const SAVE_CTA =
-  'px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 shadow-lg shadow-emerald-950/50 flex items-center gap-2 transition-all cursor-pointer hover:scale-102 active:scale-98';
+  'px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 shadow-lg shadow-emerald-950/50 flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer hover:scale-102 active:scale-98';
 
 
 /** Title shown when a locked field is clicked; `{label}` becomes the field name. */

@@ -121,7 +121,9 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [autoDownloadPdf, setAutoDownloadPdf] = useState(false);
   const [isHtmlEditModalOpen, setIsHtmlEditModalOpen] = useState(false);
-  const [activePrintData, setActivePrintData] = useState<GpfFinalFormData>(formData);  const { toast, showToast } = useToast();
+  const [activePrintData, setActivePrintData] = useState<GpfFinalFormData>(formData);
+
+  const { toast, showToast } = useToast();
 
   const dashboardRef = useRef<HTMLDivElement>(null);
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LABELS } from '../app-shared/ui/tokens';
 import { GpfDeathClaim, LockSettings, LockableField } from './types/gpf';
 import { INITIAL_CLAIMS, INITIAL_LOCKS } from './utils/initialData';
 import { PlusCircle } from 'lucide-react';
@@ -92,7 +93,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
 
   const handleToggleLock = (field: LockableField) => {
     if (field === 'upazilaName' || field === 'districtName') {
-      showToast('উপজেলা ও জেলার নাম স্থায়ীভাবে ফিক্সড করা আছে।');
+      showToast(LABELS.fixedFieldToast, 'info');
       return;
     }
     setLockSettings((prev) => ({

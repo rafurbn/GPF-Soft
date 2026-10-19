@@ -1,4 +1,3 @@
-import dashboardLogo from '../../src/assets/images/rf-logo.svg';
 import React, { useState } from 'react';
 import { 
   Lock, 
@@ -96,30 +95,6 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
   return (
     <div className="w-full bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl overflow-hidden mb-8">
       
-      {/* Input Dashboard Header — kept in step with app4 (DeathClaimForm).
-          Same title, "আনলিমিটেড সেইভ ফাইল" badge and subtitle so all four GPF
-          apps present one identical input dashboard. */}
-      <div className="px-4 sm:px-5 py-4 border-b border-slate-800/90 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
-            <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-base font-bold text-white tracking-tight">
-                জিপিএফ চূড়ান্ত উত্তোলন-ইনপুট ড্যাশবোর্ড
-              </h2>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                আনলিমিটেড সেইভ ফাইল
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              নিবন্ধিত শিক্ষক ও কর্মচারীর চূড়ান্ত উত্তোলন ফাইল প্রস্তুত ও সংরক্ষণ
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* Main Table 16 Rows */}
       <div className="overflow-x-auto">
@@ -129,7 +104,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
               <th className="py-2.5 px-3 w-12 text-center">ক্র:</th>
               <th className="py-2.5 px-4 w-72">ফিল্ডের নাম</th>
               <th className="py-2.5 px-4">এখানে তথ্য ইনপুট দিন</th>
-              <th className="py-2.5 px-3 w-32 text-center">লক / আনলক</th>
+              <th className="py-2.5 px-3 w-32 text-center">{LABELS.lockColumn}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#15223b] bg-[#0b1328] text-slate-200">
@@ -543,7 +518,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                     value={formData.upazila}
                     readOnly
                     placeholder="বিয়ানীবাজার"
-                    title="উপজেলা আইডি খোলার সময় নিশ্চিত করা নাম — স্থায়ীভাবে ফিক্সড"
+                    title={`(${LABELS.fixed})`}
                     className={`w-full px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                       locks.upazila
                         ? 'bg-[#091120] border border-emerald-500/40 text-emerald-100 cursor-not-allowed select-none pr-20'
@@ -569,7 +544,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                     value={formData.district}
                     readOnly
                     placeholder="সিলেট"
-                    title="উপজেলা আইডি খোলার সময় নিশ্চিত করা নাম — স্থায়ীভাবে ফিক্সড"
+                    title={`(${LABELS.fixed})`}
                     className={`w-full px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                       locks.district
                         ? 'bg-[#091120] border border-emerald-500/40 text-emerald-100 cursor-not-allowed select-none pr-20'

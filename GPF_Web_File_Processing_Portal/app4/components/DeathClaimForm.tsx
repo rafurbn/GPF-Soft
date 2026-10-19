@@ -15,15 +15,9 @@ import {
   normaliseBengaliDate,
   parseBengaliNumber,
 } from '../utils/bengaliWords';
-import {
-  Save,
-  RotateCcw,
-  Sparkles,
-  Check,
-  PlusCircle,
-} from 'lucide-react';
-import dashboardLogo from '../../src/assets/images/rf-logo.svg';
+import { Sparkles, PlusCircle } from 'lucide-react';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
+import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
 import type { ToastKind } from '../../app-shared/ui/Toast';
 import { LABELS } from '../../app-shared/ui/tokens';
 
@@ -282,8 +276,8 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
     };
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!deceasedEmployeeName || !applicantName || !schoolName || !gpfAccountNo) {
       onShowToast('অনুগ্রহ করে মৃত কর্মচারীর নাম, বিদ্যালয়, আবেদনকারী ও জিপিএফ হিসাব নম্বর পূরণ করুন।', 'error');
       return;
@@ -372,15 +366,9 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
 
   return (
     <div className="bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl print:hidden">
-      {/* Top Banner - Sticky Freeze Pane right below the top navigation Header */}
-      <div className="px-5 py-3.5 bg-[#0e1628]/95 backdrop-blur-md border-b border-emerald-900/50 shadow-lg shadow-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-t-2xl">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
-            <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              জিপিএফ মৃত্যুদাবী নিষ্পত্তি-ইনপুট ড্যাশবোর্ড
+      {/* Entry-mode strip — the page title and logo live in SubAppHeader only */}
+      <div className="px-5 py-3 border-b border-emerald-900/50 flex items-center gap-2">
+        <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
               {isEditing ? (
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold animate-pulse">
                   সম্পাদনা মোড
@@ -390,20 +378,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
                   নতুন এন্ট্রি মোড
                 </span>
               )}
-            </h2>
-          </div>
-        </div>
-
-        {isEditing && (
-          <button
-            type="button"
-            onClick={onReset}
-            className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 font-medium transition-colors cursor-pointer"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>নতুন এন্ট্রি শুরু করুন</span>
-          </button>
-        )}
+        </h2>
       </div>
 
       {/* Main Table Form */}
@@ -430,7 +405,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
                 এখানে তথ্য ইনপুট দিন
               </th>
               <th colSpan={2} className="bg-[#0f172a] text-slate-300 py-2.5 px-2 w-48 text-center font-bold text-xs sm:text-sm">
-                {`${LABELS.locked} / ${LABELS.unlocked}`}
+                {LABELS.lockColumn}
               </th>
             </tr>
           </thead>
@@ -802,29 +777,24 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
         </table>
         </div>
 
-        {/* Action Buttons */}
-        <div className="p-4 sm:p-6 pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-800">
-          <div className="text-xs text-slate-400 flex items-center gap-1.5">
-            <span className="text-rose-400">*</span>
-            <span>চিহ্নিত ফিল্ডসমূহ আবশ্যক। লকড ফিল্ডের তথ্য পরবর্তী ফর্মে অটো লোড থাকবে।</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-            <button
-              type="button"
-              onClick={onReset}
-              className="px-3.5 py-2 rounded-lg text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors flex items-center gap-1.5 border border-slate-700 cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>রিসেট / খালি ফর্ম</span>
-            </button>
-
-            {isEditing && (
+        {/* Action bar \u2014 the same one app1/app2/app3 use */}
+        <DashboardActionBar
+          note={
+            <>
+              <span className="text-rose-400">*</span>
+              <span>\u099a\u09bf\u09b9\u09cd\u09a8\u09bf\u09a4 \u09ab\u09bf\u09b2\u09cd\u09a1\u09b8\u09ae\u09c2\u09b9 \u0986\u09ac\u09b6\u09cd\u09af\u0995\u0964 {LABELS.locked} \u09ab\u09bf\u09b2\u09cd\u09a1\u09c7\u09b0 \u09a4\u09a5\u09cd\u09af \u09aa\u09b0\u09ac\u09b0\u09cd\u09a4\u09c0 \u09ab\u09b0\u09cd\u09ae\u09c7 \u0985\u099f\u09cb \u09b2\u09cb\u09a1 \u09a5\u09be\u0995\u09ac\u09c7\u0964</span>
+            </>
+          }
+          onNew={onReset}
+          onSave={handleSave}
+          saveLabel={saveSuccess ? '\u09a4\u09a5\u09cd\u09af \u09b8\u09ab\u09b2\u09ad\u09be\u09ac\u09c7 \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4!' : isEditing ? LABELS.update : LABELS.save}
+          extra={
+            isEditing ? (
               <button
                 type="button"
                 onClick={() => {
                   if (!deceasedEmployeeName || !applicantName || !schoolName || !gpfAccountNo) {
-                    onShowToast('অনুগ্রহ করে মৃত কর্মচারীর নাম, বিদ্যালয়, আবেদনকারী ও জিপিএফ হিসাব নম্বর পূরণ করুন।', 'error');
+                    onShowToast('\u0985\u09a8\u09c1\u0997\u09cd\u09b0\u09b9 \u0995\u09b0\u09c7 \u09ae\u09c3\u09a4 \u0995\u09b0\u09cd\u09ae\u099a\u09be\u09b0\u09c0\u09b0 \u09a8\u09be\u09ae, \u09ac\u09bf\u09a6\u09cd\u09af\u09be\u09b2\u09df, \u0986\u09ac\u09c7\u09a6\u09a8\u0995\u09be\u09b0\u09c0 \u0993 \u099c\u09bf\u09aa\u09bf\u098f\u09ab \u09b9\u09bf\u09b8\u09be\u09ac \u09a8\u09ae\u09cd\u09ac\u09b0 \u09aa\u09c2\u09b0\u09a3 \u0995\u09b0\u09c1\u09a8\u0964', 'error');
                     return;
                   }
                   onSaveClaim(getFormDataObject(), true);
@@ -832,31 +802,14 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
                   setTimeout(() => setSaveSuccess(false), 3000);
                 }}
                 className="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold text-emerald-200 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/70 transition-colors flex items-center gap-1.5 shadow-md cursor-pointer"
-                title="বিদ্যমান ফাইল অপরিবর্তিত রেখে এটি নতুন ক্লেইম হিসেবে সংরক্ষণ করুন"
+                title="\u09ac\u09bf\u09a6\u09cd\u09af\u09ae\u09be\u09a8 \u09ab\u09be\u0987\u09b2 \u0985\u09aa\u09b0\u09bf\u09ac\u09b0\u09cd\u09a4\u09bf\u09a4 \u09b0\u09c7\u0996\u09c7 \u098f\u099f\u09bf \u09a8\u09a4\u09c1\u09a8 \u0995\u09cd\u09b2\u09c7\u0987\u09ae \u09b9\u09bf\u09b8\u09c7\u09ac \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u0995\u09b0\u09c1\u09a8"
               >
                 <PlusCircle className="w-4 h-4 text-emerald-400" />
-                <span>নতুন হিসেবে সংরক্ষণ</span>
+                <span>\u09a8\u09a4\u09c1\u09a8 \u09b9\u09bf\u09b8\u09c7\u09ac \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3</span>
               </button>
-            )}
-
-            <button
-              type="submit"
-              className="px-6 py-2 rounded-lg text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-950/50 flex items-center gap-2 border border-emerald-500 cursor-pointer"
-            >
-              {saveSuccess ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>তথ্য সফলভাবে সংরক্ষিত!</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>{isEditing ? LABELS.update : LABELS.save}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+            ) : null
+          }
+        />
       </form>
     </div>
   );

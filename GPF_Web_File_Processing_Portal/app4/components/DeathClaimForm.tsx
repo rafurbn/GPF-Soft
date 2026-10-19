@@ -98,7 +98,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   
   // 3. প্রাপক: একাধিক লাইনে লেখাযোগ্য ফিল্ড
   const [recipient, setRecipient] = useState<string>(
-    initialData?.recipient || 'উপজেলা হিসাবরক্ষণ কর্মকর্তা\nবিয়ানীবাজার, সিলেট।'
+    initialData?.recipient || 'জেলা প্রাথমিক শিক্ষা অফিসার\nসিলেট।'
   );
   
   // 4. মৃত কর্মচারীর নাম

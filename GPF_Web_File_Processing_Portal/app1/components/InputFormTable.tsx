@@ -9,7 +9,7 @@ import {
   Sparkles,
   Calendar,
 } from 'lucide-react';
-import dashboardLogo from '../../src/assets/images/rafu.svg';
+import dashboardLogo from '../../src/assets/images/rf-logo.svg';
 import { LockToggleButton } from './LockToggleButton';
 
 interface InputFormTableProps {

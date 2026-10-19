@@ -21,9 +21,9 @@ import {
   RotateCcw,
   Sparkles,
   Check,
-  FileCheck,
   PlusCircle,
 } from 'lucide-react';
+import dashboardLogo from '../../src/assets/images/rf-logo.svg';
 import { LockToggleButton } from './LockToggleButton';
 
 interface FormRowProps {
@@ -420,8 +420,8 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
       {/* Top Banner - Sticky Freeze Pane right below the top navigation Header */}
       <div className="sticky top-[48px] sm:top-[52px] z-30 px-5 py-3.5 bg-[#0e1628]/95 backdrop-blur-md border-b border-emerald-900/50 shadow-lg shadow-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-t-2xl">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            <FileCheck className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
+            <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">

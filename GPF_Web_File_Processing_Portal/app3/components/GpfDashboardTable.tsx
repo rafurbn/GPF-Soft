@@ -1,4 +1,4 @@
-import dashboardLogo from '../../src/assets/images/rafu.svg';
+import dashboardLogo from '../../src/assets/images/rf-logo.svg';
 import React, { useState } from 'react';
 import { 
   Lock, 

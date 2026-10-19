@@ -30,7 +30,6 @@ import {
   Settings
 } from 'lucide-react';
 import { UserSession, ActiveAppTab } from '../types';
-import portalLogo from '../assets/images/logo RF.svg';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { ForgotPasswordOtpModal } from './ForgotPasswordOtpModal';
 import { RegionSettingsModal } from './RegionSettingsModal';
@@ -432,12 +431,6 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
           <div className="absolute -left-12 -top-12 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
           <div className="flex items-center gap-3.5 relative z-10">
-            {/* Elegant Monogram / Crest Badge */}
-            <div className="w-20 h-20 sm:w-[5.5rem] sm:h-[5.5rem] rounded-[24px] bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-500 p-0.5 shadow-lg shadow-emerald-950/60 shrink-0">
-              <div className="w-full h-full rounded-[22px] overflow-hidden border border-emerald-500/30">
-                <img src={portalLogo} alt="GPF পোর্টাল লোগো" className="w-full h-full object-cover" />
-              </div>
-            </div>
 
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-black tracking-tight text-white">

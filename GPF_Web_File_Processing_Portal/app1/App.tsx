@@ -5,7 +5,6 @@ import { UserSession, GpfApplication, GpfFormData, LockedFieldsConfig, LockableF
 import {
   DEFAULT_INITIAL_FORM,
   DEFAULT_LOCKED_CONFIG,
-  SAMPLE_RECORDS,
   getSavedRecords,
   getLockedConfig,
   saveLockedConfig,
@@ -21,12 +20,13 @@ import { PrintTemplates } from './components/PrintTemplates';
 import { toBanglaDigits, cleanNumberString } from '../src/utils/numberToBanglaWords';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
+import { scopedKey } from '../src/lib/scopedStorage';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 import { Toast, useToast } from '../app-shared/ui/Toast';
 
-// localStorage key that app1 mirrors its records into (see src/utils/storage.ts).
-const RECORDS_STORAGE_KEY = 'gpf_advance_saved_records_v2';
+// Base key for app1's saved records; the signed-in upazila code is prefixed at call time.
+const RECORDS_BASE_KEY = 'gpf_advance_saved_records_v2';
 
 interface GpfRefundableAppProps {
   currentUser: UserSession;
@@ -49,10 +49,13 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
     return {
       ...DEFAULT_INITIAL_FORM,
       ...lockedVals,
-      upazilaName: currentUser.upazila_name_bn || lockedVals.upazilaName || 'বিয়ানীবাজার',
-      districtName: currentUser.district_name_bn || lockedVals.districtName || 'সিলেট',
+      upazilaName: currentUser.upazila_name_bn || lockedVals.upazilaName || '',
+      districtName: currentUser.district_name_bn || lockedVals.districtName || '',
     };
   });
+
+  // One namespace per app + upazila: it is both the IndexedDB scope and the localStorage key.
+  const recordsStorageKey = scopedKey(currentUser.upazila_code, RECORDS_BASE_KEY);
 
   const [records, setRecords] = useState<GpfFormData[]>(() => getSavedRecords());
 
@@ -61,17 +64,17 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
   // replaces it with the full, uncapped record set.
   useEffect(() => {
     let active = true;
-    void loadUnlimitedRecords<GpfFormData>().then((stored) => {
+    void loadUnlimitedRecords<GpfFormData>(recordsStorageKey).then((stored) => {
       if (active && stored && stored.length > 0) setRecords(stored);
     });
     return () => {
       active = false;
     };
-  }, []);
+  }, [recordsStorageKey]);
 
   // Persists records to IndexedDB (uncapped) and mirrors to localStorage.
   const persistRecords = (next: GpfFormData[]) => {
-    void saveUnlimitedRecords(next, RECORDS_STORAGE_KEY).then((result) => {
+    void saveUnlimitedRecords(next, recordsStorageKey).then((result) => {
       if (!result.ok) {
         showToast('সংরক্ষণ করা যায়নি — ব্রাউজার স্টোরেজ পূর্ণ। পুরনো আবেদন মুছে আবার চেষ্টা করুন।', 'error');
       }
@@ -300,11 +303,6 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
     showToast('নতুন আবেদন এন্ট্রি করার জন্য ফরম প্রস্তুত করা হয়েছে', 'info');
   };
 
-  const handleLoadSampleData = () => {
-    setRecords(SAMPLE_RECORDS);
-    persistRecords(SAMPLE_RECORDS);
-    showToast('নমুনা তথ্য সফলভাবে লোড হয়েছে', 'success');
-  };
 
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col">
@@ -342,7 +340,6 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
           onDeleteRecord={handleDeleteRecord}
           onExportCSV={handleExportCSV}
           onNewRecord={handleNewRecord}
-          onLoadSampleData={handleLoadSampleData}
         />
       </main>
 

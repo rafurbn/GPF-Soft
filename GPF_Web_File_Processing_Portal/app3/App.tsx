@@ -15,6 +15,7 @@ import { numberToBengaliWords, cleanNumberString, calculatePrlDate } from '../sr
 import { getCurrentBengaliDate } from '../src/utils/dateUtils';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
+import { readScoped, writeScoped, scopedKey } from '../src/lib/scopedStorage';
 import { CheckCircle2 } from 'lucide-react';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
@@ -52,28 +53,20 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
     birthDate: '',
     gpfAccountNo: '',
     totalDepositedAmount: '',
-    requestedAmountNumber: '1480000',
-    requestedAmountWords: 'চৌদ্দ লক্ষ আশি হাজার টাকা মাত্র',
+    requestedAmountNumber: '',
+    requestedAmountWords: '',
     basicSalary: '',
-    nidNumber: '19659112345000999',
+    nidNumber: '',
     ddoName: '',
     ddoDesignation: '',
-    upazila: currentUser.upazila_name_bn || 'বিয়ানীবাজার',
-    district: currentUser.district_name_bn || 'সিলেট',
+    upazila: currentUser.upazila_name_bn || '',
+    district: currentUser.district_name_bn || '',
     prlDate: '',
   };
 
-  const defaultSavedRecords: FinalSavedApplicationRecord[] = [
-    {
-      ...defaultInitialData,
-      id: 'seed-record-final-saleh',
-      savedAt: new Date().toISOString(),
-    }
-  ];
-
   // Active Draft Form Data
   const [formData, setFormData] = useState<GpfFinalFormData>(() => {
-    const saved = localStorage.getItem(STORAGE_FORM_KEY);
+    const saved = readScoped(currentUser.upazila_code, STORAGE_FORM_KEY);
     if (saved) {
       try {
         return {
@@ -93,7 +86,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   // Locks State
   const [locks, setLocks] = useState<FinalFieldLocks>(() => {
     let stored = DEFAULT_LOCKS;
-    const saved = localStorage.getItem(STORAGE_LOCKS_KEY);
+    const saved = readScoped(currentUser.upazila_code, STORAGE_LOCKS_KEY);
     if (saved) {
       try {
         stored = JSON.parse(saved);
@@ -107,7 +100,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
 
   // Saved Records
   const [savedRecords, setSavedRecords] = useState<FinalSavedApplicationRecord[]>(() => {
-    const saved = localStorage.getItem(STORAGE_RECORDS_KEY);
+    const saved = readScoped(currentUser.upazila_code, STORAGE_RECORDS_KEY);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -115,8 +108,11 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
         console.error('Error loading saved final records', e);
       }
     }
-    return defaultSavedRecords;
+    return [];
   });
+
+  // IndexedDB scope + localStorage mirror key for this app and upazila.
+  const recordsScope = scopedKey(currentUser.upazila_code, STORAGE_RECORDS_KEY);
 
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [autoDownloadPdf, setAutoDownloadPdf] = useState(false);
@@ -129,34 +125,34 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
 
   // Auto-persist active form data
   useEffect(() => {
-    localStorage.setItem(STORAGE_FORM_KEY, JSON.stringify(formData));
+    writeScoped(currentUser.upazila_code, STORAGE_FORM_KEY, JSON.stringify(formData));
   }, [formData]);
 
   // Auto-persist lock states
   useEffect(() => {
-    localStorage.setItem(STORAGE_LOCKS_KEY, JSON.stringify(locks));
+    writeScoped(currentUser.upazila_code, STORAGE_LOCKS_KEY, JSON.stringify(locks));
   }, [locks]);
 
   // Hydrate from the unlimited (IndexedDB) store once the page mounts, so the
   // full uncapped record set replaces the localStorage first-paint copy.
   useEffect(() => {
     let active = true;
-    void loadUnlimitedRecords<FinalSavedApplicationRecord>().then((stored) => {
+    void loadUnlimitedRecords<FinalSavedApplicationRecord>(recordsScope).then((stored) => {
       if (active && stored && stored.length > 0) setSavedRecords(stored);
     });
     return () => {
       active = false;
     };
-  }, []);
+  }, [recordsScope]);
 
   // Auto-persist saved records to the unlimited (IndexedDB) store.
   useEffect(() => {
-    void saveUnlimitedRecords(savedRecords, STORAGE_RECORDS_KEY).then((result) => {
+    void saveUnlimitedRecords(savedRecords, recordsScope).then((result) => {
       if (!result.ok) {
         showToast('সংরক্ষণ করা যায়নি — ব্রাউজার স্টোরেজ পূর্ণ। পুরনো আবেদন মুছে আবার চেষ্টা করুন।', 'error');
       }
     });
-  }, [savedRecords]);
+  }, [savedRecords, recordsScope]);
 
   // Form field change handler - strictly protects locked fields
   const handleFieldChange = (field: keyof GpfFinalFormData, value: string) => {
@@ -188,7 +184,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
         ...prev,
         [field]: lockState,
       };
-      localStorage.setItem(STORAGE_LOCKS_KEY, JSON.stringify(updatedLocks));
+      writeScoped(currentUser.upazila_code, STORAGE_LOCKS_KEY, JSON.stringify(updatedLocks));
       return updatedLocks;
     });
   };

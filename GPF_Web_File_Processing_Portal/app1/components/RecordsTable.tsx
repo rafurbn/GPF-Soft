@@ -12,7 +12,6 @@ interface RecordsTableProps {
   onDeleteRecord: (id: string) => void;
   onExportCSV?: () => void;
   onNewRecord?: () => void;
-  onLoadSampleData?: () => void;
 }
 
 export const RecordsTable: React.FC<RecordsTableProps> = ({
@@ -23,7 +22,6 @@ export const RecordsTable: React.FC<RecordsTableProps> = ({
   onDeleteRecord,
   onExportCSV,
   onNewRecord,
-  onLoadSampleData,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -119,15 +117,6 @@ export const RecordsTable: React.FC<RecordsTableProps> = ({
             <p className="text-xs mt-1 text-slate-500">
               উপরের ড্যাশবোর্ডে তথ্য ইনপুট দিয়ে "ডাটা সেইভ করুন" বাটনে ক্লিক করুন।
             </p>
-            {onLoadSampleData && (
-              <button
-                type="button"
-                onClick={onLoadSampleData}
-                className="mt-3 inline-block text-xs text-amber-400 hover:text-amber-300 underline font-medium cursor-pointer"
-              >
-                নমুনা (Sample) তথ্য রিলোড করুন
-              </button>
-            )}
           </div>
         ) : (
           <table className="w-full text-left border-collapse text-xs md:text-sm">

@@ -16,15 +16,24 @@
  * throws into the caller, it reports back so the UI can warn the user.
  */
 
+/**
+ * The storage key doubles as the IndexedDB scope: one app's records are only
+ * ever read back, or cleared, by that same app for the same upazila. Before
+ * this, every app wrote to one shared, unscoped record set and each save
+ * started with `store.clear()` — so saving in app1 deleted app2's and app3's
+ * uncapped history (and vice versa).
+ */
 const DB_NAME = 'gpf-unlimited-store';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'records';
 
 interface StoredRecord {
-  /** The record's `id` field. */
+  /** `<scope>::<record id>`, so the same id in two apps never shares a row. */
   __id: string;
   /** Insertion order, so the newest-first ordering survives a reload. */
   __seq: number;
+  /** Which app + upazila this record belongs to (its localStorage key). */
+  __scope: string;
   [key: string]: unknown;
 }
 
@@ -55,6 +64,10 @@ const openDb = (): Promise<IDBDatabase> => {
         const store = db.createObjectStore(STORE_NAME, { keyPath: '__id' });
         store.createIndex('__seq', '__seq', { unique: false });
       }
+      const store = request.transaction?.objectStore(STORE_NAME);
+      if (store && !store.indexNames.contains('__scope')) {
+        store.createIndex('__scope', '__scope', { unique: false });
+      }
     };
 
     request.onsuccess = () => resolve(request.result);
@@ -81,17 +94,19 @@ const pickId = (record: RecordLike, fallbackIndex: number): string => {
 };
 
 /**
- * Reads every stored record back, newest first. Returns `null` when the store
- * has never been written to, so the caller can fall back to its seed data.
+ * Reads every stored record for one scope, newest first. Returns `null` when
+ * that scope has never been written to, so the caller can fall back to its
+ * `localStorage` mirror — which is also what re-seeds this store for users who
+ * saved records before records were scoped.
  */
-export const loadUnlimitedRecords = async <T>(): Promise<T[] | null> => {
+export const loadUnlimitedRecords = async <T>(scope: string): Promise<T[] | null> => {
   if (!idbAvailable()) return null;
 
   try {
     const db = await openDb();
     const rows = await new Promise<StoredRecord[]>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
-      const request = tx.objectStore(STORE_NAME).getAll();
+      const request = tx.objectStore(STORE_NAME).index('__scope').getAll(IDBKeyRange.only(scope));
       request.onsuccess = () => resolve((request.result || []) as StoredRecord[]);
       request.onerror = () => reject(request.error ?? new Error('IndexedDB read failed'));
     });
@@ -102,9 +117,10 @@ export const loadUnlimitedRecords = async <T>(): Promise<T[] | null> => {
     rows.sort((a, b) => (b.__seq ?? 0) - (a.__seq ?? 0));
 
     return rows.map((row) => {
-      const { __id, __seq, ...rest } = row;
+      const { __id, __seq, __scope, ...rest } = row;
       void __id;
       void __seq;
+      void __scope;
       return rest as T;
     });
   } catch {
@@ -112,27 +128,25 @@ export const loadUnlimitedRecords = async <T>(): Promise<T[] | null> => {
   }
 };
 
-/** Replaces the whole record set. Never throws; reports what happened instead. */
+/**
+ * Replaces one scope's record set. Never throws; reports what happened instead.
+ * Only rows belonging to `scope` are removed, so another app's or another
+ * upazila's history is left untouched.
+ */
 export const saveUnlimitedRecords = async <T extends RecordLike>(
   records: T[],
-  localStorageKey?: string,
+  scope: string,
 ): Promise<SaveResult> => {
   // Always mirror to localStorage first: it is synchronous, so a reload right
   // after the save still finds the data even if IndexedDB is slow to commit.
-  if (localStorageKey) {
-    try {
-      window.localStorage.setItem(localStorageKey, JSON.stringify(records));
-    } catch {
-      // Quota exceeded — IndexedDB below is the real home for the data.
-    }
+  try {
+    window.localStorage.setItem(scope, JSON.stringify(records));
+  } catch {
+    // Quota exceeded — IndexedDB below is the real home for the data.
   }
 
   if (!idbAvailable()) {
-    return {
-      ok: true,
-      store: localStorageKey ? 'localstorage' : 'none',
-      count: records.length,
-    };
+    return { ok: true, store: 'localstorage', count: records.length };
   }
 
   try {
@@ -143,15 +157,20 @@ export const saveUnlimitedRecords = async <T extends RecordLike>(
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
 
-      // Clear then rewrite so deletions are reflected too.
-      store.clear();
+      // Clear this scope only, so deletions are reflected too.
+      const ownKeys = store.index('__scope').getAllKeys(IDBKeyRange.only(scope));
+      ownKeys.onsuccess = () => (ownKeys.result || []).forEach((key) => store.delete(key));
 
       records.forEach((record, index) => {
         const row: StoredRecord = {
           ...(record as unknown as Record<string, unknown>),
-          __id: pickId(record, index),
+          // The primary key is qualified with the scope: two apps can produce
+          // the same record id, and one shared key would let one app overwrite
+          // (or delete) another app's row.
+          __id: `${scope}::${pickId(record, index)}`,
           // Preserve the array order: index 0 stays the newest.
           __seq: now - index,
+          __scope: scope,
         };
         store.put(row);
       });
@@ -164,15 +183,13 @@ export const saveUnlimitedRecords = async <T extends RecordLike>(
     return { ok: true, store: 'indexeddb', count: records.length };
   } catch (error) {
     // Even if IndexedDB fails, the localStorage mirror above may have worked.
-    const mirrored = localStorageKey
-      ? (() => {
-          try {
-            return window.localStorage.getItem(localStorageKey) !== null;
-          } catch {
-            return false;
-          }
-        })()
-      : false;
+    const mirrored = (() => {
+      try {
+        return window.localStorage.getItem(scope) !== null;
+      } catch {
+        return false;
+      }
+    })();
 
     return {
       ok: mirrored,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LABELS } from '../app-shared/ui/tokens';
 import { GpfDeathClaim, LockSettings, LockableField } from './types/gpf';
-import { INITIAL_CLAIMS, INITIAL_LOCKS } from './utils/initialData';
+import { INITIAL_LOCKS } from './utils/initialData';
 import { PlusCircle } from 'lucide-react';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 import { Toast, useToast } from '../app-shared/ui/Toast';
@@ -12,11 +12,61 @@ import { readScoped, writeScoped } from '../src/lib/scopedStorage';
 import type { SubAppProps } from '../app-shared/bootstrap';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { toBn } from '../src/lib/format';
+import { getCurrentBengaliDate } from '../src/utils/dateUtils';
 
 // Base keys; every read/write is scoped to the signed-in upazila so two upazilas
 // sharing one browser never see or overwrite each other's death-claim records.
 const BASE_KEY_CLAIMS = 'gpf_death_claims_data_v3';
 const BASE_KEY_LOCKS = 'gpf_death_locks_data_v3';
+
+// A blank claim form. Only two things are prefilled: the signed-in upazila/district
+// and today's date. No applicant, officer name, memo number or amount is invented.
+const treasuryFor = (currentUser: SubAppProps['currentUser']): string => {
+  const upazila = currentUser.upazila_name_bn || '';
+  const district = currentUser.district_name_bn || '';
+  return upazila && district ? `উপজেলা হিসাবরক্ষণ অফিস, ${upazila}, ${district}` : '';
+};
+
+const blankClaim = (
+  currentUser: SubAppProps['currentUser'],
+  serialNo: number,
+  carry: Partial<GpfDeathClaim> = {},
+): GpfDeathClaim => {
+  const today = getCurrentBengaliDate();
+  const now = new Date().toISOString();
+  return {
+    id: `gpf-claim-${Date.now()}`,
+    serialNo,
+    year: '২০২৬',
+    applicationDate: today,
+    recipient: '',
+    deceasedEmployeeName: '',
+    deceasedDesignation: 'প্রাক্তন সহকারী শিক্ষক',
+    schoolName: '',
+    deathDate: '',
+    applicantName: '',
+    relationship: 'স্ত্রী',
+    gpfAccountNo: '',
+    depositedAmount: 0,
+    depositedAmountInWords: '',
+    ddoName: '',
+    ddoDesignation: '',
+    upazilaName: currentUser.upazila_name_bn || '',
+    districtName: currentUser.district_name_bn || '',
+    attachmentsCount: '০২(দুই) খানা',
+    sanctionMemoNo: '',
+    sanctionDate: '',
+    forwardingMemoNo: '',
+    forwardingDate: today,
+    lastDeductionAmount: 0,
+    lastVoucherNo: '',
+    treasuryOffice: treasuryFor(currentUser),
+    status: 'খসড়া',
+    createdAt: now,
+    updatedAt: now,
+    ...carry,
+  };
+};
 
 // Locks that always stay on: the upazila and district come from the session and
 // must never be edited inside a claim.
@@ -39,7 +89,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
     } catch {
       // fallback
     }
-    return INITIAL_CLAIMS;
+    return [];
   });
 
   // Lock settings with localStorage persistence (scoped per upazila)
@@ -55,27 +105,12 @@ export default function App({ currentUser, onBack }: SubAppProps) {
   });
 
   // Current claim being edited or filled
-  const [currentClaim, setCurrentClaim] = useState<GpfDeathClaim | null>(() => {
-    const seed = INITIAL_CLAIMS[0];
-    if (!seed) return null;
-    return {
-      ...seed,
-      upazilaName: currentUser.upazila_name_bn || seed.upazilaName,
-      districtName: currentUser.district_name_bn || seed.districtName,
-    };
-  });
+  const [currentClaim, setCurrentClaim] = useState<GpfDeathClaim | null>(() => blankClaim(currentUser, 1));
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   // Target claim for print engine
-  const [printTargetClaim, setPrintTargetClaim] = useState<GpfDeathClaim | null>(() => {
-    const seed = INITIAL_CLAIMS[0];
-    if (!seed) return null;
-    return {
-      ...seed,
-      upazilaName: currentUser.upazila_name_bn || seed.upazilaName,
-      districtName: currentUser.district_name_bn || seed.districtName,
-    };
-  });
+  // Nothing printable until a real claim exists.
+  const [printTargetClaim, setPrintTargetClaim] = useState<GpfDeathClaim | null>(null);
 
   // Notification toast
   const { toast, showToast } = useToast();
@@ -197,37 +232,15 @@ export default function App({ currentUser, onBack }: SubAppProps) {
     });
 
     // Keep the locked values for the next entry, but clear the per-applicant ones.
-    const nextFormValues: GpfDeathClaim = {
-      id: `gpf-claim-${Date.now() + 1}`,
-      serialNo: nextSerial + 1,
-      year: lockSettings.year ? claimData.year : '২০২৬',
-      recipient: lockSettings.recipient ? claimData.recipient : '',
-      ddoName: lockSettings.ddoName ? claimData.ddoName : 'নৃপেন্দ্র নাথ সরকার',
-      ddoDesignation: lockSettings.ddoDesignation ? claimData.ddoDesignation : 'উপজেলা প্রাথমিক শিক্ষা অফিসার (চ:দা:)',
-      upazilaName: currentUser.upazila_name_bn || (lockSettings.upazilaName ? claimData.upazilaName : 'বিয়ানীবাজার'),
-      districtName: currentUser.district_name_bn || (lockSettings.districtName ? claimData.districtName : 'সিলেট'),
-      attachmentsCount: lockSettings.attachmentsCount ? claimData.attachmentsCount : '০২(দুই) খানা',
-      applicationDate: claimData.applicationDate || '১৬/০৩/২০২৬',
-      deceasedEmployeeName: '',
-      deceasedDesignation: 'প্রাক্তন সহকারী শিক্ষক',
-      schoolName: '',
-      deathDate: '',
-      applicantName: '',
-      relationship: 'স্ত্রী',
-      gpfAccountNo: '',
-      depositedAmount: 0,
-      depositedAmountInWords: '',
-      sanctionMemoNo: '',
-      sanctionDate: '',
-      forwardingMemoNo: `উশিঅ/বিবা/সিল/${claimData.year || '২০২৬'}/`,
-      forwardingDate: claimData.applicationDate || '১৬/০৩/২০২৬',
-      lastDeductionAmount: 0,
-      lastVoucherNo: '',
-      treasuryOffice: claimData.treasuryOffice || `উপজেলা হিসাবরক্ষণ অফিস, ${currentUser.upazila_name_bn || 'বিয়ানীবাজার'}, ${currentUser.district_name_bn || 'সিলেট'}`,
-      status: 'খসড়া',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    // Locked rows carry over to the next entry; everything else starts blank.
+    const nextFormValues: GpfDeathClaim = blankClaim(currentUser, nextSerial + 1, {
+      ...(lockSettings.year ? { year: claimData.year } : {}),
+      ...(lockSettings.recipient ? { recipient: claimData.recipient } : {}),
+      ...(lockSettings.ddoName ? { ddoName: claimData.ddoName } : {}),
+      ...(lockSettings.ddoDesignation ? { ddoDesignation: claimData.ddoDesignation } : {}),
+      ...(lockSettings.attachmentsCount ? { attachmentsCount: claimData.attachmentsCount } : {}),
+      ...(claimData.treasuryOffice ? { treasuryOffice: claimData.treasuryOffice } : {}),
+    });
     setCurrentClaim(nextFormValues);
     setIsEditing(false);
   };
@@ -235,41 +248,18 @@ export default function App({ currentUser, onBack }: SubAppProps) {
   // Reset form handler
   const handleResetForm = () => {
     const nextSerial = claims.reduce((max, c) => Math.max(max, c.serialNo || 0), 0) + 1;
-    const lockedReset: GpfDeathClaim = {
-      id: `gpf-claim-${Date.now()}`,
-      serialNo: nextSerial,
-      year: lockSettings.year ? currentClaim?.year || '২০২৬' : '২০২৬',
-      recipient: lockSettings.recipient ? currentClaim?.recipient || '' : '',
-      ddoName: lockSettings.ddoName ? currentClaim?.ddoName || 'নৃপেন্দ্র নাথ সরকার' : 'নৃপেন্দ্র নাথ সরকার',
-      ddoDesignation: lockSettings.ddoDesignation
-        ? currentClaim?.ddoDesignation || 'উপজেলা প্রাথমিক শিক্ষা অফিসার (চ:দা:)'
-        : 'উপজেলা প্রাথমিক শিক্ষা অফিসার (চ:দা:)',
-      upazilaName: currentUser.upazila_name_bn || currentClaim?.upazilaName || 'বিয়ানীবাজার',
-      districtName: currentUser.district_name_bn || currentClaim?.districtName || 'সিলেট',
-      attachmentsCount: lockSettings.attachmentsCount
-        ? currentClaim?.attachmentsCount || '০২(দুই) খানা'
-        : '০২(দুই) খানা',
-      applicationDate: '১৬/০৩/২০২৬',
-      deceasedEmployeeName: '',
-      deceasedDesignation: 'প্রাক্তন সহকারী শিক্ষক',
-      schoolName: '',
-      deathDate: '',
-      applicantName: '',
-      relationship: 'স্ত্রী',
-      gpfAccountNo: '',
-      depositedAmount: 0,
-      depositedAmountInWords: '',
-      sanctionMemoNo: '',
-      sanctionDate: '',
-      forwardingMemoNo: `উশিঅ/বিবা/সিল/${currentClaim?.year || '২০২৬'}/`,
-      forwardingDate: '১৬/০৩/২০২৬',
-      lastDeductionAmount: 0,
-      lastVoucherNo: '',
-      treasuryOffice: `উপজেলা হিসাবরক্ষণ অফিস, ${currentUser.upazila_name_bn || 'বিয়ানীবাজার'}, ${currentUser.district_name_bn || 'সিলেট'}`,
-      status: 'খসড়া',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const lockedReset: GpfDeathClaim = blankClaim(currentUser, nextSerial, {
+      ...(lockSettings.year && currentClaim?.year ? { year: currentClaim.year } : {}),
+      ...(lockSettings.recipient && currentClaim?.recipient ? { recipient: currentClaim.recipient } : {}),
+      ...(lockSettings.ddoName && currentClaim?.ddoName ? { ddoName: currentClaim.ddoName } : {}),
+      ...(lockSettings.ddoDesignation && currentClaim?.ddoDesignation
+        ? { ddoDesignation: currentClaim.ddoDesignation }
+        : {}),
+      ...(lockSettings.attachmentsCount && currentClaim?.attachmentsCount
+        ? { attachmentsCount: currentClaim.attachmentsCount }
+        : {}),
+      ...(currentClaim?.treasuryOffice ? { treasuryOffice: currentClaim.treasuryOffice } : {}),
+    });
     setCurrentClaim(lockedReset);
     setIsEditing(false);
     showToast('নতুন ক্লেইম ফর্ম প্রস্তুত করা হয়েছে।');

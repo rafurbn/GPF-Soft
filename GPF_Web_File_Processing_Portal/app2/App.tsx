@@ -60,21 +60,21 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   const defaultInitialData: GpfNonRefundableFormData = {
     id: 'nonref-init-1',
     year: '২০২৬',
-    apply_date: '২০/০৯/২০২৬',
+    apply_date: getCurrentBengaliDate(),
     receiver_info: '',
     applicant_name: '',
     designation: 'সহকারী শিক্ষক',
     school_name: 'সরকারি প্রাথমিক বিদ্যালয়',
-    date_of_birth: '02/01/1970',
+    date_of_birth: '',
     gpf_acc_no: '',
-    gpf_total_balance: '800000',
-    requested_amount: '500000',
-    gpf_total_balance_words: 'পাঁচ লক্ষ টাকা মাত্র',
-    basic_salary: '24220',
+    gpf_total_balance: '',
+    requested_amount: '',
+    gpf_total_balance_words: '',
+    basic_salary: '',
     ddo_name: '',
     ddo_designation: '',
-    upazila_name: currentUser.upazila_name_bn || 'বিয়ানীবাজার',
-    district_name: currentUser.district_name_bn || 'সিলেট',
+    upazila_name: currentUser.upazila_name_bn || '',
+    district_name: currentUser.district_name_bn || '',
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -102,8 +102,8 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
             receiver_info: '',
             ddo_name: '',
             ddo_designation: '',
-            upazila_name: currentUser.upazila_name_bn || 'বিয়ানীবাজার',
-            district_name: currentUser.district_name_bn || 'সিলেট',
+            upazila_name: currentUser.upazila_name_bn || '',
+            district_name: currentUser.district_name_bn || '',
           };
     } catch {
       return {};
@@ -120,9 +120,9 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
           return parsed;
         }
       }
-      return [defaultInitialData];
+      return [];
     } catch {
-      return [defaultInitialData];
+      return [];
     }
   });
 
@@ -191,13 +191,15 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   // then replaces it with the full, uncapped record set.
   useEffect(() => {
     let active = true;
-    void loadUnlimitedRecords<GpfNonRefundableFormData>().then((stored) => {
+    void loadUnlimitedRecords<GpfNonRefundableFormData>(
+      scopedKey(currentUser.upazila_code, BASE_KEY_RECORDS),
+    ).then((stored) => {
       if (active && stored && stored.length > 0) setRecords(stored);
     });
     return () => {
       active = false;
     };
-  }, []);
+  }, [currentUser.upazila_code]);
 
   // Sync records to the unlimited (IndexedDB) store + localStorage mirror.
   useEffect(() => {

@@ -20,6 +20,7 @@ import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
 import type { ToastKind } from '../../app-shared/ui/Toast';
 import { LABELS } from '../../app-shared/ui/tokens';
+import { getCurrentBengaliDate } from '../../src/utils/dateUtils';
 
 interface FormRowProps {
   /** Row number shown in the "ক্র: নং" column, e.g. '১' */
@@ -90,12 +91,12 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   
   // 2. আবেদনের তারিখ
   const [applicationDate, setApplicationDate] = useState<string>(
-    initialData?.applicationDate ? normaliseBengaliDate(initialData.applicationDate) : '১৬/০৩/২০২৬'
+    initialData?.applicationDate ? normaliseBengaliDate(initialData.applicationDate) : getCurrentBengaliDate()
   );
   
   // 3. প্রাপক: একাধিক লাইনে লেখাযোগ্য ফিল্ড
   const [recipient, setRecipient] = useState<string>(
-    initialData?.recipient || 'জেলা প্রাথমিক শিক্ষা অফিসার\nসিলেট।'
+    initialData?.recipient || ''
   );
   
   // 4. মৃত কর্মচারীর নাম
@@ -113,7 +114,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
 
   // 7. মৃত্যুর তারিখ
   const [deathDate, setDeathDate] = useState<string>(
-    initialData?.deathDate ? normaliseBengaliDate(initialData.deathDate) : '১৬/০৩/২০২৬'
+    initialData?.deathDate ? normaliseBengaliDate(initialData.deathDate) : ''
   );
 
   // 8. আবেদনকারীর নাম
@@ -126,32 +127,32 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
 
   // 10. জিপিএফ হিসাব নং
   const [gpfAccountNo, setGpfAccountNo] = useState<string>(
-    initialData?.gpfAccountNo ? toBengaliNumber(initialData.gpfAccountNo) : '১৩৬৮'
+    initialData?.gpfAccountNo ? toBengaliNumber(initialData.gpfAccountNo) : ''
   );
 
   // 11. জমাকৃত টাকার পরিমাণ
   const [depositedAmount, setDepositedAmount] = useState<string>(
-    initialData?.depositedAmount ? toBengaliNumber(String(initialData.depositedAmount)) : '৩০০০০০'
+    initialData?.depositedAmount ? toBengaliNumber(String(initialData.depositedAmount)) : ''
   );
 
   // 12. জমাকৃত টাকা (কথায়)
   const [depositedAmountInWords, setDepositedAmountInWords] = useState<string>(
-    initialData?.depositedAmountInWords || 'তিন লক্ষ টাকা মাত্র'
+    initialData?.depositedAmountInWords || ''
   );
 
   // 13. আয়ন ব্যয়ন কর্মকর্তার নাম
-  const [ddoName, setDdoName] = useState<string>(initialData?.ddoName || 'নৃপেন্দ্র নাথ সরকার');
+  const [ddoName, setDdoName] = useState<string>(initialData?.ddoName || '');
 
   // 14. আয়ন ব্যয়ন কর্মকর্তার পদবী
   const [ddoDesignation, setDdoDesignation] = useState<string>(
-    initialData?.ddoDesignation || 'উপজেলা প্রাথমিক শিক্ষা অফিসার (চ:দা:)'
+    initialData?.ddoDesignation || ''
   );
 
   // 15. উপজেলার নাম
-  const [upazilaName, setUpazilaName] = useState<string>(initialData?.upazilaName || 'বিয়ানীবাজার');
+  const [upazilaName, setUpazilaName] = useState<string>(initialData?.upazilaName || '');
 
   // 16. জেলার নাম
-  const [districtName, setDistrictName] = useState<string>(initialData?.districtName || 'সিলেট');
+  const [districtName, setDistrictName] = useState<string>(initialData?.districtName || '');
 
   // 17. সংযুক্তি: শুধুমাত্র ০১(এক) খানা ও ০২(দুই) খানা
   const [attachmentsCount, setAttachmentsCount] = useState<string>(
@@ -160,25 +161,25 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
 
   // Template variables
   const [sanctionMemoNo, setSanctionMemoNo] = useState<string>(
-    initialData?.sanctionMemoNo ? toBengaliNumber(initialData.sanctionMemoNo) : '৪৭০/১(০৪)'
+    initialData?.sanctionMemoNo ? toBengaliNumber(initialData.sanctionMemoNo) : ''
   );
   const [sanctionDate, setSanctionDate] = useState<string>(
-    initialData?.sanctionDate ? normaliseBengaliDate(initialData.sanctionDate) : '২৪/০৯/২০২৬'
+    initialData?.sanctionDate ? normaliseBengaliDate(initialData.sanctionDate) : ''
   );
   const [forwardingMemoNo, setForwardingMemoNo] = useState<string>(
-    initialData?.forwardingMemoNo ? toBengaliNumber(initialData.forwardingMemoNo) : 'উশিঅ/বিবা/সিল/২০২৬/'
+    initialData?.forwardingMemoNo ? toBengaliNumber(initialData.forwardingMemoNo) : ''
   );
   const [forwardingDate, setForwardingDate] = useState<string>(
-    initialData?.forwardingDate ? normaliseBengaliDate(initialData.forwardingDate) : '১৬/০৩/২০২৬'
+    initialData?.forwardingDate ? normaliseBengaliDate(initialData.forwardingDate) : ''
   );
   const [lastDeductionAmount, setLastDeductionAmount] = useState<string>(
-    initialData?.lastDeductionAmount ? toBengaliNumber(String(initialData.lastDeductionAmount)) : '৪৯০০'
+    initialData?.lastDeductionAmount ? toBengaliNumber(String(initialData.lastDeductionAmount)) : ''
   );
   const [lastVoucherNo, setLastVoucherNo] = useState<string>(
-    initialData?.lastVoucherNo ? toBengaliNumber(initialData.lastVoucherNo) : '০৮'
+    initialData?.lastVoucherNo ? toBengaliNumber(initialData.lastVoucherNo) : ''
   );
   const [treasuryOffice, setTreasuryOffice] = useState<string>(
-    initialData?.treasuryOffice || 'উপজেলা হিসাবরক্ষণ অফিস, বিয়ানীবাজার, সিলেট'
+    initialData?.treasuryOffice || ''
   );
 
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -187,7 +188,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   useEffect(() => {
     if (initialData) {
       setYear(toBengaliNumber(initialData.year || '২০২৬'));
-      setApplicationDate(normaliseBengaliDate(initialData.applicationDate || '১৬/০৩/২০২৬'));
+      setApplicationDate(normaliseBengaliDate(initialData.applicationDate || getCurrentBengaliDate()));
       setRecipient(initialData.recipient || '');
       setDeceasedEmployeeName(initialData.deceasedEmployeeName || '');
       setDeceasedDesignation(initialData.deceasedDesignation || 'প্রাক্তন সহকারী শিক্ষক');
@@ -196,11 +197,8 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
       setApplicantName(initialData.applicantName || '');
       setRelationship(initialData.relationship || 'স্ত্রী');
       setGpfAccountNo(toBengaliNumber(initialData.gpfAccountNo || ''));
-      setDepositedAmount(
-        initialData.depositedAmount !== undefined && initialData.depositedAmount !== null
-          ? toBengaliNumber(String(initialData.depositedAmount))
-          : ''
-      );
+      // A saved claim with no amount reads as blank, not as ০.
+      setDepositedAmount(initialData.depositedAmount ? toBengaliNumber(String(initialData.depositedAmount)) : '');
       setDepositedAmountInWords(
         initialData.depositedAmountInWords ||
           (initialData.depositedAmount ? amountToBengaliWords(initialData.depositedAmount) : '')
@@ -216,11 +214,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
       setSanctionDate(initialData.sanctionDate ? normaliseBengaliDate(initialData.sanctionDate) : '');
       setForwardingMemoNo(initialData.forwardingMemoNo ? toBengaliNumber(initialData.forwardingMemoNo) : '');
       setForwardingDate(initialData.forwardingDate ? normaliseBengaliDate(initialData.forwardingDate) : '');
-      setLastDeductionAmount(
-        initialData.lastDeductionAmount !== undefined && initialData.lastDeductionAmount !== null
-          ? toBengaliNumber(String(initialData.lastDeductionAmount))
-          : ''
-      );
+      setLastDeductionAmount(initialData.lastDeductionAmount ? toBengaliNumber(String(initialData.lastDeductionAmount)) : '');
       setLastVoucherNo(initialData.lastVoucherNo ? toBengaliNumber(initialData.lastVoucherNo) : '');
       setTreasuryOffice(initialData.treasuryOffice || '');
     }

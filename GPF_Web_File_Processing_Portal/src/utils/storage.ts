@@ -1,30 +1,45 @@
 import { GpfFormData, LockedFieldsConfig } from '../types';
+import { readUpazilaContext } from '../lib/upazilaSession';
+import { readScoped, scopedKey, writeScoped } from '../lib/scopedStorage';
+import { getCurrentBengaliDate } from './dateUtils';
+
+/**
+ * app1 keeps its drafts, lock states and saved files in `localStorage`. Those
+ * keys used to be plain strings shared by the whole origin, so two upazilas
+ * signing in on the same computer read and overwrote each other's files. Every
+ * helper below now goes through `readScoped`/`writeScoped`, which namespaces by
+ * the active upazila and adopts the pre-namespacing value once.
+ */
+
+/** The upazila whose session is currently active in this browser. */
+const currentScope = (): string | undefined | null => readUpazilaContext()?.upazila_code;
 
 export const DEFAULT_INITIAL_FORM: GpfFormData = {
   year: '২০২৪-২০২৫',
-  applyDate: '২২/০৯/২০২৪',
+  applyDate: getCurrentBengaliDate(),
   receiverInfo: '',
   applicantName: '',
   designation: 'সহকারী শিক্ষক',
-  schoolName: 'সরকারি প্রাথমিক বিদ্যালয়',
+  schoolName: 'সরকারি প্রাথমিক বিদ্যালয়',
   gpfAccNo: '',
   gpfTotalBalance: '',
   requestedAmount: '',
-  requestedAmountWords: 'এক লক্ষ পঞ্চাশ হাজার টাকা মাত্র',
+  requestedAmountWords: '',
   basicSalary: '',
   installmentNo: '১ম কিস্তি',
   hasPreviousLoan: 'না',
-  isPreviousLoanRepaid: 'প্রযোজ্য নয়',
-  lastInstallmentDate: 'প্রযোজ্য নয়',
-  remainingInstallments: 'প্রযোজ্য নয়',
+  isPreviousLoanRepaid: 'প্রযোজ্য নয়',
+  lastInstallmentDate: 'প্রযোজ্য নয়',
+  remainingInstallments: 'প্রযোজ্য নয়',
   ddoName: '',
   ddoDesignation: '',
-  upazilaName: 'বিয়ানীবাজার',
-  districtName: 'সিলেট',
-  installmentCount: '২৪',
-  installmentAmount: '৬,২৫০',
+  // Both come from the signed-in upazila's own session, never a preset name.
+  upazilaName: '',
+  districtName: '',
+  installmentCount: '',
+  installmentAmount: '',
   purpose: 'গৃহমেরামত',
-  memoNo: 'উশিঅ/বিবা/সা:ভ:তহ:/অগ্রিম/২০২৪/',
+  memoNo: '',
   hasInterest: 'হ্যাঁ',
   createdAt: new Date().toISOString(),
 };
@@ -38,67 +53,6 @@ export const DEFAULT_LOCKED_CONFIG: LockedFieldsConfig = {
   districtName: true,
 };
 
-export const SAMPLE_RECORDS: GpfFormData[] = [
-  {
-    id: 'rec-1',
-    year: '২০২৪-২০২৫',
-    applyDate: '২২/০৯/২০২৪',
-    receiverInfo: 'উপজেলা শিক্ষা অফিসার\nবিয়ানীবাজার, সিলেট।',
-    applicantName: 'মোছাঃ আফিয়া বেগম',
-    designation: 'সহকারী শিক্ষক',
-    schoolName: 'কুড়ার বাজার সরকারি প্রাথমিক বিদ্যালয়',
-    gpfAccNo: '৭৮৪৫',
-    gpfTotalBalance: '৫,৪০,০০০',
-    requestedAmount: '১,৫০,০০০',
-    requestedAmountWords: 'এক লক্ষ পঞ্চাশ হাজার টাকা মাত্র',
-    basicSalary: '২৪,২২০',
-    installmentNo: '১ম কিস্তি',
-    hasPreviousLoan: 'না',
-    isPreviousLoanRepaid: 'প্রযোজ্য নয়',
-    lastInstallmentDate: 'প্রযোজ্য নয়',
-    remainingInstallments: 'প্রযোজ্য নয়',
-    ddoName: 'মোঃ মোয়াজ্জেম হোসেন',
-    ddoDesignation: 'উপজেলা শিক্ষা অফিসার',
-    upazilaName: 'বিয়ানীবাজার',
-    districtName: 'সিলেট',
-    installmentCount: '২৪',
-    installmentAmount: '৬,২৫০',
-    purpose: 'গৃহমেরামত',
-    memoNo: 'উশিঅ/বিবা/সা:ভ:তহ:/অগ্রিম/২০২৪/১১০',
-    hasInterest: 'হ্যাঁ',
-    createdAt: '2024-09-22T10:00:00.000Z',
-  },
-  {
-    id: 'rec-2',
-    year: '২০২৪-২০২৫',
-    applyDate: '১৮/০৯/২০২৪',
-    receiverInfo: 'উপজেলা শিক্ষা অফিসার\nবিয়ানীবাজার, সিলেট।',
-    applicantName: 'মোঃ আব্দুল মতিন',
-    designation: 'প্রধান শিক্ষক',
-    schoolName: '১০ নং বৈরাগীবাজার সরকারি প্রাথমিক বিদ্যালয়',
-    gpfAccNo: '৪৫৮৯২',
-    gpfTotalBalance: '৬,৮০,০০০',
-    requestedAmount: '১,৮০,০০০',
-    requestedAmountWords: 'এক লক্ষ আশি হাজার টাকা মাত্র',
-    basicSalary: '৩২,৩০০',
-    installmentNo: '২য় কিস্তি',
-    hasPreviousLoan: 'হ্যাঁ',
-    isPreviousLoanRepaid: 'হ্যাঁ',
-    lastInstallmentDate: 'জুন ২০২৩',
-    remainingInstallments: 'প্রযোজ্য নয়',
-    ddoName: 'মোঃ মোয়াজ্জেম হোসেন',
-    ddoDesignation: 'উপজেলা শিক্ষা অফিসার',
-    upazilaName: 'বিয়ানীবাজার',
-    districtName: 'সিলেট',
-    installmentCount: '৩৬',
-    installmentAmount: '৫,০০০',
-    purpose: 'জরুরি চিকিৎসা ব্যয়',
-    memoNo: 'উশিঅ/বিবা/সা:ভ:তহ:/অগ্রিম/২০২৪/১১৮',
-    hasInterest: 'হ্যাঁ',
-    createdAt: '2024-09-18T11:30:00.000Z',
-  },
-];
-
 const STORAGE_KEYS = {
   RECORDS: 'gpf_advance_saved_records_v2',
   LOCKED_CONFIG: 'gpf_advance_locked_config_v3',
@@ -106,30 +60,31 @@ const STORAGE_KEYS = {
   CUSTOM_HTML: 'gpf_advance_custom_html_v2',
 };
 
+/**
+ * The saved files for this upazila. Empty means empty: the app never seeds the
+ * list with sample applications, because a government dashboard must not show
+ * names that no one filed.
+ */
 export const getSavedRecords = (): GpfFormData[] => {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.RECORDS);
+    const data = readScoped(currentScope(), STORAGE_KEYS.RECORDS);
     if (data) {
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch (err) {
     console.error('Failed to parse saved records', err);
   }
-  return SAMPLE_RECORDS;
+  return [];
 };
 
 export const saveRecords = (records: GpfFormData[]): void => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(records));
-  } catch (err) {
-    console.error('Failed to save records', err);
-  }
+  writeScoped(currentScope(), STORAGE_KEYS.RECORDS, JSON.stringify(records));
 };
 
 export const getLockedConfig = (): LockedFieldsConfig => {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.LOCKED_CONFIG);
+    const data = readScoped(currentScope(), STORAGE_KEYS.LOCKED_CONFIG);
     if (data) return JSON.parse(data);
   } catch (err) {
     console.error('Failed to get locked config', err);
@@ -138,16 +93,12 @@ export const getLockedConfig = (): LockedFieldsConfig => {
 };
 
 export const saveLockedConfig = (config: LockedFieldsConfig): void => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.LOCKED_CONFIG, JSON.stringify(config));
-  } catch (err) {
-    console.error('Failed to save locked config', err);
-  }
+  writeScoped(currentScope(), STORAGE_KEYS.LOCKED_CONFIG, JSON.stringify(config));
 };
 
 export const getLockedValues = (): Partial<GpfFormData> => {
   try {
-    const data = localStorage.getItem(STORAGE_KEYS.LOCKED_VALUES);
+    const data = readScoped(currentScope(), STORAGE_KEYS.LOCKED_VALUES);
     if (data) return JSON.parse(data);
   } catch (err) {
     console.error('Failed to get locked values', err);
@@ -163,32 +114,18 @@ export const getLockedValues = (): Partial<GpfFormData> => {
 };
 
 export const saveLockedValues = (vals: Partial<GpfFormData>): void => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.LOCKED_VALUES, JSON.stringify(vals));
-  } catch (err) {
-    console.error('Failed to save locked values', err);
-  }
+  writeScoped(currentScope(), STORAGE_KEYS.LOCKED_VALUES, JSON.stringify(vals));
 };
 
-export const getSavedCustomHtml = (): string => {
-  try {
-    return localStorage.getItem(STORAGE_KEYS.CUSTOM_HTML) || '';
-  } catch {
-    return '';
-  }
-};
+export const getSavedCustomHtml = (): string => readScoped(currentScope(), STORAGE_KEYS.CUSTOM_HTML) || '';
 
 export const saveCustomHtml = (html: string): void => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_HTML, html);
-  } catch (err) {
-    console.error('Failed to save custom HTML', err);
-  }
+  writeScoped(currentScope(), STORAGE_KEYS.CUSTOM_HTML, html);
 };
 
 export const clearCustomHtml = (): void => {
   try {
-    localStorage.removeItem(STORAGE_KEYS.CUSTOM_HTML);
+    window.localStorage.removeItem(scopedKey(currentScope(), STORAGE_KEYS.CUSTOM_HTML));
   } catch (err) {
     console.error('Failed to clear custom HTML', err);
   }

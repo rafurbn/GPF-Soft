@@ -59,7 +59,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
   <style>
     @page {
       size: A4 portrait;
-      margin: 20mm 20mm 15mm 20mm;
+      margin: 24mm 22mm 15mm 22mm;
     }
     html, body {
       height: auto;
@@ -183,7 +183,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
         max-width: 210mm;
         margin: 0 auto 30px auto;
         background: #ffffff;
-        padding: 20mm 20mm 15mm 20mm;
+        padding: 24mm 22mm 15mm 22mm;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         border-radius: 4px;
       }
@@ -296,10 +296,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       </div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-      <div>টোকেন নং.................................... তারিখ....................................</div>
-      <div>ভাউচার নং .................................... তারিখ ....................................</div>
-    </div>
+    <div style="margin-bottom: 10px;">টোকেন নং.................. তারিখ.................. ভাউচার নং .................. তারিখ ..................</div>
 
     <table class="bordered-table">
       <thead>
@@ -423,7 +420,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       <div style="margin-bottom: 6px;">১১। মনোনীত ব্যক্তি নাই এমন চাঁদা দাতার ক্ষেত্রে তাহার পরিবারের সদস্যদের বয়স এবং মৃত্যু কালে চাঁদা দাতার সংযোগের সম্পর্কের তালিকা মাইনর পুত্র ও বিবাহিত কন্যা ছাড়া প্রেরণ করিতে হইবে ...........................................</div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 45px; font-size: 10.5pt; line-height: 1.5;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 78px; font-size: 10.5pt; line-height: 1.5;">
       <div style="width: 44%; text-align: justify; text-justify: inter-word;">
         নন-গেজেটেড চাঁদা দাতার ক্ষেত্রে অফিস প্রধানের স্বাক্ষর<br>
         অথবা গেজেটেড অফিসারের ক্ষেত্রে চাঁদা দাতা নিজের স্বাক্ষর
@@ -458,9 +455,9 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
           </tr>
         </thead>
         <tbody>
-          <tr style="height: 32px;"><td>(১)</td><td></td><td></td></tr>
-          <tr style="height: 32px;"><td>(২)</td><td></td><td></td></tr>
-          <tr style="height: 32px;"><td>(৩)</td><td></td><td></td></tr>
+          <tr style="height: 38px;"><td>(১)</td><td></td><td></td></tr>
+          <tr style="height: 38px;"><td>(২)</td><td></td><td></td></tr>
+          <tr style="height: 38px;"><td>(৩)</td><td></td><td></td></tr>
         </tbody>
       </table>
     </div>
@@ -479,11 +476,11 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
           </tr>
         </thead>
         <tbody>
-          <tr style="height: 40px; vertical-align: middle;"><td>(১)</td><td>বাম/ডান কনিষ্ঠ</td><td></td></tr>
-          <tr style="height: 40px; vertical-align: middle;"><td>(২)</td><td>বাম/ডান অনামিকা</td><td></td></tr>
-          <tr style="height: 40px; vertical-align: middle;"><td>(৩)</td><td>বাম/ডান মধ্যমা</td><td></td></tr>
-          <tr style="height: 40px; vertical-align: middle;"><td>(৪)</td><td>বাম/ডান তর্জনী</td><td></td></tr>
-          <tr style="height: 40px; vertical-align: middle;"><td>(৫)</td><td>বাম/ডান বৃদ্ধাঙ্গুলি</td><td></td></tr>
+          <tr style="height: 66px; vertical-align: middle;"><td>(১)</td><td>বাম/ডান কনিষ্ঠ</td><td></td></tr>
+          <tr style="height: 66px; vertical-align: middle;"><td>(২)</td><td>বাম/ডান অনামিকা</td><td></td></tr>
+          <tr style="height: 66px; vertical-align: middle;"><td>(৩)</td><td>বাম/ডান মধ্যমা</td><td></td></tr>
+          <tr style="height: 66px; vertical-align: middle;"><td>(৪)</td><td>বাম/ডান তর্জনী</td><td></td></tr>
+          <tr style="height: 66px; vertical-align: middle;"><td>(৫)</td><td>বাম/ডান বৃদ্ধাঙ্গুলি</td><td></td></tr>
         </tbody>
       </table>
     </div>

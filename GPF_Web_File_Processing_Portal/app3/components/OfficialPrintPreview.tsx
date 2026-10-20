@@ -201,7 +201,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
             <div className="grow flex flex-wrap items-baseline gap-x-1">
               <span>চাঁদা দাতার নাম:</span>
               <span className="font-medium border-b border-dotted border-gray-700 px-1">
-                {data.applicant_name || '..................'}
+                জনাব {data.applicant_name || '..................'}
               </span>
             </div>
           </div>
@@ -376,7 +376,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
             <div className="grid grid-cols-12 font-normal items-stretch">
               <div className="col-span-1 p-2 text-center align-top font-normal" style={{ borderRight: '1px solid #000000' }}>১</div>
               <div className="col-span-4 p-2 align-top text-justify font-normal" style={{ borderRight: '1px solid #000000' }}>
-                  <div>{data.applicant_name || '................................................'}</div>
+                  <div>জনাব {data.applicant_name || '................................................'}</div>
                   <div>{data.designation || '................................'}</div>
                   <div>{data.school_name || '................................................'}</div>
                   <div>
@@ -603,7 +603,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
             <div className="grid grid-cols-15 font-normal min-h-[90px]">
               <div className="col-span-2 p-2 text-center align-top font-normal" style={{ borderRight: '1px solid #000000' }}>০১</div>
               <div className="col-span-7 p-2 align-top font-normal leading-relaxed" style={{ borderRight: '1px solid #000000' }}>
-                  <div>{data.applicant_name || '................................................'}</div>
+                  <div>জনাব {data.applicant_name || '................................................'}</div>
                   <div>{data.designation || '................................'}</div>
                   <div>{data.school_name || '................................................'}</div>
                   <div>

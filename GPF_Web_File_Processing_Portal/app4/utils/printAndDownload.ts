@@ -1,6 +1,5 @@
 import { GpfDeathClaim } from '../types/gpf';
 import {
-  toBengaliNumber,
   formatBangladeshiCurrency,
 } from './bengaliWords';
 

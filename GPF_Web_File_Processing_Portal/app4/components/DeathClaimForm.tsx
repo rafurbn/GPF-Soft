@@ -8,7 +8,6 @@ import {
 } from '../types/gpf';
 import {
   toBengaliNumber,
-  toEnglishNumber,
   amountToBengaliWords,
   formatBangladeshiCurrency,
   normaliseBengaliInput,

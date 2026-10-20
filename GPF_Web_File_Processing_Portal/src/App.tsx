@@ -3,7 +3,6 @@ import { UserSession, ActiveAppTab } from './types';
 import { PortalDesktopSignInView } from './components/PortalDesktopSignInView';
 import { AccountRegistrationModal } from './components/AccountRegistrationModal';
 import { FirstTimePasswordModal } from './components/FirstTimePasswordModal';
-import { SuperAdminOverview } from './components/SuperAdminOverview';
 import { SuperAdminSuite } from './components/SuperAdminSuite';
 import { BroadcastNoticeMarquee } from './components/BroadcastNoticeMarquee';
 import { ArchitectureDocsView } from './components/ArchitectureDocsView';

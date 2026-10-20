@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Radio, AlertTriangle, Info, Bell, X, Sparkles } from 'lucide-react';
+import { Radio, AlertTriangle, X } from 'lucide-react';
 import { getActiveAnnouncementsForUser, hydrateAnnouncements } from '../lib/centralAdminStore';
 import { supabase } from '../lib/supabase';
 import type { SystemAnnouncement } from '../types';

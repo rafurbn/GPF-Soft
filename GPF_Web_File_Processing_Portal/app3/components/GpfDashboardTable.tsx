@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Lock, 
-  Unlock, 
-  Sparkles, 
-  Save, 
+import {
+  Sparkles,
   Calendar,
-  CheckCircle2,
-  AlertCircle
 } from 'lucide-react';
 import { GpfFinalFormData, FinalLockableFieldKey, FinalFieldLocks } from '../../src/types';
 import {

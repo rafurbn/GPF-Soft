@@ -12,27 +12,22 @@ import {
   RotateCcw,
   KeyRound,
   CheckCircle2,
-  XCircle,
   Search,
   Filter,
   Activity,
   Layers,
   FileSpreadsheet,
-  FileText,
   Clock,
   Sparkles,
   ChevronRight,
   LogOut,
   Send,
   Eye,
-  Settings,
-  HelpCircle,
   RefreshCw,
-  Zap,
 } from 'lucide-react';
 import { UserSession, CentralClaimRecord, SystemAnnouncement, AppMaintenanceControl, AuditLogEntry, ActiveSession, UserAccountStatus, UserRole } from '../types';
 import { toBn, moneyCompact, date, dateTime } from '../lib/format';
-import { APP_VERSION, VERSION_LABEL } from '../lib/portalMeta';
+import { VERSION_LABEL } from '../lib/portalMeta';
 import {
   getCentralClaims,
   hydrateCentralClaims,
@@ -45,7 +40,6 @@ import {
   setUserAccountStatus,
   unlockUserAccount,
   getAuditLogs,
-  clearAuditLogs,
   clearAuditLogsOnServer,
   getActiveSessions,
   terminateSession,
@@ -74,7 +68,7 @@ import {
   replayClaimsToServer,
   type BackupPayload,
 } from '../lib/centralAdminStore';
-import { getAllDivisions, getAllUpazilas } from '../data/upazilaData';
+import { getAllDivisions } from '../data/upazilaData';
 import { supabase } from '../lib/supabase';
 import {
   fetchLoginSecurity,

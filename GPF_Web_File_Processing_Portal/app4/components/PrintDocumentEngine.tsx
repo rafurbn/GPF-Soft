@@ -1,7 +1,6 @@
 import React from 'react';
 import { GpfDeathClaim } from '../types/gpf';
 import {
-  toBengaliNumber,
   formatBangladeshiCurrency,
 } from '../utils/bengaliWords';
 

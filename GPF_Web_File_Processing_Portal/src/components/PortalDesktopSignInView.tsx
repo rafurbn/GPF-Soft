@@ -1,47 +1,34 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Lock, 
+import {
+  Lock,
   Unlock,
-  KeyRound, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Search, 
-  ArrowRight, 
-  LogOut, 
-  HelpCircle, 
-  Phone, 
-  Mail,
-  MapPin,
-  FileSpreadsheet, 
-  FileText, 
-  Sparkles, 
-  ShieldCheck, 
-  UserCheck, 
-  ChevronRight, 
-  Award, 
-  Globe, 
-  Layers, 
-  SlidersHorizontal,
+  KeyRound,
+  CheckCircle2,
+  AlertTriangle,
+  Search,
+  ArrowRight,
+  LogOut,
+  Phone,
+  ShieldCheck,
+  UserCheck,
+  Award,
+  Globe,
   BookmarkCheck,
   Eye,
   EyeOff,
-  X,
-  LayoutDashboard,
-  Settings
+  Settings,
 } from 'lucide-react';
 import { UserSession, ActiveAppTab } from '../types';
-import { isSupabaseConfigured } from '../lib/supabase';
 import { ForgotPasswordOtpModal } from './ForgotPasswordOtpModal';
 import { RegionSettingsModal } from './RegionSettingsModal';
 import { OfficialDashboard } from './OfficialDashboard';
 import { persistUpazilaContext } from '../lib/upazilaSession';
 import { toBn } from '../lib/format';
-import { APP_VERSION, SUPPORT_PHONE, VERSION_LABEL } from '../lib/portalMeta';
+import { SUPPORT_PHONE, VERSION_LABEL } from '../lib/portalMeta';
 import {
   getAllDivisions,
   getDistrictsByDivision,
   getAllUpazilas,
-  UPAZILA_DATABASE,
 } from '../data/upazilaData';
 
 interface PortalDesktopSignInViewProps {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyRound, AlertTriangle, ShieldCheck, X } from 'lucide-react';
+import { KeyRound, AlertTriangle, X } from 'lucide-react';
 import { UserSession } from '../types';
 
 interface FirstTimePasswordModalProps {

@@ -5,16 +5,14 @@ import {
   Lock,
   Mail,
   KeyRound,
-  CheckCircle2,
   Settings,
   ShieldCheck,
-  Building2
+  Building2,
 } from 'lucide-react';
 import {
   getAllDivisions,
   getDistrictsByDivision,
   getAllUpazilas,
-  UpazilaRecord
 } from '../data/upazilaData';
 
 interface RegionSettingsModalProps {

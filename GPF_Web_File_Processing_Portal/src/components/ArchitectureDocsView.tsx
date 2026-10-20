@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Database, Layers, CheckCircle2, FileCode, Server } from 'lucide-react';
+import { ShieldCheck, Database, Layers, FileCode, Server } from 'lucide-react';
 
 export const ArchitectureDocsView: React.FC = () => {
   return (

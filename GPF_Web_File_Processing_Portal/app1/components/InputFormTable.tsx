@@ -1,6 +1,6 @@
 import React from 'react';
 import { GpfFormData, LockedFieldsConfig, LockableFieldKey } from '../../src/types';
-import { numberToBanglaWords, toBanglaDigits, cleanNumberString, formatBanglaCurrency } from '../../src/utils/numberToBanglaWords';
+import { numberToBanglaWords, toBanglaDigits, formatBanglaCurrency } from '../../src/utils/numberToBanglaWords';
 import { deriveFormData } from '../../src/utils/deriveFormData';
 import { Sparkles, Calendar } from 'lucide-react';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';

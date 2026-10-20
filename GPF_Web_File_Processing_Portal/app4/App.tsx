@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { LABELS } from '../app-shared/ui/tokens';
 import { GpfDeathClaim, LockSettings, LockableField } from './types/gpf';
 import { INITIAL_LOCKS } from './utils/initialData';

@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../src/index.css';
-import type { GpfApplication, UserSession } from '../src/types';
+import type { UserSession } from '../src/types';
 import { isSupabaseConfigured, supabase } from '../src/lib/supabase';
 import { loadUserSession } from '../src/lib/authProfile';
 import { getRemoteMaintenanceState, isCurrentSessionTerminated, isCurrentAccountActive, touchCurrentSession, endCurrentSessionOnServer } from '../src/lib/centralAdminStore';

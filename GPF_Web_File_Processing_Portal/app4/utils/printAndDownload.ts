@@ -688,8 +688,7 @@ export function printClaimDocument(claim: GpfDeathClaim) {
         printFrame.contentWindow?.focus();
         printFrame.contentWindow?.print();
       } catch (err) {
-        console.warn('Iframe print blocked, falling back to window.print():', err);
-        window.print();
+        console.error('Iframe print blocked:', err);
       }
 
       // Cleanup frame after print dialog interaction
@@ -702,7 +701,9 @@ export function printClaimDocument(claim: GpfDeathClaim) {
       }, 60000);
     }, 250);
   } else {
-    window.print();
+    // Without a frame there is no 7-page document to print; the app screen
+    // is print-hidden and would come out blank.
+    console.error('Print frame unavailable: nothing to print.');
   }
 }
 

@@ -13,7 +13,6 @@ interface ClaimsDataTableProps {
   onNewClaim: () => void;
   onShowToast: (msg: string) => void;
   onImportClaims?: (imported: GpfDeathClaim[]) => void;
-  onSetPrintTarget?: (claim: GpfDeathClaim) => void;
 }
 
 export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
@@ -23,7 +22,6 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
   onNewClaim,
   onShowToast,
   onImportClaims,
-  onSetPrintTarget,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -153,18 +151,18 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
 
   const handlePrint = (claim: GpfDeathClaim) => {
     try {
-      if (onSetPrintTarget) onSetPrintTarget(claim);
       printClaimDocument(claim);
       onShowToast(`"${claim.deceasedEmployeeName}" এর ৭টি পেজের প্রিন্ট প্রস্তুত করা হয়েছে।`);
     } catch (e) {
       console.error(e);
-      window.print();
+      // The 7 pages exist only inside the print frame, so window.print()
+      // here would send the dark app screen itself to the printer.
+      onShowToast('প্রিন্ট শুরু করা যায়নি। ডাউনলোড করে সেই ফাইল থেকে প্রিন্ট করুন।');
     }
   };
 
   const handleDownload = (claim: GpfDeathClaim) => {
     try {
-      if (onSetPrintTarget) onSetPrintTarget(claim);
       downloadClaimDocument(claim);
       onShowToast(`"${claim.deceasedEmployeeName}" এর ৭টি পেজ অফিশিয়াল ফাইল ডাউনলোড হয়েছে।`);
     } catch (e) {

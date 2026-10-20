@@ -7,7 +7,6 @@ import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 import { Toast, useToast } from '../app-shared/ui/Toast';
 import { DeathClaimForm } from './components/DeathClaimForm';
 import { ClaimsDataTable } from './components/ClaimsDataTable';
-import { PrintDocumentEngine } from './components/PrintDocumentEngine';
 import { readScoped, writeScoped } from '../src/lib/scopedStorage';
 import type { SubAppProps } from '../app-shared/bootstrap';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
@@ -108,10 +107,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
   const [currentClaim, setCurrentClaim] = useState<GpfDeathClaim | null>(() => blankClaim(currentUser, 1));
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  // Target claim for print engine
-  // Nothing printable until a real claim exists.
-  const [printTargetClaim, setPrintTargetClaim] = useState<GpfDeathClaim | null>(null);
-
   // Notification toast
   const { toast, showToast } = useToast();
 
@@ -181,7 +176,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
         updatedAt: new Date().toISOString(),
       };
       setCurrentClaim(updatedClaim);
-      setPrintTargetClaim(updatedClaim);
       showToast(`"${claimData.deceasedEmployeeName}" এর ডেথ ক্লেইম তথ্য সফলভাবে আপডেট করা হয়েছে।`);
       void syncClaimToCentral('app4', {
         id: updatedClaim.id,
@@ -212,7 +206,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
       updatedAt: new Date().toISOString(),
     };
     setClaims([newClaim, ...claims]);
-    setPrintTargetClaim(newClaim);
     showToast(`"${claimData.deceasedEmployeeName}" এর নতুন ডেথ ক্লেইম সফলভাবে সংরক্ষণ করা হয়েছে (ক্রমিক: ${nextSerial})।`);
     void syncClaimToCentral('app4', {
       id: newClaim.id,
@@ -273,7 +266,6 @@ export default function App({ currentUser, onBack }: SubAppProps) {
   const handleEditClaim = (claim: GpfDeathClaim) => {
     setCurrentClaim(claim);
     setIsEditing(true);
-    setPrintTargetClaim(claim);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     showToast(`"${claim.deceasedEmployeeName}" এর ফাইল লোড হয়েছে।`);
   };
@@ -340,13 +332,9 @@ export default function App({ currentUser, onBack }: SubAppProps) {
             onNewClaim={handleNewEntry}
             onShowToast={showToast}
             onImportClaims={handleImportClaims}
-            onSetPrintTarget={setPrintTargetClaim}
           />
         </section>
       </main>
-
-      {/* Print Document Engine */}
-      <PrintDocumentEngine claim={printTargetClaim} />
 
       <SubAppFooter appNumber={4} appShortName="ডেথ ক্লেইম চূড়ান্ত উত্তোলন" currentUser={currentUser} />
 

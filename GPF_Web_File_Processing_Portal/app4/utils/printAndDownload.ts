@@ -10,6 +10,7 @@ import { date, money, toBn } from '../../src/lib/format';
  * - Explicit 1.5px table borders so rows and columns stay intact in Firefox on pages 3, 6, and 7
  * - Complete conversion of all dates and numbers to Bengali digits
  * - Zero bold weights (font-weight: 400 throughout) for official letters
+ * - One standard type scale only: 11.5pt letter body, 13pt titles, 10.5pt form/table detail, 9.5pt printing note
  */
 export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
   const formattedAmount = money(claim.depositedAmount);
@@ -61,7 +62,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       color: #000000;
       background: #ffffff;
       line-height: 1.55;
-      font-size: 12pt;
+      font-size: 11.5pt;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
@@ -80,7 +81,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       margin: 0;
       background: #ffffff;
       font-weight: 400 !important;
-      font-size: 12pt;
+      font-size: 11.5pt;
     }
     .page:last-child {
       page-break-after: auto;
@@ -111,7 +112,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
     th, td {
       padding: 5px 7px;
       font-weight: 400 !important;
-      font-size: 11pt;
+      font-size: 10.5pt;
     }
     /* Explicit 1.5px borders prevent Firefox print engine from hiding table grid */
     .bordered-table {
@@ -150,7 +151,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 11.5pt;
+      font-size: 10.5pt;
       font-weight: 400 !important;
     }
     .code-box-group span:last-child {
@@ -175,7 +176,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
 <body>
 
   <!-- ================= PAGE 1: আবেদনপত্র (উপজেলা হিসাবরক্ষণ কর্মকর্তা বরাবরে) ================= -->
-  <div class="page text-left" style="font-size: 13.5pt; line-height: 1.65;">
+  <div class="page text-left" style="font-size: 11.5pt; line-height: 1.65;">
     <div style="margin-bottom: 16px;">তারিখ: <span class="val">${appDate}</span></div>
 
     <div style="margin-bottom: 16px; line-height: 1.35;">
@@ -213,7 +214,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
   </div>
 
   <!-- ================= PAGE 2: আবেদনপত্র (জেলা প্রাথমিক শিক্ষা অফিসার বরাবরে) ================= -->
-  <div class="page text-left" style="font-size: 13.5pt; line-height: 1.65;">
+  <div class="page text-left" style="font-size: 11.5pt; line-height: 1.65;">
     <div style="margin-bottom: 16px;">তারিখ: <span class="val">${appDate}</span></div>
 
     <div style="margin-bottom: 16px; line-height: 1.35;">
@@ -251,17 +252,17 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
   </div>
 
   <!-- ================= PAGE 3: টি, আর ফরম নং ৩৭ ================= -->
-  <div class="page" style="font-size: 11pt; line-height: 1.45;">
-    <div style="text-align: left; font-size: 11pt; margin-bottom: 8px; line-height: 1.3;">
+  <div class="page" style="font-size: 11.5pt; line-height: 1.45;">
+    <div style="text-align: left; margin-bottom: 8px; line-height: 1.3;">
       <div>টি, আর ফরম নং ৩৭</div>
       <div>[এস, আর ৩২৪ (১) দ্রষ্টব্য]</div>
     </div>
 
-    <div style="text-align: center; font-size: 13.5pt; font-weight: 500; margin-bottom: 12px;">
+    <div style="text-align: center; font-size: 13pt; font-weight: 500; margin-bottom: 12px;">
       কর্মচারীদের ভবিষ্যৎ তহবিল হইতে উত্তোলন/অগ্রিম গ্রহণের বিল
     </div>
 
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 11pt;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
       <div>ভবিষ্যৎ তহবিলের শ্রেণী বিন্যাস কোড</div>
       <div style="display: flex; align-items: center; gap: 8px;">
         <div class="code-box-group">
@@ -279,7 +280,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       </div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; font-size: 11pt; margin-bottom: 10px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
       <div>টোকেন নং.................................... তারিখ....................................</div>
       <div>ভাউচার নং .................................... তারিখ ....................................</div>
     </div>
@@ -314,7 +315,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       প্রয়োজনীয় প্রদেয় টাকা = <span class="val">${formattedAmount}/-</span> (কথায়: <span class="val">${amountInWords}</span>) টাকা বুঝিয়া পাইলাম।
     </div>
 
-    <div style="font-size: 10.5pt; line-height: 1.45; text-align: justify; margin-bottom: 12px;">
+    <div style="font-size: 11.5pt; line-height: 1.45; text-align: justify; margin-bottom: 12px;">
       <div style="text-decoration: underline; margin-bottom: 3px;">প্রত্যায়নসমূহ</div>
       <p style="margin-bottom: 4px;">
         ১। প্রত্যায়ন করা যাইতেছে যে এই বিলে গৃহীত টাকা প্রকৃত প্রাপকদের মধ্যে বিলি করা হইয়াছে এবং প্রত্যেক ২০০ টাকার উপর প্রদানের ক্ষেত্রে রেভিনিউ স্ট্যাম্প লাগাইয়া সেগুলি যথাযথভাবে বাতিলপূর্বক আমার অফিসে রক্ষিত প্রাপ্তি বহিতে প্রাপ্তির রশিদ গ্রহণ করা হইয়াছে।
@@ -324,7 +325,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       </p>
     </div>
 
-    <div style="display: flex; justify-content: space-between; font-size: 10.5pt; margin-bottom: 8px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
       <div style="line-height: 1.6;">
         <div>স্থান....................................</div>
         <div>তারিখ ....................................</div>
@@ -339,9 +340,9 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
 
     <hr style="border: 0; border-top: 1px solid #000000; margin: 8px 0;">
 
-    <div style="text-align: center; font-size: 11.5pt; margin-bottom: 6px;">হিসাব রক্ষণ অফিসে ব্যবহারের জন্য</div>
+    <div style="text-align: center; font-size: 13pt; margin-bottom: 6px;">হিসাব রক্ষণ অফিসে ব্যবহারের জন্য</div>
 
-    <div style="font-size: 10.5pt; margin-bottom: 10px;">
+    <div style="margin-bottom: 10px;">
       টাকা .................................... (কথায়) .................................................................... প্রদানের জন্য পাস করা হইল।
     </div>
 
@@ -406,7 +407,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       <div style="margin-bottom: 6px;">১১। মনোনীত ব্যক্তি নাই এমন চাঁদা দাতার ক্ষেত্রে তাহার পরিবারের সদস্যদের বয়স এবং মৃত্যু কালে চাঁদা দাতার সংযোগের সম্পর্কের তালিকা মাইনর পুত্র ও বিবাহিত কন্যা ছাড়া প্রেরণ করিতে হইবে ...........................................</div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 45px; font-size: 11pt; line-height: 1.5;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 45px; font-size: 10.5pt; line-height: 1.5;">
       <div style="width: 44%; text-align: justify; text-justify: inter-word;">
         নন-গেজেটেড চাঁদা দাতার ক্ষেত্রে অফিস প্রধানের স্বাক্ষর<br>
         অথবা গেজেটেড অফিসারের ক্ষেত্রে চাঁদা দাতা নিজের স্বাক্ষর
@@ -420,10 +421,10 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
   </div>
 
   <!-- ================= PAGE 5: সংযোজনী-৬ ================= -->
-  <div class="page" style="font-size: 12.5pt; line-height: 1.55;">
-    <div style="text-align: right; font-size: 12.5pt; margin-bottom: 8px;">সংযোজনী-৬</div>
+  <div class="page" style="font-size: 11.5pt; line-height: 1.55;">
+    <div style="text-align: right; font-size: 10.5pt; margin-bottom: 8px;">সংযোজনী-৬</div>
 
-    <div style="text-align: center; font-size: 15pt; margin-bottom: 16px; text-decoration: underline;">
+    <div style="text-align: center; font-size: 13pt; margin-bottom: 16px; text-decoration: underline;">
       নমুনা স্বাক্ষর ও হাতের পাঁচ আঙ্গুলের ছাপ
     </div>
 
@@ -432,7 +433,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
         ১। নিম্নে সাধারণ ভবিষ্যৎ তহবিলে জমাকৃত সমুদয় অর্থ উত্তোলনের জন্য আবেদনকারী জনাব/বেগম <span class="val">${claim.applicantName}</span> (<span class="val">${claim.relationship}</span> মৃত <span class="val">${claim.deceasedEmployeeName}</span>, <span class="val">${claim.deceasedDesignation}</span>, <span class="val">${claim.schoolName}</span>) ${claim.upazilaName}, ${claim.districtName} এর তিনটি নমুনা স্বাক্ষর সত্যায়িত করা হইল।
       </p>
 
-      <table class="borderless-table" style="font-size: 12pt;">
+      <table class="borderless-table">
         <thead>
           <tr style="text-align: left;">
             <th style="width: 90px;">ক্রমিক নং</th>
@@ -453,7 +454,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
         ২। নিম্নে সাধারণ ভবিষ্যৎ তহবিলে জমাকৃত সমুদয় অর্থ উত্তোলনের জন্য আবেদনকারী জনাব/বেগম <span class="val">${claim.applicantName}</span> (<span class="val">${claim.relationship}</span> মৃত <span class="val">${claim.deceasedEmployeeName}</span>, <span class="val">${claim.deceasedDesignation}</span>, <span class="val">${claim.schoolName}</span>) ${claim.upazilaName}, ${claim.districtName} এর হাতের পাঁচ আঙ্গুলের ছাপ সত্যায়িত করা হইল।
       </p>
 
-      <table class="borderless-table" style="font-size: 12pt;">
+      <table class="borderless-table">
         <thead>
           <tr style="text-align: left;">
             <th style="width: 90px;">ক্রমিক নং</th>
@@ -471,25 +472,25 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       </table>
     </div>
 
-    <div style="font-size: 11.5pt; margin-bottom: 20px;">
+    <div style="font-size: 10.5pt; margin-bottom: 20px;">
       ৩। উপর্যুক্ত নমুনা স্বাক্ষর ও হাতের পাঁচ আঙ্গুলের ছাপ আমার সম্মুখে প্রদান করা হইয়াছে।
     </div>
 
-    <div style="width: 320px; margin-left: auto; text-align: center; font-size: 11pt; line-height: 1.45;">
+    <div style="width: 320px; margin-left: auto; text-align: center; line-height: 1.45;">
       <div>সত্যায়নকারী প্রথম শ্রেণির গেজেটেড কর্মকর্তার তারিখসহ স্বাক্ষর</div>
       <div>সীলমোহর (নামযুক্ত)</div>
     </div>
   </div>
 
   <!-- ================= PAGE 6: ফরোয়ার্ডিং পত্র (ইউএও বরাবরে) ================= -->
-  <div class="page" style="font-size: 12.5pt; line-height: 1.65;">
+  <div class="page" style="font-size: 11.5pt; line-height: 1.65;">
     <div style="text-align: center; margin-bottom: 16px;">
       <div>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
       <div>উপজেলা শিক্ষা অফিসারের কার্যালয়</div>
       <div><span class="val">${claim.upazilaName}</span>, <span class="val">${claim.districtName}</span>।</div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; font-size: 12pt; margin-bottom: 14px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 14px;">
       <div>স্মারক নং- <span class="val">${forwardingMemo}</span></div>
       <div>তারিখ: <span class="val">${forwardingDate}</span></div>
     </div>
@@ -505,7 +506,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
     <!-- ছক -->
     <table class="bordered-table">
       <thead>
-        <tr style="text-align: center; font-size: 11pt;">
+        <tr style="text-align: center;">
           <th style="width: 55px;">ক্র:নং</th>
           <th>আবেদনকারীর বিবরণ</th>
           <th style="width: 170px;">চূড়ান্ত উত্তোলনের কারণ</th>
@@ -522,7 +523,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       </tbody>
     </table>
 
-    <div style="font-size: 11.5pt; margin-bottom: 14px;">
+    <div style="font-size: 10.5pt; margin-bottom: 14px;">
       <div style="text-decoration: underline; margin-bottom: 4px;">সংযুক্তি:</div>
       <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
         <span>১। আবেদনপত্র-----------------------------------------------------</span>
@@ -547,28 +548,28 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
     </div>
 
     <!-- ডিডিও স্বাক্ষর স্পেস -->
-    <div style="width: 280px; margin-left: auto; text-align: center; font-size: 12pt; line-height: 1.45; margin-top: 60px; margin-bottom: 14px;">
+    <div style="width: 280px; margin-left: auto; text-align: center; line-height: 1.45; margin-top: 60px; margin-bottom: 14px;">
       <div>(<span class="val">${claim.ddoName}</span>)</div>
       <div><span class="val">${claim.ddoDesignation}</span></div>
       <div><span class="val">${claim.upazilaName}</span>, <span class="val">${claim.districtName}</span>।</div>
     </div>
 
     <!-- প্রাপক অংশ -->
-    <div style="text-align: left; font-size: 12pt; line-height: 1.35;">
+    <div style="text-align: left; line-height: 1.35;">
       <div>উপজেলা হিসাব রক্ষণ কর্মকর্তা,</div>
       <div><span class="val">${claim.upazilaName}</span>, <span class="val">${claim.districtName}</span>।</div>
     </div>
   </div>
 
   <!-- ================= PAGE 7: ফরোয়ার্ডিং পত্র (ডিপিইও বরাবরে) ================= -->
-  <div class="page" style="font-size: 12.5pt; line-height: 1.65;">
+  <div class="page" style="font-size: 11.5pt; line-height: 1.65;">
     <div style="text-align: center; margin-bottom: 16px;">
       <div>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
       <div>উপজেলা শিক্ষা অফিসারের কার্যালয়</div>
       <div><span class="val">${claim.upazilaName}</span>, <span class="val">${claim.districtName}</span>।</div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; font-size: 12pt; margin-bottom: 14px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 14px;">
       <div>স্মারক নং- <span class="val">${forwardingMemo}</span></div>
       <div>তারিখ: <span class="val">${forwardingDate}</span></div>
     </div>
@@ -584,7 +585,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
     <!-- ছক -->
     <table class="bordered-table">
       <thead>
-        <tr style="text-align: center; font-size: 11pt;">
+        <tr style="text-align: center;">
           <th style="width: 55px;">ক্র:নং</th>
           <th>আবেদনকারীর বিবরণ</th>
           <th style="width: 170px;">চূড়ান্ত উত্তোলনের কারণ</th>
@@ -601,7 +602,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       </tbody>
     </table>
 
-    <div style="font-size: 11.5pt; margin-bottom: 14px;">
+    <div style="font-size: 10.5pt; margin-bottom: 14px;">
       <div style="text-decoration: underline; margin-bottom: 4px;">সংযুক্তি:</div>
       <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
         <span>১। আবেদনপত্র-----------------------------------------------------</span>
@@ -626,14 +627,14 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
     </div>
 
     <!-- ডিডিও স্বাক্ষর স্পেস -->
-    <div style="width: 280px; margin-left: auto; text-align: center; font-size: 12pt; line-height: 1.45; margin-top: 60px; margin-bottom: 14px;">
+    <div style="width: 280px; margin-left: auto; text-align: center; line-height: 1.45; margin-top: 60px; margin-bottom: 14px;">
       <div>(<span class="val">${claim.ddoName}</span>)</div>
       <div><span class="val">${claim.ddoDesignation}</span></div>
       <div><span class="val">${claim.upazilaName}</span>, <span class="val">${claim.districtName}</span>।</div>
     </div>
 
     <!-- প্রাপক অংশ -->
-    <div style="text-align: left; font-size: 12pt; line-height: 1.35;">
+    <div style="text-align: left; line-height: 1.35;">
       <div>জেলা প্রাথমিক শিক্ষা অফিসার,</div>
       <div><span class="val">${claim.districtName}</span>।</div>
     </div>

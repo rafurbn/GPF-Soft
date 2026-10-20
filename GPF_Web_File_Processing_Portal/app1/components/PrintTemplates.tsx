@@ -310,7 +310,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
             <div className="grid grid-cols-12 min-h-[90px] text-xs font-normal">
               <div className="col-span-1 border-r border-black p-2 text-center font-normal">০১</div>
               <div className="col-span-5 border-r border-black p-2 leading-relaxed font-normal">
-                <p>{applicantName}, {designation}</p>
+                <p>জনাব {applicantName}, {designation}</p>
                 <p>{schoolName}</p>
                 <p>{upazilaName}, {districtName} এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অগ্রিম উত্তোলন এর বিল।</p>
                 <p className="mt-1 whitespace-nowrap">মঞ্জুরী নং-.................  তারিখ:...............</p>
@@ -446,7 +446,7 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
                 ০১
               </div>
               <div className="w-[28%] border-r border-black p-2 leading-relaxed text-left font-normal">
-                <p>{applicantName}, {designation}</p>
+                <p>জনাব {applicantName}, {designation}</p>
                 <p>{schoolName}</p>
                 <p>{upazilaName}, {districtName}।</p>
               </div>

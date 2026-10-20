@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LABELS } from '../app-shared/ui/tokens';
-import { Code2, CheckCircle2, AlertCircle, Info, Sparkles, FileText, Layers } from 'lucide-react';
 import { UserSession, GpfApplication, GpfFormData, LockedFieldsConfig, LockableFieldKey } from '../src/types';
 import {
   DEFAULT_INITIAL_FORM,
-  DEFAULT_LOCKED_CONFIG,
   getSavedRecords,
   getLockedConfig,
   saveLockedConfig,
@@ -12,12 +10,13 @@ import {
   saveLockedValues,
 } from '../src/utils/storage';
 import { InputFormTable } from './components/InputFormTable';
-import { RecordsTable } from './components/RecordsTable';
+import { SavedRecordsTable } from '../app-shared/ui/SavedRecordsTable';
+import { csvFileName, downloadCsv } from '../src/lib/exportCsv';
 import { DocumentPreviewModal } from './components/DocumentPreviewModal';
 import { DesktopGuideModal } from '../app-shared/ui/DesktopGuideModal';
 import { HtmlEditorModal } from './components/HtmlEditorModal';
 import { PrintTemplates } from './components/PrintTemplates';
-import { toBanglaDigits, cleanNumberString } from '../src/utils/numberToBanglaWords';
+import { cleanNumberString } from '../src/utils/numberToBanglaWords';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { scopedKey } from '../src/lib/scopedStorage';
@@ -280,20 +279,14 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
     const headers = ['ক্র.নং', 'আবেদনকারীর নাম', 'পদবী', 'বিদ্যালয়', 'জিপিএফ হিসাব নং', 'প্রার্থীত অর্থ (টাকা)', 'তারিখ'];
     const rows = records.map((r, i) => [
       i + 1,
-      `"${r.applicantName || ''}"`,
-      `"${r.designation || ''}"`,
-      `"${r.schoolName || ''}"`,
-      `"${r.gpfAccNo || ''}"`,
-      `"${r.requestedAmount || ''}"`,
-      `"${r.applyDate || ''}"`
+      r.applicantName || '',
+      r.designation || '',
+      r.schoolName || '',
+      r.gpfAccNo || '',
+      r.requestedAmount || '',
+      r.applyDate || ''
     ]);
-    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `GPF_Advance_Records_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
+    downloadCsv(csvFileName('GPF_Advance_Records'), headers, rows);
     showToast('এক্সেল (CSV) ফাইল সফলভাবে ডাউনলোড হয়েছে', 'success');
   };
 
@@ -332,14 +325,25 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
         />
 
         {/* Saved Applications Records Table matching image.png */}
-        <RecordsTable
+        <SavedRecordsTable
           records={records}
-          onSelectRecordToEdit={handleSelectRecordToEdit}
-          onSelectRecordToPrint={handleSelectRecordToPrint}
+          title="সংরক্ষিত জিপিএফ অগ্রিম আবেদনের তালিকা"
+          columns={{
+            name: (r) => r.applicantName,
+            designation: (r) => r.designation,
+            school: (r) => r.schoolName,
+            account: (r) => r.gpfAccNo,
+            amount: (r) => r.requestedAmount,
+            applicationDate: (r) => r.applyDate,
+            searchable: (r) => [r.applicantName, r.schoolName, r.gpfAccNo, r.designation, r.applyDate],
+            id: (r) => r.id,
+          }}
+          onEditRecord={handleSelectRecordToEdit}
+          onPrintRecord={handleSelectRecordToPrint}
           onDownloadPdfRecord={handleDownloadPdfRecord}
           onDeleteRecord={handleDeleteRecord}
-          onExportCSV={handleExportCSV}
           onNewRecord={handleNewRecord}
+          onExportCSV={handleExportCSV}
         />
       </main>
 

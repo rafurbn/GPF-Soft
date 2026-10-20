@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Check, 
-  AlertCircle,
-  FileSpreadsheet
-} from 'lucide-react';
 import { UserSession, GpfApplication, GpfNonRefundableFormData, NonRefundableLockableKey, NonRefundableLockedState, NonRefundableLockedValues } from '../src/types';
 import { FormTable } from './components/FormTable';
-import { RecordsList } from './components/RecordsList';
+import { SavedRecordsTable } from '../app-shared/ui/SavedRecordsTable';
+import { csvFileName, downloadCsv } from '../src/lib/exportCsv';
 import { PreviewModal } from './components/PreviewModal';
 import { DocumentTemplate } from './components/DocumentTemplate';
 import { DesktopGuideModal } from '../app-shared/ui/DesktopGuideModal';
@@ -418,34 +414,24 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
       'উপজেলা',
       'জেলা',
     ];
-
     const rows = records.map((r) => [
-      `"${r.year || ''}"`,
-      `"${r.apply_date || ''}"`,
-      `"${r.applicant_name || ''}"`,
-      `"${r.designation || ''}"`,
-      `"${r.school_name || ''}"`,
-      `"${r.date_of_birth || ''}"`,
-      `"${r.gpf_acc_no || ''}"`,
-      `"${r.gpf_total_balance || ''}"`,
-      `"${r.requested_amount || ''}"`,
-      `"${r.gpf_total_balance_words || ''}"`,
-      `"${r.basic_salary || ''}"`,
-      `"${r.ddo_name || ''}"`,
-      `"${r.ddo_designation || ''}"`,
-      `"${r.upazila_name || ''}"`,
-      `"${r.district_name || ''}"`,
+      r.year || '',
+      r.apply_date || '',
+      r.applicant_name || '',
+      r.designation || '',
+      r.school_name || '',
+      r.date_of_birth || '',
+      r.gpf_acc_no || '',
+      r.gpf_total_balance || '',
+      r.requested_amount || '',
+      r.gpf_total_balance_words || '',
+      r.basic_salary || '',
+      r.ddo_name || '',
+      r.ddo_designation || '',
+      r.upazila_name || '',
+      r.district_name || '',
     ]);
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `GPF_NonRefundable_Export_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    downloadCsv(csvFileName('GPF_NonRefundable_Export'), headers, rows);
     showToast('এক্সেলে ব্যবহার উপযোগী CSV ফাইল ডাউনলোড হয়েছে!');
   };
 
@@ -477,10 +463,20 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
         />
 
         {/* Saved Records Section */}
-        <RecordsList
+        <SavedRecordsTable
           records={records}
+          title="সংরক্ষিত জিপিএফ অফেরতযোগ্য আবেদনের তালিকা"
+          columns={{
+            name: (r) => r.applicant_name,
+            designation: (r) => r.designation,
+            school: (r) => r.school_name,
+            account: (r) => r.gpf_acc_no,
+            amount: (r) => r.requested_amount,
+            applicationDate: (r) => r.apply_date,
+            searchable: (r) => [r.applicant_name, r.school_name, r.gpf_acc_no, r.upazila_name, r.district_name],
+            id: (r) => r.id,
+          }}
           onEditRecord={handleEditRecord}
-          onDeleteRecord={handleDeleteRecord}
           onPrintRecord={(rec) => {
             // Print straight from the records list; the preview modal is never opened.
             setFormData(rec);
@@ -489,6 +485,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
             });
           }}
           onDownloadPdfRecord={handleDownloadPdfRecord}
+          onDeleteRecord={handleDeleteRecord}
           onNewRecord={handleReset}
           onExportCSV={handleExportCSV}
         />

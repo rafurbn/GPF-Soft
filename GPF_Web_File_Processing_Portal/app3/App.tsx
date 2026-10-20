@@ -10,13 +10,13 @@ import {
 import { GpfDashboardTable } from './components/GpfDashboardTable';
 import { OfficialPrintPreview } from './components/OfficialPrintPreview';
 import { PreviewModal } from './components/PreviewModal';
-import { SavedRecordsTable } from './components/SavedRecordsTable';
+import { SavedRecordsTable } from '../app-shared/ui/SavedRecordsTable';
+import { csvFileName, downloadCsv } from '../src/lib/exportCsv';
 import { numberToBengaliWords, cleanNumberString, calculatePrlDate } from '../src/utils/bengaliConverter';
 import { getCurrentBengaliDate } from '../src/utils/dateUtils';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { readScoped, writeScoped, scopedKey } from '../src/lib/scopedStorage';
-import { CheckCircle2 } from 'lucide-react';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 import { Toast, useToast } from '../app-shared/ui/Toast';
@@ -350,6 +350,45 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
     setSavedRecords((prev) => prev.filter((r) => r.id !== id));
   };
 
+  const handleExportCSV = () => {
+    if (savedRecords.length === 0) return;
+    const headers = [
+      'ক্র.নং',
+      'আবেদনকারীর নাম',
+      'পদবী',
+      'বিদ্যালয়',
+      'জিপিএফ হিসাব নং',
+      'সর্বশেষ জমাকৃত টাকা',
+      'প্রার্থীত টাকা (অংকে)',
+      'প্রার্থীত টাকা (কথায়)',
+      'মূল বেতন',
+      'এনআইডি',
+      'সন',
+      'তারিখ',
+      'আয়ন ব্যয়ন কর্মকর্তা',
+      'উপজেলা',
+      'জেলা'
+    ];
+    const rows = savedRecords.map((r, i) => [
+      i + 1,
+      r.applicantName || '',
+      r.designation || '',
+      r.schoolName || '',
+      r.gpfAccountNo || '',
+      r.totalDepositedAmount || '',
+      r.requestedAmountNumber || '',
+      r.requestedAmountWords || '',
+      r.basicSalary || '',
+      r.nidNumber || '',
+      r.yearSession || '',
+      r.applicationDate || '',
+      r.ddoName || '',
+      r.upazila || '',
+      r.district || ''
+    ]);
+    downloadCsv(csvFileName('GPF_Final_Records'), headers, rows);
+  };
+
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col">
       <Toast toast={toast} />
@@ -380,16 +419,26 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
         </div>
 
         {/* Section 2: Saved Records Table Card */}
-        <div id="saved-records-section" className="w-full">
-          <SavedRecordsTable
-            records={savedRecords}
-            onEditRecord={handleEditRecord}
-            onPrintRecord={handlePrintRecord}
-            onDownloadPdfRecord={handleDownloadPdfRecord}
-            onDeleteRecord={handleDeleteRecord}
-            onNewApplication={handleNewApplication}
-          />
-        </div>
+        <SavedRecordsTable
+          records={savedRecords}
+          title="সংরক্ষিত জিপিএফ চূড়ান্ত উত্তোলনের তালিকা"
+          columns={{
+            name: (r) => r.applicantName,
+            designation: (r) => r.designation,
+            school: (r) => r.schoolName,
+            account: (r) => r.gpfAccountNo,
+            amount: (r) => r.requestedAmountNumber,
+            applicationDate: (r) => r.applicationDate,
+            searchable: (r) => [r.applicantName, r.gpfAccountNo, r.schoolName, r.nidNumber, r.upazila, r.district],
+            id: (r) => r.id,
+          }}
+          onEditRecord={handleEditRecord}
+          onPrintRecord={handlePrintRecord}
+          onDownloadPdfRecord={handleDownloadPdfRecord}
+          onDeleteRecord={handleDeleteRecord}
+          onNewRecord={handleNewApplication}
+          onExportCSV={handleExportCSV}
+        />
       </main>
 
       <SubAppFooter appNumber={3} appShortName="চূড়ান্ত উত্তোলন ও অদাবী" currentUser={currentUser} />

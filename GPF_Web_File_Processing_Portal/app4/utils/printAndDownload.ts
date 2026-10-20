@@ -30,6 +30,23 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
   const lastDed = claim.lastDeductionAmount ? toBn(claim.lastDeductionAmount) : '০';
   const lastVoucher = claim.lastVoucherNo ? toBn(claim.lastVoucherNo) : '....................';
   const treasury = claim.treasuryOffice || `উপজেলা হিসাবরক্ষণ অফিস, ${claim.upazilaName}, ${claim.districtName}`;
+  // Pages 6 and 7 sign off with the dashboard DDO name and designation. A record
+  // saved before those rows existed gets the same dotted fill-in line the bill
+  // uses instead of an empty bracket.
+  const dottedLine = '.'.repeat(20);
+  const ddoNameText = (claim.ddoName || '').trim() || dottedLine;
+  const ddoDesignationText = (claim.ddoDesignation || '').trim() || dottedLine;
+
+  // The page-2 addressee block under the fixed heading line is the dashboard field:
+  // its first line names the office and every line below it is the address. With the
+  // field left empty the earlier fixed addressee and district line are printed.
+  const recipientLines = (claim.recipient || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const addresseeLines = recipientLines.length
+    ? recipientLines
+    : ['জেলা প্রাথমিক শিক্ষা অফিসার', `${claim.districtName}।`];
 
   return `<!doctype html>
 <html lang="bn">
@@ -219,8 +236,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
 
     <div style="margin-bottom: 16px; line-height: 1.35;">
       <div>বরাবর</div>
-      <div>জেলা প্রাথমিক শিক্ষা অফিসার</div>
-      <div><span class="val">${claim.districtName}</span>।</div>
+      ${addresseeLines.map((line) => `<div><span class="val">${line}</span></div>`).join('')}
     </div>
 
     <div style="margin-bottom: 16px;">মাধ্যম: যথাযথ কর্তৃপক্ষ।</div>
@@ -316,7 +332,7 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
     </div>
 
     <div style="font-size: 11.5pt; line-height: 1.45; text-align: justify; margin-bottom: 12px;">
-      <div style="text-decoration: underline; margin-bottom: 3px;">প্রত্যায়নসমূহ</div>
+      <div style="text-align: center; text-decoration: underline; margin-bottom: 3px;">প্রত্যায়নসমূহ</div>
       <p style="margin-bottom: 4px;">
         ১। প্রত্যায়ন করা যাইতেছে যে এই বিলে গৃহীত টাকা প্রকৃত প্রাপকদের মধ্যে বিলি করা হইয়াছে এবং প্রত্যেক ২০০ টাকার উপর প্রদানের ক্ষেত্রে রেভিনিউ স্ট্যাম্প লাগাইয়া সেগুলি যথাযথভাবে বাতিলপূর্বক আমার অফিসে রক্ষিত প্রাপ্তি বহিতে প্রাপ্তির রশিদ গ্রহণ করা হইয়াছে।
       </p>
@@ -549,8 +565,8 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
 
     <!-- ডিডিও স্বাক্ষর স্পেস -->
     <div style="width: 280px; margin-left: auto; text-align: center; line-height: 1.45; margin-top: 60px; margin-bottom: 14px;">
-      <div>(<span class="val">${claim.ddoName}</span>)</div>
-      <div><span class="val">${claim.ddoDesignation}</span></div>
+      <div>(<span class="val">${ddoNameText}</span>)</div>
+      <div><span class="val">${ddoDesignationText}</span></div>
       <div><span class="val">${claim.upazilaName}</span>, <span class="val">${claim.districtName}</span>।</div>
     </div>
 
@@ -628,8 +644,8 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
 
     <!-- ডিডিও স্বাক্ষর স্পেস -->
     <div style="width: 280px; margin-left: auto; text-align: center; line-height: 1.45; margin-top: 60px; margin-bottom: 14px;">
-      <div>(<span class="val">${claim.ddoName}</span>)</div>
-      <div><span class="val">${claim.ddoDesignation}</span></div>
+      <div>(<span class="val">${ddoNameText}</span>)</div>
+      <div><span class="val">${ddoDesignationText}</span></div>
       <div><span class="val">${claim.upazilaName}</span>, <span class="val">${claim.districtName}</span>।</div>
     </div>
 

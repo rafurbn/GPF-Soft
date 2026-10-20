@@ -498,9 +498,9 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
               </tr>
             </thead>
             <tbody>
-              <tr style={{ height: '32px' }}><td style={{ padding: '2px 4px' }}>(১)</td><td></td><td></td></tr>
-              <tr style={{ height: '32px' }}><td style={{ padding: '2px 4px' }}>(২)</td><td></td><td></td></tr>
-              <tr style={{ height: '32px' }}><td style={{ padding: '2px 4px' }}>(৩)</td><td></td><td></td></tr>
+              <tr style={{ height: '24px' }}><td style={{ padding: '4px 4px' }}>(১)</td><td></td><td></td></tr>
+              <tr style={{ height: '24px' }}><td style={{ padding: '4px 4px' }}>(২)</td><td></td><td></td></tr>
+              <tr style={{ height: '24px' }}><td style={{ padding: '4px 4px' }}>(৩)</td><td></td><td></td></tr>
             </tbody>
           </table>
         </div>
@@ -519,11 +519,11 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
               </tr>
             </thead>
             <tbody>
-              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '2px 4px' }}>(১)</td><td>বাম/ডান কনিষ্ঠ</td><td></td></tr>
-              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '2px 4px' }}>(২)</td><td>বাম/ডান অনামিকা</td><td></td></tr>
-              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '2px 4px' }}>(৩)</td><td>বাম/ডান মধ্যমা</td><td></td></tr>
-              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '2px 4px' }}>(৪)</td><td>বাম/ডান তর্জনী</td><td></td></tr>
-              <tr style={{ height: '40px', verticalAlign: 'middle' }}><td style={{ padding: '2px 4px' }}>(৫)</td><td>বাম/ডান বৃদ্ধাঙ্গুলি</td><td></td></tr>
+              <tr style={{ height: '28px', verticalAlign: 'middle' }}><td style={{ padding: '6px 4px' }}>(১)</td><td>বাম/ডান কনিষ্ঠ</td><td></td></tr>
+              <tr style={{ height: '28px', verticalAlign: 'middle' }}><td style={{ padding: '6px 4px' }}>(২)</td><td>বাম/ডান অনামিকা</td><td></td></tr>
+              <tr style={{ height: '28px', verticalAlign: 'middle' }}><td style={{ padding: '6px 4px' }}>(৩)</td><td>বাম/ডান মধ্যমা</td><td></td></tr>
+              <tr style={{ height: '28px', verticalAlign: 'middle' }}><td style={{ padding: '6px 4px' }}>(৪)</td><td>বাম/ডান তর্জনী</td><td></td></tr>
+              <tr style={{ height: '28px', verticalAlign: 'middle' }}><td style={{ padding: '6px 4px' }}>(৫)</td><td>বাম/ডান বৃদ্ধাঙ্গুলি</td><td></td></tr>
             </tbody>
           </table>
         </div>

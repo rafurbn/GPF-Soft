@@ -21,7 +21,7 @@ export const HtmlEditorModal: React.FC<HtmlEditorModalProps> = ({ isOpen, onClos
   // Generate complete standalone HTML string based on current data
   const generateInitialHtml = (d: GpfFormData) => {
     const applyDate = d.applyDate ? toBanglaDigits(d.applyDate) : '........................';
-    const rawReceiver = d.receiverInfo || 'উপজেলা শিক্ষা অফিসার, বিয়ানীবাজার, সিলেট।';
+    const rawReceiver = d.receiverInfo;
     const displayReceiver = rawReceiver.split('\n').map((s) => s.trim()).filter(Boolean).join(', ');
     const installmentNo = d.installmentNo || '১ম কিস্তি';
     const schoolName = d.schoolName || '................................';
@@ -31,8 +31,8 @@ export const HtmlEditorModal: React.FC<HtmlEditorModalProps> = ({ isOpen, onClos
     const requestedAmount = d.requestedAmount ? toBanglaDigits(d.requestedAmount) : '................';
     const requestedAmountWords = d.requestedAmountWords || '................................';
     const applicantName = d.applicantName || '................................';
-    const upazilaName = d.upazilaName || 'বিয়ানীবাজার';
-    const districtName = d.districtName || 'সিলেট';
+    const upazilaName = d.upazilaName || '........................';
+    const districtName = d.districtName || '........................';
     const gpfTotalBalance = d.gpfTotalBalance ? toBanglaDigits(d.gpfTotalBalance) : '................';
     const basicSalary = d.basicSalary ? toBanglaDigits(d.basicSalary) : '................';
     const installmentCount = d.installmentCount ? toBanglaDigits(d.installmentCount) : '২৪';
@@ -203,7 +203,7 @@ export const HtmlEditorModal: React.FC<HtmlEditorModalProps> = ({ isOpen, onClos
       <p className="mb-4">স্বাক্ষর .........................................</p>
       <p className="font-medium">পদবী: {designation || 'উপজেলা প্রাথমিক শিক্ষা অফিসার'}</p>
       <p>{officeName || 'উপজেলা শিক্ষা অফিস'}</p>
-      <p>{upazilaName || 'বিয়ানীবাজার'}, {districtName || 'সিলেট'}।</p>
+      <p>{upazilaName || '........................'}, {districtName || '........................'}।</p>
     </div>
   </div>
 </div>

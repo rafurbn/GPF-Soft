@@ -745,7 +745,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                     </div>
                     <div className="rounded-lg bg-slate-950/90 border border-slate-800 px-3.5 py-2.5 font-bold text-white text-sm sm:text-base tracking-wide flex items-center justify-between">
                       <span>
-                        {selectedRegion?.divisionBn || 'সিলেট'} / {selectedRegion?.districtBn || 'সিলেট'} / {selectedRegion?.upazilaBn || 'বিয়ানীবাজার'}
+                        {selectedRegion?.divisionBn || '—'} / {selectedRegion?.districtBn || '—'} / {selectedRegion?.upazilaBn || '—'}
                       </span>
                       <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 rounded">
                         {selectedRegion?.defaultId || upazilaCode}

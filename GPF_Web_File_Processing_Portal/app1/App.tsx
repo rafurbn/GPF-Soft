@@ -14,7 +14,7 @@ import {
 import { InputFormTable } from './components/InputFormTable';
 import { RecordsTable } from './components/RecordsTable';
 import { DocumentPreviewModal } from './components/DocumentPreviewModal';
-import { DesktopGuideModal } from './components/DesktopGuideModal';
+import { DesktopGuideModal } from '../app-shared/ui/DesktopGuideModal';
 import { HtmlEditorModal } from './components/HtmlEditorModal';
 import { PrintTemplates } from './components/PrintTemplates';
 import { toBanglaDigits, cleanNumberString } from '../src/utils/numberToBanglaWords';
@@ -352,6 +352,7 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
         data={previewData}
         autoDownload={autoDownloadPdf}
         downloadFileName={createPdfFileName('GPF_Refundable', previewData.applicantName || '')}
+        onShowToast={showToast}
         onAutoDownloadComplete={() => {
           setAutoDownloadPdf(false);
           setIsPreviewOpen(false);

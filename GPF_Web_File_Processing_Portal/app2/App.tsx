@@ -9,7 +9,7 @@ import { FormTable } from './components/FormTable';
 import { RecordsList } from './components/RecordsList';
 import { PreviewModal } from './components/PreviewModal';
 import { DocumentTemplate } from './components/DocumentTemplate';
-import { DesktopGuideModal } from './components/DesktopGuideModal';
+import { DesktopGuideModal } from '../app-shared/ui/DesktopGuideModal';
 import { getCurrentBengaliDate } from '../src/utils/dateUtils';
 import { numberToBanglaWords, cleanNumberString } from '../src/utils/numberToBanglaWords';
 import { createPdfFileName } from '../src/utils/pdfDownload';
@@ -501,7 +501,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
         data={formData}
-        onPrint={(pageFilter) => handlePrint(pageFilter)}
+        onShowToast={showToast}
         autoDownload={autoDownloadPdf}
         downloadFileName={createPdfFileName('GPF_NonRefundable', formData.applicant_name || '')}
         onAutoDownloadComplete={() => {

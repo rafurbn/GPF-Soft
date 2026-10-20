@@ -10,7 +10,7 @@ interface PrintTemplatesProps {
 export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter = 'all' }) => {
   // Normalize fields and ensure fallback
   const applyDate = data.applyDate ? toBanglaDigits(data.applyDate) : '........................';
-  const rawReceiver = data.receiverInfo || 'উপজেলা প্রাথমিক শিক্ষা অফিসার\nবিয়ানীবাজার, সিলেট।';
+  const rawReceiver = data.receiverInfo;
   const receiverLines = rawReceiver.split('\n');
   // For page 2: receiver displayed on a single clean line
   const displayReceiverPage2 = rawReceiver
@@ -28,8 +28,8 @@ export const PrintTemplates: React.FC<PrintTemplatesProps> = ({ data, pageFilter
   const requestedAmount = data.requestedAmount ? toBanglaDigits(data.requestedAmount) : '................';
   const requestedAmountWords = data.requestedAmountWords || '................................';
   const applicantName = data.applicantName || '................................';
-  const upazilaName = data.upazilaName || 'বিয়ানীবাজার';
-  const districtName = data.districtName || 'সিলেট';
+  const upazilaName = data.upazilaName || '........................';
+  const districtName = data.districtName || '........................';
   const gpfTotalBalance = data.gpfTotalBalance ? toBanglaDigits(data.gpfTotalBalance) : '................';
   const basicSalary = data.basicSalary ? toBanglaDigits(data.basicSalary) : '................';
   const installmentCount = data.installmentCount ? toBanglaDigits(data.installmentCount) : '২৪';

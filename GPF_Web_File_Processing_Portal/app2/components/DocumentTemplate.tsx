@@ -27,7 +27,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
   // Single line receiver for Page 2
   const singleLineReceiver = data.receiver_info
     ? data.receiver_info.replace(/\n+/g, ', ')
-    : `জেলা প্রাথমিক শিক্ষা অফিসার, ${data.district_name || 'সিলেট'}।`;
+    : '';
 
   const anyData = data as any;
 
@@ -45,7 +45,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
           <div className="mb-5 text-left font-normal">
             <div>বরাবর</div>
             <div className="whitespace-pre-line mt-1 font-normal">
-              {data.receiver_info || `জেলা প্রাথমিক শিক্ষা অফিসার\n${data.district_name || 'সিলেট'}।`}
+              {data.receiver_info}
             </div>
           </div>
 
@@ -123,14 +123,14 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
           <div className="flex justify-between items-start mb-4 text-sm font-normal">
             <div>
               <p>তারিখ: {formattedDate || data.apply_date || anyData.applyDate || '........................'}</p>
-              <p>স্থান: {data.upazila_name || anyData.upazilaName || 'বিয়ানীবাজার'}, {data.district_name || anyData.districtName || 'সিলেট'}।</p>
+              <p>স্থান: {data.upazila_name || anyData.upazilaName || '........................'}, {data.district_name || anyData.districtName || '........................'}।</p>
             </div>
             <div className="text-left text-sm leading-snug font-normal">
               <p>আপনার অনুগত</p>
               <p className="mt-3">স্বাক্ষর: .......................................</p>
               <p className="mt-1">পদবী: {data.designation || 'সহকারী শিক্ষক'}</p>
               <p>ঠিকানা: {data.school_name || anyData.schoolName || '................................'}</p>
-              <p>{data.upazila_name || anyData.upazilaName || 'বিয়ানীবাজার'}, {data.district_name || anyData.districtName || 'সিলেট'}।</p>
+              <p>{data.upazila_name || anyData.upazilaName || '........................'}, {data.district_name || anyData.districtName || '........................'}।</p>
             </div>
           </div>
 
@@ -227,7 +227,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
                 <p>স্বাক্ষর ......................................</p>
                 <p>পদবী: {data.designation || 'সহকারী শিক্ষক'}</p>
                 <p>{data.school_name || anyData.schoolName || '................................'}</p>
-                <p>{data.upazila_name || anyData.upazilaName || 'বিয়ানীবাজার'}, {data.district_name || anyData.districtName || 'সিলেট'}।</p>
+                <p>{data.upazila_name || anyData.upazilaName || '........................'}, {data.district_name || anyData.districtName || '........................'}।</p>
               </div>
             </div>
           </div>
@@ -477,7 +477,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
             <div>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
             <div>উপজেলা শিক্ষা অফিসারের কার্যালয়</div>
             <div>
-              {data.upazila_name || 'বিয়ানীবাজার'}, {data.district_name || 'সিলেট'}।
+              {data.upazila_name || '........................'}, {data.district_name || '........................'}।
             </div>
           </div>
 
@@ -567,7 +567,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
                 <div>({data.ddo_name || 'নৃপেন্দ্র নাথ সরকার'})</div>
                 <div>{data.ddo_designation || 'উপজেলা প্রাথমিক শিক্ষা অফিসার'}</div>
                 <div>
-                  {data.upazila_name || 'বিয়ানীবাজার'}, {data.district_name || 'সিলেট'}।
+                  {data.upazila_name || '........................'}, {data.district_name || '........................'}।
                 </div>
               </div>
             </div>

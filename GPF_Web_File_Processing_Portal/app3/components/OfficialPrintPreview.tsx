@@ -50,7 +50,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
   const formattedYear = toBanglaNumber(data.year);
   const formattedPrlDate = data.prl_date ? toBanglaNumber(data.prl_date) : '';
   const cleanReceiver = data.receiver_info.replace(/\n+/g, ' ');
-  const singleLineReceiver = cleanReceiver || `উপজেলা শিক্ষা অফিসার, ${data.district_name || 'সিলেট'}`;
+  const singleLineReceiver = cleanReceiver;
   const shouldRender = (page: number) => pageFilter === 'all' || pageFilter === page;
 
   return (
@@ -92,7 +92,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
           <div className="mb-5 text-left font-normal">
             <div>বরাবর</div>
             <div className="whitespace-pre-line mt-1 font-normal">
-              {data.receiver_info || `জেলা প্রাথমিক শিক্ষা অফিসার\n${data.district_name || 'সিলেট'}।`}
+              {data.receiver_info}
             </div>
           </div>
 
@@ -142,7 +142,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
             <div>বরাবর</div>
             <div className="mt-1 font-normal">
               <div>উপজেলা হিসাব রক্ষন কর্মকর্তা</div>              
-              <div>{(data.upazila_name || '...............')}, {data.district_name || 'সিলেট'}।</div>
+              <div>{(data.upazila_name || '...............')}, {data.district_name || '........................'}।</div>
             </div>
           </div>
 
@@ -275,7 +275,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
             <div className="grow flex flex-wrap items-baseline gap-x-1">
               <span>যে ট্রেজারীতে অর্থ প্রদান ইচ্ছা করা হয় তাহার নাম: </span>
               <span className="font-medium border-b border-dotted border-gray-700 px-1">
-                উপজেলা হিসাবরক্ষণ অফিস, {data.upazila_name || 'বিয়ানীবাজার'}, {data.district_name || 'সিলেট'}।
+                উপজেলা হিসাবরক্ষণ অফিস, {data.upazila_name || '........................'}, {data.district_name || '........................'}।
               </span>
             </div>
           </div>
@@ -571,7 +571,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
             <div>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
             <div>উপজেলা প্রাথমিক শিক্ষা অফিসারের কার্যালয়</div>
             <div>
-              {data.upazila_name || 'বিয়ানীবাজার'}, {data.district_name || 'সিলেট'}।
+              {data.upazila_name || '........................'}, {data.district_name || '........................'}।
             </div>
           </div>
 
@@ -648,7 +648,7 @@ export const OfficialPrintPreview: React.FC<DocumentTemplateProps> = ({
                 <div>({data.ddo_name || 'নৃপেন্দ্র নাথ সরকার'})</div>
                 <div>{data.ddo_designation || 'উপজেলা প্রাথমিক শিক্ষা অফিসার'}</div>
                 <div>
-                  {data.upazila_name || 'বিয়ানীবাজার'}, {data.district_name || 'সিলেট'}।
+                  {data.upazila_name || '........................'}, {data.district_name || '........................'}।
                 </div>
               </div>
             </div>

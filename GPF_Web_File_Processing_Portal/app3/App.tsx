@@ -406,6 +406,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
         }}
         autoDownload={autoDownloadPdf}
         downloadFileName={createPdfFileName('GPF_Final', activePrintData.applicantName || '')}
+        onShowToast={showToast}
         onAutoDownloadComplete={() => {
           setAutoDownloadPdf(false);
           setIsPrintModalOpen(false);

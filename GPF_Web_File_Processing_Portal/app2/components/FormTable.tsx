@@ -5,6 +5,8 @@ import { numberToBengaliWords, toBanglaNumber } from '../../src/utils/bengaliCon
 import { calculateAge } from '../../src/utils/dateUtils';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { LABELS } from '../../app-shared/ui/tokens';
+import type { ToastKind } from '../../app-shared/ui/Toast';
+import { lockFieldProps, useLockedFieldNotice } from '../../app-shared/ui/lockedField';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
 
 interface FormTableProps {
@@ -17,6 +19,7 @@ interface FormTableProps {
   onPreview?: () => void;
   onPrint: () => void;
   isEditingExisting?: boolean;
+  onShowToast: (text: string, kind?: ToastKind) => void;
 }
 
 const DESIGNATION_PRESETS = [
@@ -35,7 +38,9 @@ export const FormTable: React.FC<FormTableProps> = ({
   onPreview,
   onPrint,
   isEditingExisting = false,
+  onShowToast,
 }) => {
+  const noticeLocked = useLockedFieldNotice(onShowToast);
   const [manualWordsEdit, setManualWordsEdit] = useState(false);
   const [showDesignationPresets, setShowDesignationPresets] = useState(false);
 
@@ -90,7 +95,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                       type="text"
                       id="input-year"
                       value={formData.year}
-                      readOnly={lockedState.year}
+                      {...lockFieldProps(lockedState.year, 'সন', noticeLocked)}
                       onChange={(e) => onChange('year', e.target.value)}
                       placeholder="২০২৬"
                       className={`w-full px-3 py-2 rounded-lg text-sm ${
@@ -164,7 +169,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                       id="input-receiver-info"
                       rows={2}
                       value={formData.receiver_info}
-                      readOnly={lockedState.receiver_info}
+                      {...lockFieldProps(lockedState.receiver_info, 'প্রাপক', noticeLocked)}
                       onChange={(e) => onChange('receiver_info', e.target.value)}
                       placeholder=""
                       className={`w-full px-3 py-2 rounded-lg text-sm ${
@@ -456,7 +461,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                     type="text"
                     id="input-ddo-name"
                     value={formData.ddo_name}
-                    readOnly={lockedState.ddo_name}
+                    {...lockFieldProps(lockedState.ddo_name, 'আয়ন ব্যয়ন কর্মকর্তার নাম', noticeLocked)}
                     onChange={(e) => onChange('ddo_name', e.target.value)}
                     placeholder=""
                     className={`w-full px-3 py-2 rounded-lg text-sm ${
@@ -485,7 +490,11 @@ export const FormTable: React.FC<FormTableProps> = ({
                     type="text"
                     id="input-ddo-designation"
                     value={formData.ddo_designation}
-                    readOnly={lockedState.ddo_designation}
+                    {...lockFieldProps(
+                      lockedState.ddo_designation,
+                      'আয়ন ব্যয়ন কর্মকর্তার পদবী',
+                      noticeLocked
+                    )}
                     onChange={(e) => onChange('ddo_designation', e.target.value)}
                     placeholder=""
                     className={`w-full px-3 py-2 rounded-lg text-sm ${
@@ -514,7 +523,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                     type="text"
                     id="input-upazila-name"
                     value={formData.upazila_name}
-                    readOnly={lockedState.upazila_name}
+                    {...lockFieldProps(lockedState.upazila_name, 'উপজেলার নাম', noticeLocked)}
                     onChange={(e) => onChange('upazila_name', e.target.value)}
                     placeholder="যেমন: বিয়ানীবাজার"
                     className={`w-full px-3 py-2 rounded-lg text-sm ${
@@ -543,7 +552,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                     type="text"
                     id="input-district-name"
                     value={formData.district_name}
-                    readOnly={lockedState.district_name}
+                    {...lockFieldProps(lockedState.district_name, 'জেলার নাম', noticeLocked)}
                     onChange={(e) => onChange('district_name', e.target.value)}
                     placeholder="যেমন: সিলেট"
                     className={`w-full px-3 py-2 rounded-lg text-sm ${

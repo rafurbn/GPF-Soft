@@ -5,6 +5,8 @@ import { deriveFormData } from '../../src/utils/deriveFormData';
 import { Sparkles, Calendar } from 'lucide-react';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { LABELS } from '../../app-shared/ui/tokens';
+import type { ToastKind } from '../../app-shared/ui/Toast';
+import { lockFieldProps, useLockedFieldNotice } from '../../app-shared/ui/lockedField';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
 
 interface InputFormTableProps {
@@ -16,6 +18,7 @@ interface InputFormTableProps {
   onResetUnlocked: () => void;
   onOpenPreview: () => void;
   onOpenHtmlEditor: () => void;
+  onShowToast: (text: string, kind?: ToastKind) => void;
 }
 
 interface FormRowProps {
@@ -72,7 +75,10 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
   onResetUnlocked,
   onOpenPreview,
   onOpenHtmlEditor,
+  onShowToast,
 }) => {
+  const noticeLocked = useLockedFieldNotice(onShowToast);
+
   // Field change handler
   const handleChange = (field: keyof GpfFormData, value: string) => {
     // Widened view of the lock config so any form field can be looked up safely
@@ -164,7 +170,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     type="text"
                     value={formData.year}
                     onChange={(e) => handleChange('year', e.target.value)}
-                    readOnly={lockedConfig.year}
+                    {...lockFieldProps(lockedConfig.year, 'সন', noticeLocked)}
                     placeholder="২০২৬"
                     className={`w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
                       lockedConfig.year
@@ -219,7 +225,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     rows={2}
                     value={formData.receiverInfo}
                     onChange={(e) => handleChange('receiverInfo', e.target.value)}
-                    readOnly={lockedConfig.receiverInfo}
+                    {...lockFieldProps(lockedConfig.receiverInfo, 'প্রাপক', noticeLocked)}
                     placeholder=""
                     className={`w-full px-3 py-2 rounded-lg text-sm ${
                       lockedConfig.receiverInfo
@@ -573,7 +579,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     type="text"
                     value={formData.ddoName}
                     onChange={(e) => handleChange('ddoName', e.target.value)}
-                    readOnly={lockedConfig.ddoName}
+                    {...lockFieldProps(lockedConfig.ddoName, 'আয়ন ব্যয়ন কর্মকর্তার নাম', noticeLocked)}
                     placeholder=""
                     className={`w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
                       lockedConfig.ddoName
@@ -594,7 +600,11 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                       type="text"
                       value={formData.ddoDesignation}
                       onChange={(e) => handleChange('ddoDesignation', e.target.value)}
-                      readOnly={lockedConfig.ddoDesignation}
+                      {...lockFieldProps(
+                        lockedConfig.ddoDesignation,
+                        'আয়ন ব্যয়ন কর্মকর্তার পদবী',
+                        noticeLocked
+                      )}
                       placeholder=""
                       className={`flex-1 min-w-[200px] rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden ${
                         lockedConfig.ddoDesignation
@@ -633,7 +643,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                   <input
                     type="text"
                     value={formData.upazilaName}
-                    readOnly
+                    {...lockFieldProps(true, 'উপজেলার নাম', noticeLocked)}
                     placeholder="যেমন: বিয়ানীবাজার"
                     className="w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden bg-emerald-950/20 border-emerald-700/50 text-emerald-200 placeholder-slate-500 cursor-not-allowed select-none"
                   />
@@ -649,7 +659,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                   <input
                     type="text"
                     value={formData.districtName}
-                    readOnly
+                    {...lockFieldProps(true, 'জেলার নাম', noticeLocked)}
                     placeholder="যেমন: সিলেট"
                     className="w-full max-w-xl rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden bg-emerald-950/20 border-emerald-700/50 text-emerald-200 placeholder-slate-500 cursor-not-allowed select-none"
                   />

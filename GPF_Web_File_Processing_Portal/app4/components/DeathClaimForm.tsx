@@ -14,6 +14,7 @@ import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
 import type { ToastKind } from '../../app-shared/ui/Toast';
 import { LABELS } from '../../app-shared/ui/tokens';
+import { lockFieldProps, useLockedFieldNotice } from '../../app-shared/ui/lockedField';
 import { getCurrentBengaliDate } from '../../src/utils/dateUtils';
 
 interface FormRowProps {
@@ -330,24 +331,11 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   const fieldClass = (locked: boolean) =>
     `w-full max-w-sm rounded-lg px-3 py-1.5 border text-sm font-semibold focus:outline-hidden transition-colors ${
       locked
-        ? 'bg-emerald-950/25 border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none caret-transparent pointer-events-none'
+        ? 'bg-emerald-950/25 border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none'
         : 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:border-emerald-500'
     }`;
 
-  /**
-   * Spread onto any <input>/<textarea> so a locked field cannot receive focus,
-   * a caret or a text selection.
-   */
-  const lockProps = (locked: boolean) =>
-    locked
-      ? {
-          disabled: true,
-          readOnly: true,
-          tabIndex: -1,
-          'aria-readonly': true,
-          style: { caretColor: 'transparent', userSelect: 'none' as const, pointerEvents: 'none' as const },
-        }
-      : {};
+  const noticeLocked = useLockedFieldNotice(onShowToast);
 
   return (
     <div className="bg-[#0e1628] border border-slate-800/90 rounded-2xl shadow-2xl print:hidden">
@@ -403,7 +391,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
                 inputMode="numeric"
                 value={year}
                 onChange={(e) => setYear(normaliseBengaliInput(e.target.value.replace(/[^0-9০-৯]/g, '')))}
-                {...lockProps(lockSettings.year)}
+                {...lockFieldProps(lockSettings.year, 'সন', noticeLocked)}
                 placeholder="২০২৬"
                 className={fieldClass(lockSettings.year)}
               />            </div>
@@ -434,11 +422,11 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               rows={2}
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
-              {...lockProps(lockSettings.recipient)}
+              {...lockFieldProps(lockSettings.recipient, 'প্রাপক', noticeLocked)}
               placeholder={`উপজেলা হিসাবরক্ষণ কর্মকর্তা\n${upazilaName}, ${districtName}।`}
               className={`w-full rounded-lg px-3 py-2 text-sm ${
                 lockSettings.recipient
-                  ? 'bg-emerald-950/25 border border-emerald-500/50 text-emerald-200 cursor-not-allowed pointer-events-none select-none'
+                  ? 'bg-emerald-950/25 border border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none'
                   : 'bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500'
               }`}
             />
@@ -605,7 +593,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               type="text"
               value={ddoName}
               onChange={(e) => setDdoName(e.target.value)}
-              {...lockProps(lockSettings.ddoName)}
+              {...lockFieldProps(lockSettings.ddoName, 'আয়ন ব্যয়ন কর্মকর্তার নাম', noticeLocked)}
               placeholder="নৃপেন্দ্র নাথ সরকার"
               required
               className={fieldClass(lockSettings.ddoName)}
@@ -618,7 +606,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               type="text"
               value={ddoDesignation}
               onChange={(e) => setDdoDesignation(e.target.value)}
-              {...lockProps(lockSettings.ddoDesignation)}
+              {...lockFieldProps(lockSettings.ddoDesignation, 'আয়ন ব্যয়ন কর্মকর্তার পদবী', noticeLocked)}
               placeholder="উপজেলা প্রাথমিক শিক্ষা অফিসার (চ:দা:)"
               required
               className={fieldClass(lockSettings.ddoDesignation)}
@@ -630,7 +618,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
             <input
               type="text"
               value={upazilaName}
-              {...lockProps(true)}
+              {...lockFieldProps(true, 'উপজেলার নাম', noticeLocked)}
               placeholder="বিয়ানীবাজার"
               className={fieldClass(true)}
             />
@@ -641,7 +629,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
             <input
               type="text"
               value={districtName}
-              {...lockProps(true)}
+              {...lockFieldProps(true, 'জেলার নাম', noticeLocked)}
               placeholder="সিলেট"
               className={fieldClass(true)}
             />

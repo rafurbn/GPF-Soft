@@ -11,7 +11,8 @@ import {
   calculatePrlDate
 } from '../../src/utils/bengaliConverter';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
-import { LOCKED_FIELD_TOAST, LABELS } from '../../app-shared/ui/tokens';
+import { LABELS } from '../../app-shared/ui/tokens';
+import { lockFieldProps, useLockedFieldNotice } from '../../app-shared/ui/lockedField';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
 import type { ToastKind } from '../../app-shared/ui/Toast';
 
@@ -48,9 +49,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
 }) => {
   const [showDesignationPopup, setShowDesignationPopup] = useState(false);
 
-  const handleLockedFieldNotice = (fieldName: string) => {
-    onShowToast?.(LOCKED_FIELD_TOAST.replace('{label}', fieldName), 'warning');
-  };
+  const handleLockedFieldNotice = useLockedFieldNotice((text, kind) => onShowToast?.(text, kind));
 
   // Set today's date in Bengali DD/MM/YYYY format
   const handleSetToday = () => {
@@ -116,11 +115,9 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   <input
                     type="text"
                     value={formData.yearSession}
-                    readOnly={locks.yearSession}
-                    onClick={() => locks.yearSession && handleLockedFieldNotice('সন')}
+                    {...lockFieldProps(locks.yearSession, 'সন', handleLockedFieldNotice)}
                     onChange={(e) => !locks.yearSession && onChange('yearSession', e.target.value)}
                     placeholder="২০২৬"
-                    title={locks.yearSession ? 'এই ফিল্ডটি লক করা আছে (ডানপাশে আনলক বাটনে ক্লিক করুন)' : undefined}
                     className={`w-full pl-3 pr-28 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                       locks.yearSession
                         ? 'bg-[#091120] border border-emerald-500/40 text-emerald-100 cursor-not-allowed select-none'
@@ -180,11 +177,9 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   <textarea
                     rows={2}
                     value={formData.recipient}
-                    readOnly={locks.recipient}
-                    onClick={() => locks.recipient && handleLockedFieldNotice('প্রাপক')}
+                    {...lockFieldProps(locks.recipient, 'প্রাপক', handleLockedFieldNotice)}
                     onChange={(e) => !locks.recipient && onChange('recipient', e.target.value)}
                     placeholder=""
-                    title={locks.recipient ? 'এই ফিল্ডটি লক করা আছে (ডানপাশে আনলক বাটনে ক্লিক করুন)' : undefined}
                     className={`w-full px-3 py-2 rounded-lg text-sm resize-none leading-relaxed transition-all ${
                       locks.recipient
                         ? 'bg-emerald-950/25 border border-emerald-500/50 text-emerald-200 cursor-not-allowed select-none'
@@ -455,11 +450,9 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   <input
                     type="text"
                     value={formData.ddoName}
-                    readOnly={locks.ddoName}
-                    onClick={() => locks.ddoName && handleLockedFieldNotice('ডিডিও নাম')}
+                    {...lockFieldProps(locks.ddoName, 'ডিডিও নাম', handleLockedFieldNotice)}
                     onChange={(e) => !locks.ddoName && onChange('ddoName', e.target.value)}
                     placeholder=""
-                    title={locks.ddoName ? 'এই ফিল্ডটি লক করা আছে (ডানপাশে আনলক বাটনে ক্লিক করুন)' : undefined}
                     className={`w-full px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                       locks.ddoName
                         ? 'bg-[#091120] border border-emerald-500/40 text-emerald-100 cursor-not-allowed select-none pr-20'
@@ -483,11 +476,9 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   <input
                     type="text"
                     value={formData.ddoDesignation}
-                    readOnly={locks.ddoDesignation}
-                    onClick={() => locks.ddoDesignation && handleLockedFieldNotice('ডিডিও পদবী')}
+                    {...lockFieldProps(locks.ddoDesignation, 'ডিডিও পদবী', handleLockedFieldNotice)}
                     onChange={(e) => !locks.ddoDesignation && onChange('ddoDesignation', e.target.value)}
                     placeholder=""
-                    title={locks.ddoDesignation ? 'এই ফিল্ডটি লক করা আছে (ডানপাশে আনলক বাটনে ক্লিক করুন)' : undefined}
                     className={`w-full px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                       locks.ddoDesignation
                         ? 'bg-[#091120] border border-emerald-500/40 text-emerald-100 cursor-not-allowed select-none pr-20'
@@ -511,7 +502,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   <input
                     type="text"
                     value={formData.upazila}
-                    readOnly
+                    {...lockFieldProps(true, 'উপজেলার নাম', handleLockedFieldNotice)}
                     placeholder="বিয়ানীবাজার"
                     title={`(${LABELS.fixed})`}
                     className={`w-full px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
@@ -537,7 +528,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                   <input
                     type="text"
                     value={formData.district}
-                    readOnly
+                    {...lockFieldProps(true, 'জেলার নাম', handleLockedFieldNotice)}
                     placeholder="সিলেট"
                     title={`(${LABELS.fixed})`}
                     className={`w-full px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${

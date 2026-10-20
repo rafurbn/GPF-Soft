@@ -322,6 +322,7 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
           onResetUnlocked={handleResetUnlocked}
           onOpenPreview={handlePrintCurrentForm}
           onOpenHtmlEditor={() => setIsHtmlEditorOpen(true)}
+          onShowToast={showToast}
         />
 
         {/* Saved Applications Records Table matching image.png */}

@@ -213,7 +213,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   // Field change handler: strictly protects locked fields from being modified
   const handleFieldChange = (field: keyof GpfNonRefundableFormData, value: string) => {
     if (lockedState[field as NonRefundableLockableKey]) {
-      showToast(LOCKED_FIELD_TOAST.replace('{label}', LOCKABLE_FIELD_LABELS[field as NonRefundableLockableKey] || field), 'warning');
+      showToast(LOCKED_FIELD_TOAST.replace('{label}', LOCKABLE_FIELD_LABELS[field as NonRefundableLockableKey] || field), 'error');
       return;
     }
 
@@ -458,6 +458,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
           onPreview={() => setIsPreviewOpen(true)}
           onPrint={() => handlePrint('all')}
           isEditingExisting={isEditingExisting}
+          onShowToast={showToast}
         />
 
         {/* Saved Records Section */}

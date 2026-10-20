@@ -7,7 +7,7 @@ import { PreviewModal } from './components/PreviewModal';
 import { DocumentTemplate } from './components/DocumentTemplate';
 import { DesktopGuideModal } from '../app-shared/ui/DesktopGuideModal';
 import { getCurrentBengaliDate } from '../src/utils/dateUtils';
-import { numberToBanglaWords, cleanNumberString } from '../src/utils/numberToBanglaWords';
+import { numberToBengaliWords, cleanNumberString } from '../src/utils/bengaliConverter';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { readScoped, writeScoped, scopedKey } from '../src/lib/scopedStorage';
@@ -289,7 +289,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
 
     let words = formData.gpf_total_balance_words;
     if (!words && formData.requested_amount) {
-      words = numberToBanglaWords(formData.requested_amount);
+      words = numberToBengaliWords(formData.requested_amount);
     }
 
     const updatedData: GpfNonRefundableFormData = {
@@ -371,10 +371,8 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
 
   // Delete record
   const handleDeleteRecord = (id: string) => {
-    if (confirm('আপনি কি নিশ্চিত যে এই আবেদনটি তালিকা থেকে মুছে ফেলতে চান?')) {
-      setRecords((prev) => prev.filter((r) => r.id !== id));
-      showToast('আবেদনটি মুছে ফেলা হয়েছে।');
-    }
+    setRecords((prev) => prev.filter((r) => r.id !== id));
+    showToast('আবেদনটি তালিকা থেকে মুছে ফেলা হয়েছে', 'info');
   };
 
   // Print Handler

@@ -11,6 +11,7 @@ import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { persistUpazilaContext, clearUpazilaContext } from './lib/upazilaSession';
 import { registerActiveSession, addAuditLog, isCurrentSessionTerminated, isCurrentAccountActive, endCurrentSessionOnServer, touchCurrentSession } from './lib/centralAdminStore';
 import type { User } from '@supabase/supabase-js';
+import { Toast, useToast } from '../app-shared/ui/Toast';
 
 // ---------------------------------------------------------------------------
 // Multi-Page Application (MPA) routes.
@@ -68,6 +69,7 @@ const describeLoginError = async (
 };
 
 export default function App() {
+  const { toast, showToast } = useToast();
   // No built-in account directory: every sign-in is verified by Supabase Auth.
   const [users, setUsers] = useState<UserSession[]>([]);
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
@@ -377,7 +379,7 @@ export default function App() {
   const handleResetPassword = async (upazilaCode: string) => {
     const target = users.find((user) => user.upazila_code === upazilaCode);
     if (!supabase || !target?.email) {
-      window.alert('এই অ্যাকাউন্টের ইমেইল Supabase profile-এ পাওয়া যায়নি।');
+      showToast('এই অ্যাকাউন্টের ইমেইল Supabase profile-এ পাওয়া যায়নি।', 'error');
       return;
     }
 
@@ -385,10 +387,10 @@ export default function App() {
       redirectTo: window.location.origin,
     });
     if (error) {
-      window.alert('পাসওয়ার্ড রিকভারি ইমেইল পাঠানো যায়নি। Supabase SMTP সেটিংস যাচাই করুন।');
+      showToast('পাসওয়ার্ড রিকভারি ইমেইল পাঠানো যায়নি। Supabase SMTP সেটিংস যাচাই করুন।', 'error');
       return;
     }
-    window.alert('পাসওয়ার্ড রিকভারি কোড ব্যবহারকারীর যাচাইকৃত ইমেইলে পাঠানো হয়েছে।');
+    showToast('পাসওয়ার্ড রিকভারি কোড ব্যবহারকারীর যাচাইকৃত ইমেইলে পাঠানো হয়েছে।', 'success');
   };
 
   return (
@@ -478,6 +480,7 @@ export default function App() {
           onCreateAccount={handleCreateAccount}
         />
       )}
+      <Toast toast={toast} />
     </div>
   );
 }

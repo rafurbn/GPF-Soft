@@ -37,8 +37,10 @@ export const money = (value: number | string | null | undefined): string => {
 };
 
 /** Rounded, no decimals — for KPI cards and totals. Empty input gives ''. */
-export const moneyCompact = (value: number | string | null | undefined): string =>
-  formatBanglaCurrency(value === null || value === undefined ? '' : String(value));
+export const moneyCompact = (value: number | string | null | undefined): string => {
+  const num = parseFloat(toEn(String(value ?? '')).replace(/[^\d.-]/g, ''));
+  return formatBanglaCurrency(Number.isFinite(num) ? String(Math.round(num)) : '');
+};
 
 /** dd/mm/yyyy in Bengali digits; ISO yyyy-mm-dd is flipped to dd/mm/yyyy. */
 export const date = (value: string | null | undefined, separator = '/'): string => {

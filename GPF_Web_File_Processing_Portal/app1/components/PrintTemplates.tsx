@@ -1,6 +1,6 @@
 import React from 'react';
 import { GpfFormData } from '../../src/types';
-import { toBanglaDigits } from '../../src/utils/numberToBanglaWords';
+import { toBanglaDigits } from '../../src/utils/bengaliConverter';
 
 interface PrintTemplatesProps {
   data: GpfFormData;

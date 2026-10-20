@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Code2, Eye, Copy, RotateCcw, Printer, Check, Download, Save, CheckCircle2 } from 'lucide-react';
 import { GpfFormData } from '../../src/types';
-import { toBanglaDigits } from '../../src/utils/numberToBanglaWords';
+import { toBanglaDigits } from '../../src/utils/bengaliConverter';
 import { getSavedCustomHtml, saveCustomHtml, clearCustomHtml } from '../../src/utils/storage';
 
 interface HtmlEditorModalProps {

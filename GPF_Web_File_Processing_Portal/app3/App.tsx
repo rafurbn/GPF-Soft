@@ -348,6 +348,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   // Delete record
   const handleDeleteRecord = (id: string) => {
     setSavedRecords((prev) => prev.filter((r) => r.id !== id));
+    showToast('আবেদনটি তালিকা থেকে মুছে ফেলা হয়েছে', 'info');
   };
 
   const handleExportCSV = () => {

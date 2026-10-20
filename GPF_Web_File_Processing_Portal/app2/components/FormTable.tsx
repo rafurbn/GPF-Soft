@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Sparkles } from 'lucide-react';
 import { GpfNonRefundableFormData, NonRefundableLockableKey, NonRefundableLockedState } from '../../src/types';
-import { numberToBanglaWords, toBanglaNumber } from '../../src/utils/numberToBanglaWords';
+import { numberToBengaliWords, toBanglaNumber } from '../../src/utils/bengaliConverter';
 import { calculateAge } from '../../src/utils/dateUtils';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { LABELS } from '../../app-shared/ui/tokens';
@@ -42,7 +42,7 @@ export const FormTable: React.FC<FormTableProps> = ({
   // Auto-generate words when requested_amount changes
   useEffect(() => {
     if (!manualWordsEdit && formData.requested_amount) {
-      const generatedWords = numberToBanglaWords(formData.requested_amount);
+      const generatedWords = numberToBengaliWords(formData.requested_amount);
       if (generatedWords) {
         onChange('gpf_total_balance_words', generatedWords);
       }
@@ -403,7 +403,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                       id="btn-re-autogenerate-words"
                       onClick={() => {
                         setManualWordsEdit(false);
-                        const w = numberToBanglaWords(formData.requested_amount);
+                        const w = numberToBengaliWords(formData.requested_amount);
                         onChange('gpf_total_balance_words', w);
                       }}
                       className="px-2 py-1.5 text-xs text-emerald-400 hover:text-emerald-200 bg-slate-800 rounded border border-slate-700 whitespace-nowrap cursor-pointer"

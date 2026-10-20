@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { money, toBn } from '../../src/lib/format';
+import { numberToBengaliWords } from '../../src/utils/bengaliConverter';
+import { normaliseBengaliDate, normaliseBengaliInput, parseBengaliNumber } from '../utils/bengaliInput';
 import {
   GpfDeathClaim,
   LockSettings,
@@ -6,14 +9,6 @@ import {
   RelationshipType,
   LockableField,
 } from '../types/gpf';
-import {
-  toBengaliNumber,
-  amountToBengaliWords,
-  formatBangladeshiCurrency,
-  normaliseBengaliInput,
-  normaliseBengaliDate,
-  parseBengaliNumber,
-} from '../utils/bengaliWords';
 import { Sparkles, PlusCircle } from 'lucide-react';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
@@ -27,7 +22,6 @@ interface FormRowProps {
   label: React.ReactNode;
   hint?: string;
   hintClassName?: string;
-  labelExtra?: React.ReactNode;
   children: React.ReactNode;
   lockCells: React.ReactNode;
   rowClassName?: string;
@@ -38,7 +32,6 @@ const FormRow: React.FC<FormRowProps> = ({
   label,
   hint,
   hintClassName = 'text-slate-400',
-  labelExtra,
   children,
   lockCells,
   rowClassName = '',
@@ -48,11 +41,10 @@ const FormRow: React.FC<FormRowProps> = ({
       {index}
     </td>
     <td className="bg-[#0f182c] text-slate-200 font-medium py-2.5 px-3 sm:px-4 border-r border-slate-800">
-      {hint || labelExtra ? (
+      {hint ? (
         <div>
           <span>{label}</span>
-          {hint && <p className={`text-[11px] ${hintClassName} font-normal mt-0.5`}>({hint})</p>}
-          {labelExtra}
+          <p className={`text-[11px] ${hintClassName} font-normal mt-0.5`}>({hint})</p>
         </div>
       ) : (
         label
@@ -86,7 +78,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   isEditing = false,
 }) => {
     // 1. সন: 2026, 2027, 2028
-  const [year, setYear] = useState<string>(toBengaliNumber(initialData?.year || '২০২৬'));
+  const [year, setYear] = useState<string>(toBn(initialData?.year || '২০২৬'));
   
   // 2. আবেদনের তারিখ
   const [applicationDate, setApplicationDate] = useState<string>(
@@ -126,12 +118,12 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
 
   // 10. জিপিএফ হিসাব নং
   const [gpfAccountNo, setGpfAccountNo] = useState<string>(
-    initialData?.gpfAccountNo ? toBengaliNumber(initialData.gpfAccountNo) : ''
+    initialData?.gpfAccountNo ? toBn(initialData.gpfAccountNo) : ''
   );
 
   // 11. জমাকৃত টাকার পরিমাণ
   const [depositedAmount, setDepositedAmount] = useState<string>(
-    initialData?.depositedAmount ? toBengaliNumber(String(initialData.depositedAmount)) : ''
+    initialData?.depositedAmount ? toBn(String(initialData.depositedAmount)) : ''
   );
 
   // 12. জমাকৃত টাকা (কথায়)
@@ -155,27 +147,27 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
 
   // 17. সংযুক্তি: শুধুমাত্র ০১(এক) খানা ও ০২(দুই) খানা
   const [attachmentsCount, setAttachmentsCount] = useState<string>(
-    initialData?.attachmentsCount ? toBengaliNumber(initialData.attachmentsCount) : '০২(দুই) খানা'
+    initialData?.attachmentsCount ? toBn(initialData.attachmentsCount) : '০২(দুই) খানা'
   );
 
   // Template variables
   const [sanctionMemoNo, setSanctionMemoNo] = useState<string>(
-    initialData?.sanctionMemoNo ? toBengaliNumber(initialData.sanctionMemoNo) : ''
+    initialData?.sanctionMemoNo ? toBn(initialData.sanctionMemoNo) : ''
   );
   const [sanctionDate, setSanctionDate] = useState<string>(
     initialData?.sanctionDate ? normaliseBengaliDate(initialData.sanctionDate) : ''
   );
   const [forwardingMemoNo, setForwardingMemoNo] = useState<string>(
-    initialData?.forwardingMemoNo ? toBengaliNumber(initialData.forwardingMemoNo) : ''
+    initialData?.forwardingMemoNo ? toBn(initialData.forwardingMemoNo) : ''
   );
   const [forwardingDate, setForwardingDate] = useState<string>(
     initialData?.forwardingDate ? normaliseBengaliDate(initialData.forwardingDate) : ''
   );
   const [lastDeductionAmount, setLastDeductionAmount] = useState<string>(
-    initialData?.lastDeductionAmount ? toBengaliNumber(String(initialData.lastDeductionAmount)) : ''
+    initialData?.lastDeductionAmount ? toBn(String(initialData.lastDeductionAmount)) : ''
   );
   const [lastVoucherNo, setLastVoucherNo] = useState<string>(
-    initialData?.lastVoucherNo ? toBengaliNumber(initialData.lastVoucherNo) : ''
+    initialData?.lastVoucherNo ? toBn(initialData.lastVoucherNo) : ''
   );
   const [treasuryOffice, setTreasuryOffice] = useState<string>(
     initialData?.treasuryOffice || ''
@@ -186,7 +178,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
   // Synchronize when initialData changes.
   useEffect(() => {
     if (initialData) {
-      setYear(toBengaliNumber(initialData.year || '২০২৬'));
+      setYear(toBn(initialData.year || '২০২৬'));
       setApplicationDate(normaliseBengaliDate(initialData.applicationDate || getCurrentBengaliDate()));
       setRecipient(initialData.recipient || '');
       setDeceasedEmployeeName(initialData.deceasedEmployeeName || '');
@@ -195,26 +187,26 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
       setDeathDate(normaliseBengaliDate(initialData.deathDate || ''));
       setApplicantName(initialData.applicantName || '');
       setRelationship(initialData.relationship || 'স্ত্রী');
-      setGpfAccountNo(toBengaliNumber(initialData.gpfAccountNo || ''));
+      setGpfAccountNo(toBn(initialData.gpfAccountNo || ''));
       // A saved claim with no amount reads as blank, not as ০.
-      setDepositedAmount(initialData.depositedAmount ? toBengaliNumber(String(initialData.depositedAmount)) : '');
+      setDepositedAmount(initialData.depositedAmount ? toBn(String(initialData.depositedAmount)) : '');
       setDepositedAmountInWords(
         initialData.depositedAmountInWords ||
-          (initialData.depositedAmount ? amountToBengaliWords(initialData.depositedAmount) : '')
+          (initialData.depositedAmount ? numberToBengaliWords(initialData.depositedAmount) : '')
       );
       setDdoName(initialData.ddoName || '');
       setDdoDesignation(initialData.ddoDesignation || '');
       setUpazilaName(initialData.upazilaName || '');
       setDistrictName(initialData.districtName || '');
       setAttachmentsCount(
-        initialData.attachmentsCount ? toBengaliNumber(initialData.attachmentsCount) : '০২(দুই) খানা'
+        initialData.attachmentsCount ? toBn(initialData.attachmentsCount) : '০২(দুই) খানা'
       );
-      setSanctionMemoNo(initialData.sanctionMemoNo ? toBengaliNumber(initialData.sanctionMemoNo) : '');
+      setSanctionMemoNo(initialData.sanctionMemoNo ? toBn(initialData.sanctionMemoNo) : '');
       setSanctionDate(initialData.sanctionDate ? normaliseBengaliDate(initialData.sanctionDate) : '');
-      setForwardingMemoNo(initialData.forwardingMemoNo ? toBengaliNumber(initialData.forwardingMemoNo) : '');
+      setForwardingMemoNo(initialData.forwardingMemoNo ? toBn(initialData.forwardingMemoNo) : '');
       setForwardingDate(initialData.forwardingDate ? normaliseBengaliDate(initialData.forwardingDate) : '');
-      setLastDeductionAmount(initialData.lastDeductionAmount ? toBengaliNumber(String(initialData.lastDeductionAmount)) : '');
-      setLastVoucherNo(initialData.lastVoucherNo ? toBengaliNumber(initialData.lastVoucherNo) : '');
+      setLastDeductionAmount(initialData.lastDeductionAmount ? toBn(String(initialData.lastDeductionAmount)) : '');
+      setLastVoucherNo(initialData.lastVoucherNo ? toBn(initialData.lastVoucherNo) : '');
       setTreasuryOffice(initialData.treasuryOffice || '');
     }
   }, [initialData]);
@@ -227,7 +219,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
       setDepositedAmountInWords('');
       return;
     }
-    const words = amountToBengaliWords(bengaliValue);
+    const words = numberToBengaliWords(bengaliValue);
     setDepositedAmountInWords(words);
   };
 
@@ -241,7 +233,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
     const lastDedNum = parseBengaliNumber(lastDeductionAmount);
 
     return {
-      year: toBengaliNumber(year) || '২০২৬',
+      year: toBn(year) || '২০২৬',
       applicationDate: normaliseBengaliDate(applicationDate),
       recipient,
       deceasedEmployeeName: deceasedEmployeeName.trim(),
@@ -250,20 +242,20 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
       deathDate: normaliseBengaliDate(deathDate),
       applicantName: applicantName.trim(),
       relationship,
-      gpfAccountNo: toBengaliNumber(gpfAccountNo),
+      gpfAccountNo: toBn(gpfAccountNo),
       depositedAmount: depAmountNum,
-      depositedAmountInWords: depositedAmountInWords || amountToBengaliWords(depAmountNum),
+      depositedAmountInWords: depositedAmountInWords || numberToBengaliWords(depAmountNum),
       ddoName,
       ddoDesignation,
       upazilaName,
       districtName,
-      attachmentsCount: toBengaliNumber(attachmentsCount) === '০১(এক) খানা' ? '০১(এক) খানা' : '০২(দুই) খানা',
-      sanctionMemoNo: sanctionMemoNo ? toBengaliNumber(sanctionMemoNo) : '',
+      attachmentsCount: toBn(attachmentsCount) === '০১(এক) খানা' ? '০১(এক) খানা' : '০২(দুই) খানা',
+      sanctionMemoNo: sanctionMemoNo ? toBn(sanctionMemoNo) : '',
       sanctionDate: sanctionDate ? normaliseBengaliDate(sanctionDate) : '',
-      forwardingMemoNo: forwardingMemoNo ? toBengaliNumber(forwardingMemoNo) : '',
+      forwardingMemoNo: forwardingMemoNo ? toBn(forwardingMemoNo) : '',
       forwardingDate: forwardingDate ? normaliseBengaliDate(forwardingDate) : '',
       lastDeductionAmount: lastDedNum,
-      lastVoucherNo: lastVoucherNo ? toBengaliNumber(lastVoucherNo) : '',
+      lastVoucherNo: lastVoucherNo ? toBn(lastVoucherNo) : '',
       treasuryOffice,
       status: initialData?.status || 'খসড়া',
     };
@@ -572,7 +564,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               </div>
               {depositedAmount && (
                 <div className="text-[11px] text-teal-400 flex items-center gap-1 font-semibold">
-                  <span>৳ {formatBangladeshiCurrency(depositedAmount)} টাকা</span>
+                  <span>৳ {money(depositedAmount)} টাকা</span>
                 </div>
               )}
             </div>
@@ -597,7 +589,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
               />
               <button
                 type="button"
-                onClick={() => setDepositedAmountInWords(amountToBengaliWords(depositedAmount))}
+                onClick={() => setDepositedAmountInWords(numberToBengaliWords(depositedAmount))}
                 className="px-2.5 py-1.5 text-xs rounded-lg bg-emerald-900/50 text-emerald-300 border border-emerald-700/50 hover:bg-emerald-800/50 flex items-center gap-1 whitespace-nowrap cursor-pointer"
                 title="পুনরায় রূপান্তর করুন"
               >
@@ -663,7 +655,7 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
                 // record may store the English-digit form ('02(দুই) খানা').
                 // Compare on a normalised (Bengali-digit) copy so the selected
                 // option is always highlighted.
-                const isSelected = toBengaliNumber(attachmentsCount) === toBengaliNumber(opt);
+                const isSelected = toBn(attachmentsCount) === toBn(opt);
                 return (
                   <button
                     key={opt}

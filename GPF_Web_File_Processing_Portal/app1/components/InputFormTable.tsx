@@ -1,6 +1,6 @@
 import React from 'react';
 import { GpfFormData, LockedFieldsConfig, LockableFieldKey } from '../../src/types';
-import { numberToBanglaWords, toBanglaDigits, formatBanglaCurrency } from '../../src/utils/numberToBanglaWords';
+import { numberToBengaliWords, toBanglaDigits, formatBanglaCurrency } from '../../src/utils/bengaliConverter';
 import { deriveFormData } from '../../src/utils/deriveFormData';
 import { Sparkles, Calendar } from 'lucide-react';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
@@ -27,8 +27,6 @@ interface FormRowProps {
   hint?: string;
   /** Tailwind text color class for the hint */
   hintClassName?: string;
-  /** Optional extra node rendered under the label (e.g. a "লকড" badge) */
-  labelExtra?: React.ReactNode;
   /** The input/control markup for this row */
   children: React.ReactNode;
   /** Lock/unlock (or empty) cells */
@@ -42,7 +40,6 @@ const FormRow: React.FC<FormRowProps> = ({
   label,
   hint,
   hintClassName = 'text-slate-400',
-  labelExtra,
   children,
   lockCells,
   rowClassName = '',
@@ -52,11 +49,10 @@ const FormRow: React.FC<FormRowProps> = ({
       {index}
     </td>
     <td className="bg-[#0f182c] text-slate-200 font-medium py-2.5 px-3 sm:px-4 border-r border-slate-800">
-      {hint || labelExtra ? (
+      {hint ? (
         <div>
           <span>{label}</span>
-          {hint && <p className={`text-[11px] ${hintClassName} font-normal mt-0.5`}>({hint})</p>}
-          {labelExtra}
+          <p className={`text-[11px] ${hintClassName} font-normal mt-0.5`}>({hint})</p>
         </div>
       ) : (
         label
@@ -378,7 +374,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      const words = numberToBanglaWords(formData.requestedAmount);
+                      const words = numberToBengaliWords(formData.requestedAmount);
                       if (words) handleChange('requestedAmountWords', words);
                     }}
                     className="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-400 border border-emerald-300 rounded text-xs font-semibold whitespace-nowrap cursor-pointer"

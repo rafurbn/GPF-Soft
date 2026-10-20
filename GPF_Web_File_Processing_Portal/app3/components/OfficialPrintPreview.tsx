@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Printer, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { GpfFinalFormData } from '../../src/types';
-import { formatBanglaCurrency, toBanglaNumber } from '../../src/utils/numberToBanglaWords';
+import { formatBanglaCurrency, toBanglaNumber } from '../../src/utils/bengaliConverter';
 import { calculatePrlDate } from '../../src/utils/bengaliConverter';
 
 interface DocumentTemplateProps {

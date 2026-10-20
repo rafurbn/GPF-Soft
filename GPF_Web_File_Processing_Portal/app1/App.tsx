@@ -16,7 +16,7 @@ import { DocumentPreviewModal } from './components/DocumentPreviewModal';
 import { DesktopGuideModal } from '../app-shared/ui/DesktopGuideModal';
 import { HtmlEditorModal } from './components/HtmlEditorModal';
 import { PrintTemplates } from './components/PrintTemplates';
-import { cleanNumberString } from '../src/utils/numberToBanglaWords';
+import { cleanNumberString } from '../src/utils/bengaliConverter';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { scopedKey } from '../src/lib/scopedStorage';

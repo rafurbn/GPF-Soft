@@ -1,30 +1,22 @@
 import React from 'react';
+import { date, money, toBn } from '../../src/lib/format';
 import { GpfDeathClaim } from '../types/gpf';
-import {
-  formatBangladeshiCurrency,
-} from '../utils/bengaliWords';
 
 interface PrintDocumentEngineProps {
   claim: GpfDeathClaim | null;
 }
 
-// ইংরেজি সংখ্যা এবং তারিখকে বাংলায় রূপান্তরের ফাংশন
-const toBn = (val: any): string => {
-  if (val === undefined || val === null || val === '') return '';
-  let str = String(val);
 
-  // YYYY-MM-DD ফরম্যাট থাকলে DD/MM/YYYY করা
-  str = str.replace(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/g, '$3/$2/$1');
-
-  // ০-৯ সংখ্যা রূপান্তর
-  const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-  return str.replace(/[0-9]/g, (d) => bnDigits[Number(d)]);
+const withDanda = (value: unknown): string => {
+  const text = String(value ?? '').trim();
+  if (!text) return text;
+  return `${text.replace(/।+$/, '')}।`;
 };
 
 export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim }) => {
   if (!claim) return null;
 
-  const formattedAmount = formatBangladeshiCurrency(claim.depositedAmount);
+  const formattedAmount = money(claim.depositedAmount);
   const amountInWords = claim.depositedAmountInWords;
 
   const Value = ({ children }: { children: React.ReactNode }) => {
@@ -232,10 +224,10 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         <div className="mb-2 text-left space-y-0.5 leading-[1.25]">
           <div>বরাবর</div>
           <div>
-            <Value>{claim.recipient}।</Value>
+            <Value>{withDanda(claim.recipient)}</Value>
           </div>
           <div>
-            <Value>{claim.districtName}।</Value>
+            <Value>{withDanda(claim.districtName)}</Value>
           </div>
         </div>
 
@@ -336,11 +328,11 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
                 <p>{claim.deceasedDesignation || '..............................................'}</p>
                 <p>{claim.schoolName || '..............................................'}</p>
                 <p>
-                  {claim.upazilaName || '....................'}, {claim.districtName || '....................'}। এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
+                  {claim.upazilaName || '....................'}, {withDanda(claim.districtName || '....................')} এর সাধারণ ভবিষ্য তহবিল-এ জমাকৃত টাকা অফেরতযোগ্য অগ্রিম উত্তোলন এর বিল।
                 </p>
                 <div className="mt-1 flex justify-between text-[9.5px] items-center whitespace-nowrap">
                   <span className="whitespace-nowrap">মঞ্জুরী নং- {toBn(claim.forwardingMemoNo || claim.sanctionMemoNo || '...............')}</span>
-                  <span className="whitespace-nowrap">তারিখ: {toBn(claim.forwardingDate || claim.sanctionDate || claim.applicationDate || '................')}</span>
+                  <span className="whitespace-nowrap">তারিখ: {date(claim.forwardingDate || claim.sanctionDate || claim.applicationDate || '................')}</span>
                 </div>
               </td>
               <td style={{ padding: '4px 2px', textAlign: 'center', verticalAlign: 'middle' }}>
@@ -736,7 +728,7 @@ export const PrintDocumentEngine: React.FC<PrintDocumentEngineProps> = ({ claim 
         <div className="text-left text-[10px] leading-tight">
           <div>জেলা প্রাথমিক শিক্ষা অফিসার,</div>
           <div>
-            <Value>{claim.districtName}।</Value>
+            <Value>{withDanda(claim.districtName)}</Value>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { GpfNonRefundableFormData } from '../../src/types';
-import { toBanglaNumber } from '../../src/utils/numberToBanglaWords';
+import { toBanglaNumber } from '../../src/utils/bengaliConverter';
 
 interface DocumentTemplateProps {
   data: GpfNonRefundableFormData;

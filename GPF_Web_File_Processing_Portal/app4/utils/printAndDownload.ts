@@ -1,19 +1,6 @@
 import { GpfDeathClaim } from '../types/gpf';
-import {
-  formatBangladeshiCurrency,
-} from './bengaliWords';
+import { date, money, toBn } from '../../src/lib/format';
 
-/**
- * Helper to convert any English numerals and standard ISO dates into Bengali numerals.
- */
-function toBn(val: unknown): string {
-  if (val === undefined || val === null || val === '') return '';
-  let str = String(val);
-  // Normalise ISO YYYY-MM-DD or YYYY/MM/DD to DD/MM/YYYY
-  str = str.replace(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/g, '$3/$2/$1');
-  const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-  return str.replace(/[0-9]/g, (d) => bnDigits[Number(d)]);
-}
 
 /**
  * Generates the complete, standalone HTML document for the official death claim pages.
@@ -25,20 +12,20 @@ function toBn(val: unknown): string {
  * - Zero bold weights (font-weight: 400 throughout) for official letters
  */
 export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
-  const formattedAmount = toBn(formatBangladeshiCurrency(claim.depositedAmount));
+  const formattedAmount = money(claim.depositedAmount);
   const amountInWords = claim.depositedAmountInWords;
 
-  const appDate = toBn(claim.applicationDate);
-  const deathDate = toBn(claim.deathDate);
+  const appDate = date(claim.applicationDate);
+  const deathDate = date(claim.deathDate);
   const gpfNo = toBn(claim.gpfAccountNo);
   const yearBn = toBn(claim.year || '২০২৬');
   const attachments = toBn(claim.attachmentsCount || '০২(দুই) খানা');
   const sanctionMemo = claim.sanctionMemoNo ? toBn(claim.sanctionMemoNo) : '....................';
-  const sanctionDate = claim.sanctionDate ? toBn(claim.sanctionDate) : '....................';
+  const sanctionDate = claim.sanctionDate ? date(claim.sanctionDate) : '....................';
   const forwardingMemo = claim.forwardingMemoNo
     ? toBn(claim.forwardingMemoNo)
     : `উশিঅ/বিবা/সিল/${yearBn}/`;
-  const forwardingDate = toBn(claim.forwardingDate || claim.applicationDate);
+  const forwardingDate = date(claim.forwardingDate || claim.applicationDate);
   const lastDed = claim.lastDeductionAmount ? toBn(claim.lastDeductionAmount) : '০';
   const lastVoucher = claim.lastVoucherNo ? toBn(claim.lastVoucherNo) : '....................';
   const treasury = claim.treasuryOffice || `উপজেলা হিসাবরক্ষণ অফিস, ${claim.upazilaName}, ${claim.districtName}`;

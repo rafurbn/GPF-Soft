@@ -2,12 +2,8 @@ import React, { useState, useRef } from 'react';
 import { ActionButton, RowDeleteButton } from '../../app-shared/ui/ActionButton';
 import { LABELS } from '../../app-shared/ui/tokens';
 import { GpfDeathClaim } from '../types/gpf';
-import {
-  toBengaliNumber,
-  formatBangladeshiCurrency,
-} from '../utils/bengaliWords';
 import { printClaimDocument, downloadClaimDocument } from '../utils/printAndDownload';
-import { toBn, date } from '../../src/lib/format';
+import { date, money, toBn } from '../../src/lib/format';
 import { Search, FileDown, Upload } from 'lucide-react';
 
 interface ClaimsDataTableProps {
@@ -186,7 +182,7 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
               সংরক্ষিত জিপিএফ চূড়ান্ত উত্তোলন তালিকা (ডেথ ক্লেইম)
             </h3>
             <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 tabular-nums">
-              {toBengaliNumber(claims.length)} টি আবেদন
+              {toBn(claims.length)} টি আবেদন
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -315,7 +311,7 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
                 >
                   {/* Serial */}
                   <td className="py-3 px-3 text-center text-slate-400 font-medium tabular-nums">
-                    {toBengaliNumber(idx + 1)}
+                    {toBn(idx + 1)}
                   </td>
 
                   {/* Applicant & Deceased */}
@@ -344,7 +340,7 @@ export const ClaimsDataTable: React.FC<ClaimsDataTableProps> = ({
                   {/* Deposited Amount */}
                   <td className="py-3 px-3 text-right">
                     <div className="font-bold text-emerald-400 text-sm tabular-nums">
-                      ৳ {formatBangladeshiCurrency(claim.depositedAmount)}
+                      ৳ {money(claim.depositedAmount)}
                     </div>
                     <div className="text-[10px] text-slate-400 truncate max-w-[180px] ml-auto">
                       {claim.depositedAmountInWords}

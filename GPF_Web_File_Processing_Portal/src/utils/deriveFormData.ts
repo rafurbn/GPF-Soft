@@ -1,10 +1,10 @@
 import { GpfFormData } from '../types';
 import {
-  numberToBanglaWords,
+  numberToBengaliWords,
   toBanglaDigits,
   cleanNumberString,
   formatBanglaCurrency,
-} from './numberToBanglaWords';
+} from './bengaliConverter';
 
 /**
  * Pure derivation of the next form state after a single field edit.
@@ -40,7 +40,7 @@ export function deriveFormData<F extends keyof GpfFormData>(
   // If requested amount or installment count changes, auto generate words and installment
   if (field === 'requestedAmount' || field === 'installmentCount') {
     if (field === 'requestedAmount') {
-      const words = numberToBanglaWords(String(value));
+      const words = numberToBengaliWords(String(value));
       if (words) {
         updated.requestedAmountWords = words;
       }

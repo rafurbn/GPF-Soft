@@ -1,4 +1,4 @@
-import { toBanglaDigits } from './numberToBanglaWords';
+import { toBanglaDigits } from './bengaliConverter';
 
 /**
  * Calculates age based on Date of Birth and Application Date.

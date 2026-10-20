@@ -12,6 +12,7 @@ import { BookmarkCheck, Sparkles, ChevronRight, Clock, Plus, Activity, ShieldChe
 import { ActiveAppTab, UserSession } from '../types';
 import { getAppMaintenanceStates, getRemoteMaintenanceState, hydrateMaintenanceStates } from '../lib/centralAdminStore';
 import { toBn } from '../lib/format';
+import { Toast, useToast } from '../../app-shared/ui/Toast';
 
 // ৪টি সক্রিয় এ্যাপ + ১টি খালি স্লট (ভবিষ্যতে এখানে নতুন এ্যাপ যোগ করা হবে)।
 type LauncherApp = {
@@ -113,6 +114,8 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
 }) => {
   const [maintenanceStates, setMaintenanceStates] = React.useState(getAppMaintenanceStates());
 
+  const { toast, showToast } = useToast();
+
   React.useEffect(() => {
     let active = true;
     const load = async () => {
@@ -143,11 +146,11 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
       const remoteLock = await getRemoteMaintenanceState(appId);
       if (remoteLock) lockInfo = { ...lockInfo, isLocked: remoteLock.isLocked, reason: remoteLock.lockReason, appName: remoteLock.appName };
     } catch {
-      window.alert('কেন্দ্রীয় রক্ষণাবেক্ষণ অবস্থা যাচাই করা যায়নি। পরে আবার চেষ্টা করুন।');
+      showToast('কেন্দ্রীয় রক্ষণাবেক্ষণ অবস্থা যাচাই করা যায়নি। পরে আবার চেষ্টা করুন।', 'error');
       return;
     }
     if (lockInfo.isLocked) {
-      window.alert(`[${lockInfo.appName}] রক্ষণাবেক্ষণের জন্য সাময়িক বন্ধ রয়েছে।\nকারণ: ${lockInfo.reason}`);
+      showToast(`[${lockInfo.appName}] রক্ষণাবেক্ষণের জন্য সাময়িক বন্ধ রয়েছে।\nকারণ: ${lockInfo.reason}`, 'warning');
       return;
     }
 
@@ -312,6 +315,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
           );
         })}
       </div>
+      <Toast toast={toast} />
     </div>
   );
 }

@@ -2,12 +2,13 @@ import React from 'react';
 import { GpfFormData, LockedFieldsConfig, LockableFieldKey } from '../../src/types';
 import { numberToBengaliWords, toBanglaDigits, formatBanglaCurrency } from '../../src/utils/bengaliConverter';
 import { deriveFormData } from '../../src/utils/deriveFormData';
-import { Sparkles, Calendar } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { LABELS } from '../../app-shared/ui/tokens';
 import type { ToastKind } from '../../app-shared/ui/Toast';
 import { lockFieldProps, useLockedFieldNotice } from '../../app-shared/ui/lockedField';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
+import { TodayDateButton } from '../../app-shared/ui/TodayDateButton';
 
 interface InputFormTableProps {
   formData: GpfFormData;
@@ -194,20 +195,7 @@ export const InputFormTable: React.FC<InputFormTableProps> = ({
                     placeholder="যেমন: ২২/০৯/২০২৪"
                     className="w-full max-w-xl rounded-lg px-3 py-1.5 text-white bg-slate-950 border border-slate-700 focus:border-emerald-500 text-sm font-semibold focus:outline-hidden placeholder-slate-500"
                   />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const today = new Date();
-                      const d = String(today.getDate()).padStart(2, '0');
-                      const m = String(today.getMonth() + 1).padStart(2, '0');
-                      const y = today.getFullYear();
-                      handleChange('applyDate', toBanglaDigits(`${d}/${m}/${y}`));
-                    }}
-                    className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer flex items-center space-x-1"
-                  >
-                    <Calendar className="w-3.5 h-3.5 text-sky-600" />
-                    <span>আজকের তারিখ</span>
-                  </button>
+                  <TodayDateButton onPick={(v) => handleChange('applyDate', v)} />
                 </div>
             </FormRow>
 

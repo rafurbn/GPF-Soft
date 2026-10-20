@@ -18,7 +18,7 @@ export const LockToggle: React.FC<LockToggleProps> = ({ isLocked, onToggle, id, 
     onClick={onToggle}
     aria-pressed={isLocked}
     title={isLocked ? 'তথ্য পরিবর্তন করতে ক্লিক করে আনলক করুন' : 'তথ্য লক করে সংরক্ষণ করুন'}
-    className={`inline-flex min-h-8 items-center justify-center gap-1.5 ${RADIUS} border px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+    className={`inline-flex min-h-8 items-center justify-center gap-1.5 ${RADIUS} border px-2.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
       fullWidth ? 'w-full' : ''
     } ${
       isLocked

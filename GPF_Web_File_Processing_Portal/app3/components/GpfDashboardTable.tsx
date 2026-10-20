@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Sparkles,
-  Calendar,
-} from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { GpfFinalFormData, FinalLockableFieldKey, FinalFieldLocks } from '../../src/types';
 import {
   toBengaliDigits,
@@ -14,6 +11,7 @@ import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { LABELS } from '../../app-shared/ui/tokens';
 import { lockFieldProps, useLockedFieldNotice } from '../../app-shared/ui/lockedField';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
+import { TodayDateButton } from '../../app-shared/ui/TodayDateButton';
 import type { ToastKind } from '../../app-shared/ui/Toast';
 
 interface GpfDashboardTableProps {
@@ -50,16 +48,6 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
   const [showDesignationPopup, setShowDesignationPopup] = useState(false);
 
   const handleLockedFieldNotice = useLockedFieldNotice((text, kind) => onShowToast?.(text, kind));
-
-  // Set today's date in Bengali DD/MM/YYYY format
-  const handleSetToday = () => {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-    const dateFormatted = `${toBengaliDigits(day)}/${toBengaliDigits(month)}/${toBengaliDigits(year)}`;
-    onChange('applicationDate', dateFormatted);
-  };
 
   // Auto convert amount to Bengali words
   const handleAmountChange = (val: string) => {
@@ -98,7 +86,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
               <th className="py-2.5 px-3 w-12 text-center">ক্র:</th>
               <th className="py-2.5 px-4 w-72">ফিল্ডের নাম</th>
               <th className="py-2.5 px-4">এখানে তথ্য ইনপুট দিন</th>
-              <th className="py-2.5 px-3 w-32 text-center">{LABELS.lockColumn}</th>
+              <th className="py-2.5 px-3 text-center">{LABELS.lockColumn}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#15223b] bg-[#0b1328] text-slate-200">
@@ -152,14 +140,7 @@ export const GpfDashboardTable: React.FC<GpfDashboardTableProps> = ({
                     placeholder="২১/০৯/২০২৬"
                     className="flex-1 px-3 py-1.5 bg-[#10192e] border border-[#1f3052] rounded-lg text-white placeholder:text-slate-500 focus:outline-hidden focus:border-emerald-500 text-xs sm:text-sm font-medium"
                   />
-                  <button
-                    type="button"
-                    onClick={handleSetToday}
-                    className="px-3 py-1.5 bg-[#121d36] hover:bg-[#1a2a4c] text-slate-300 hover:text-white border border-[#233559] rounded-md text-xs font-medium transition-colors cursor-pointer flex items-center gap-1 shrink-0"
-                  >
-                    <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>আজকের তারিখ</span>
-                  </button>
+                  <TodayDateButton onPick={(v) => onChange('applicationDate', v)} />
                 </div>
               </td>
               <td className="py-3 px-3 text-center text-slate-500 font-bold">—</td>

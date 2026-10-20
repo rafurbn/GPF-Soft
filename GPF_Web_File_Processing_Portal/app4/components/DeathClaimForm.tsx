@@ -12,6 +12,7 @@ import {
 import { Sparkles, PlusCircle } from 'lucide-react';
 import { LockToggle, FixedLockBadge } from '../../app-shared/ui/LockToggle';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
+import { TodayDateButton } from '../../app-shared/ui/TodayDateButton';
 import type { ToastKind } from '../../app-shared/ui/Toast';
 import { LABELS } from '../../app-shared/ui/tokens';
 import { lockFieldProps, useLockedFieldNotice } from '../../app-shared/ui/lockedField';
@@ -399,15 +400,18 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
 
           {/* Row 2: আবেদনের তারিখ */}
           <FormRow index="২" label="আবেদনের তারিখ" hint="দাখিলের তারিখ (যেমন: ১৬/০৩/২০২৬)" lockCells={renderEmptyLockCells()}>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={applicationDate}
-              onChange={(e) => setApplicationDate(normaliseBengaliInput(e.target.value))}
-              onBlur={(e) => setApplicationDate(normaliseBengaliDate(e.target.value))}
-              placeholder="১৬/০৩/২০২৬"
-              className="w-full max-w-sm rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={applicationDate}
+                onChange={(e) => setApplicationDate(normaliseBengaliInput(e.target.value))}
+                onBlur={(e) => setApplicationDate(normaliseBengaliDate(e.target.value))}
+                placeholder="১৬/০৩/২০২৬"
+                className="w-full max-w-sm rounded-lg px-3 py-1.5 border border-slate-700 bg-slate-950 text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 text-sm font-semibold"
+              />
+              <TodayDateButton onPick={(v) => setApplicationDate(v)} />
+            </div>
           </FormRow>
 
           {/* Row 3: প্রাপক (মাল্টি-লাইন) */}

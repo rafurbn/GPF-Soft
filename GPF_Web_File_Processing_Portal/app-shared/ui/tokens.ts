@@ -50,6 +50,7 @@ export const LABELS = {
   cancel: 'না',
   locked: 'লক করা আছে',
   unlocked: 'আনলক',
+  todayDate: 'আজকের তারিখ',
   lockColumn: 'লক / আনলক',
   fixed: 'স্থায়ী',
   fixedFieldToast: 'উপজেলা ও জেলার নাম স্থায়ী — পরিবর্তন করা যাবে না।',

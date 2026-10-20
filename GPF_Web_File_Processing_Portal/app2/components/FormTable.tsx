@@ -8,6 +8,7 @@ import { LABELS } from '../../app-shared/ui/tokens';
 import type { ToastKind } from '../../app-shared/ui/Toast';
 import { lockFieldProps, useLockedFieldNotice } from '../../app-shared/ui/lockedField';
 import { DashboardActionBar } from '../../app-shared/ui/DashboardActionBar';
+import { TodayDateButton } from '../../app-shared/ui/TodayDateButton';
 
 interface FormTableProps {
   formData: GpfNonRefundableFormData;
@@ -77,7 +78,7 @@ export const FormTable: React.FC<FormTableProps> = ({
               <th className="py-3 px-4 w-14 text-center font-semibold">ক্র:</th>
               <th className="py-3 px-4 w-60 md:w-72 font-semibold">ফিল্ডের নাম</th>
               <th className="py-3 px-4 font-semibold">এখানে তথ্য ইনপুট দিন</th>
-              <th className="py-3 px-4 w-28 md:w-36 text-center font-semibold">{LABELS.lockColumn}</th>
+              <th className="py-3 px-4 text-center font-semibold">{LABELS.lockColumn}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60 font-sans">
@@ -134,20 +135,7 @@ export const FormTable: React.FC<FormTableProps> = ({
                     placeholder="যেমন: ২০/০৯/২০২৬"
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white focus:outline-hidden focus:border-emerald-500 text-sm"
                   />
-                  <button
-                    type="button"
-                    id="btn-set-today-date"
-                    onClick={() => {
-                      const d = new Date();
-                      const day = String(d.getDate()).padStart(2, '0');
-                      const month = String(d.getMonth() + 1).padStart(2, '0');
-                      const year = d.getFullYear();
-                      onChange('apply_date', `${toBanglaNumber(day)}/${toBanglaNumber(month)}/${toBanglaNumber(year)}`);
-                    }}
-                    className="px-2.5 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-lg whitespace-nowrap border border-slate-700 cursor-pointer"
-                  >
-                    আজকের তারিখ
-                  </button>
+                  <TodayDateButton onPick={(v) => onChange('apply_date', v)} />
                 </div>
               </td>
               <td className="py-3 px-4 text-center text-xs text-slate-600">—</td>

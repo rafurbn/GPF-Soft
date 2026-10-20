@@ -277,7 +277,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
   {/* চাঁদা প্রদানকারীর নাম ও বিবরণ */}
   <div className="col-span-5 border-r border-black p-2 text-left font-normal leading-relaxed flex flex-col justify-between">
     <div>
-      <p className="font-semibold">{data?.applicant_name || '..............................................'}</p>
+      <p className="font-semibold">জনাব {data?.applicant_name || '..............................................'}</p>
       <p>{data?.designation || '..............................................'}</p>
       <p>{data?.school_name || '..............................................'}</p>
       <p>
@@ -516,7 +516,7 @@ export const DocumentTemplate: React.FC<DocumentTemplateProps> = ({
             <div className="grid grid-cols-12 font-normal min-h-[90px]">
               <div className="col-span-2 border-r border-black p-2 text-center align-top font-normal">০১</div>
               <div className="col-span-7 border-r border-black p-2 align-top font-normal leading-relaxed">
-                <div>{data.applicant_name || '................................................'}</div>
+                <div>জনাব {data.applicant_name || '................................................'}</div>
                 <div>{data.designation || '................................'}</div>
                 <div>{data.school_name || '................................................'}</div>
                 <div>

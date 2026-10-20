@@ -762,24 +762,24 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
         </table>
         </div>
 
-        {/* Action bar \u2014 the same one app1/app2/app3 use */}
+        {/* Action bar — the same one app1/app2/app3 use */}
         <DashboardActionBar
           note={
             <>
               <span className="text-rose-400">*</span>
-              <span>\u099a\u09bf\u09b9\u09cd\u09a8\u09bf\u09a4 \u09ab\u09bf\u09b2\u09cd\u09a1\u09b8\u09ae\u09c2\u09b9 \u0986\u09ac\u09b6\u09cd\u09af\u0995\u0964 {LABELS.locked} \u09ab\u09bf\u09b2\u09cd\u09a1\u09c7\u09b0 \u09a4\u09a5\u09cd\u09af \u09aa\u09b0\u09ac\u09b0\u09cd\u09a4\u09c0 \u09ab\u09b0\u09cd\u09ae\u09c7 \u0985\u099f\u09cb \u09b2\u09cb\u09a1 \u09a5\u09be\u0995\u09ac\u09c7\u0964</span>
+              <span>চিহ্নিত ফিল্ডসমূহ আবশ্যক। {LABELS.locked} ফিল্ডের তথ্য পরবর্তী ফর্মে অটো লোড থাকবে।</span>
             </>
           }
           onNew={onReset}
           onSave={handleSave}
-          saveLabel={saveSuccess ? '\u09a4\u09a5\u09cd\u09af \u09b8\u09ab\u09b2\u09ad\u09be\u09ac\u09c7 \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09bf\u09a4!' : isEditing ? LABELS.update : LABELS.save}
+          saveLabel={saveSuccess ? 'তথ্য সফলভাবে সংরক্ষিত!' : isEditing ? LABELS.update : LABELS.save}
           extra={
             isEditing ? (
               <button
                 type="button"
                 onClick={() => {
                   if (!deceasedEmployeeName || !applicantName || !schoolName || !gpfAccountNo) {
-                    onShowToast('\u0985\u09a8\u09c1\u0997\u09cd\u09b0\u09b9 \u0995\u09b0\u09c7 \u09ae\u09c3\u09a4 \u0995\u09b0\u09cd\u09ae\u099a\u09be\u09b0\u09c0\u09b0 \u09a8\u09be\u09ae, \u09ac\u09bf\u09a6\u09cd\u09af\u09be\u09b2\u09df, \u0986\u09ac\u09c7\u09a6\u09a8\u0995\u09be\u09b0\u09c0 \u0993 \u099c\u09bf\u09aa\u09bf\u098f\u09ab \u09b9\u09bf\u09b8\u09be\u09ac \u09a8\u09ae\u09cd\u09ac\u09b0 \u09aa\u09c2\u09b0\u09a3 \u0995\u09b0\u09c1\u09a8\u0964', 'error');
+                    onShowToast('অনুগ্রহ করে মৃত কর্মচারীর নাম, বিদ্যালয়, আবেদনকারী ও জিপিএফ হিসাব নম্বর পূরণ করুন।', 'error');
                     return;
                   }
                   onSaveClaim(getFormDataObject(), true);
@@ -787,10 +787,10 @@ export const DeathClaimForm: React.FC<DeathClaimFormProps> = ({
                   setTimeout(() => setSaveSuccess(false), 3000);
                 }}
                 className="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold text-emerald-200 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/70 transition-colors flex items-center gap-1.5 shadow-md cursor-pointer"
-                title="\u09ac\u09bf\u09a6\u09cd\u09af\u09ae\u09be\u09a8 \u09ab\u09be\u0987\u09b2 \u0985\u09aa\u09b0\u09bf\u09ac\u09b0\u09cd\u09a4\u09bf\u09a4 \u09b0\u09c7\u0996\u09c7 \u098f\u099f\u09bf \u09a8\u09a4\u09c1\u09a8 \u0995\u09cd\u09b2\u09c7\u0987\u09ae \u09b9\u09bf\u09b8\u09c7\u09ac \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3 \u0995\u09b0\u09c1\u09a8"
+                title="বিদ্যমান ফাইল অপরিবর্তিত রেখে এটি নতুন ক্লেইম হিসেব সংরক্ষণ করুন"
               >
                 <PlusCircle className="w-4 h-4 text-emerald-400" />
-                <span>\u09a8\u09a4\u09c1\u09a8 \u09b9\u09bf\u09b8\u09c7\u09ac \u09b8\u0982\u09b0\u0995\u09cd\u09b7\u09a3</span>
+                <span>নতুন হিসেব সংরক্ষণ</span>
               </button>
             ) : null
           }

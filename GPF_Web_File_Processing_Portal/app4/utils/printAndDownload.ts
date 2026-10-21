@@ -7,7 +7,8 @@ import { date, money, toBn } from '../../src/lib/format';
  * Fully calibrated according to Bangladesh government office norms and cross-browser print specs:
  * - SolaimanLipi, Nikosh, Kalpurush, and Hind Siliguri fonts
  * - Perfect 7 pages in both Google Chrome and Mozilla Firefox (no flex container page-splitting)
- * - Explicit 1.5px table borders so rows and columns stay intact in Firefox on pages 3, 6, and 7
+ * - Table rules are single 1pt borders painted by one element each (no collapsed-border
+ *   conflict), so no edge can be rounded away by the print engine on pages 3, 6 and 7
  * - Complete conversion of all dates and numbers to Bengali digits
  * - Zero bold weights (font-weight: 400 throughout) for official letters
  * - One standard type scale only: 11.5pt letter body, 13pt titles, 10.5pt form/table detail, 9.5pt printing note
@@ -131,20 +132,31 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
       font-weight: 400 !important;
       font-size: 10.5pt;
     }
-    /* Explicit 1.5px borders prevent Firefox print engine from hiding table grid */
+    /* Each edge is painted by exactly one element: under the collapsed model the table
+       and its first row fight over the shared top edge, and the print engine can round
+       that 1.5px line away at some scales. 1pt is print-native and never rounds to zero. */
     .bordered-table {
       width: 100% !important;
-      border-collapse: collapse !important;
+      border-collapse: separate !important;
       border-spacing: 0 !important;
-      border: 1.5px solid #000000 !important;
+      border: none !important;
       margin-bottom: 10px !important;
     }
     .bordered-table th, .bordered-table td {
-      border: 1.5px solid #000000 !important;
+      border: none !important;
+      border-right: 1pt solid #000000 !important;
+      border-bottom: 1pt solid #000000 !important;
       background-color: transparent !important;
       box-sizing: border-box !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+    }
+    .bordered-table thead th {
+      border-top: 1pt solid #000000 !important;
+    }
+    .bordered-table tr > th:first-child,
+    .bordered-table tr > td:first-child {
+      border-left: 1pt solid #000000 !important;
     }
     .borderless-table {
       width: 100% !important;
@@ -157,14 +169,14 @@ export function generateOfficial7PagesHtml(claim: GpfDeathClaim): string {
     /* TR Form 37 Code Boxes */
     .code-box-group {
       display: inline-flex;
-      border: 1.5px solid #000000;
+      border: 1pt solid #000000;
       margin: 0 2px;
       vertical-align: middle;
     }
     .code-box-group span {
       width: 20px;
       height: 20px;
-      border-right: 1.5px solid #000000;
+      border-right: 1pt solid #000000;
       display: inline-flex;
       align-items: center;
       justify-content: center;

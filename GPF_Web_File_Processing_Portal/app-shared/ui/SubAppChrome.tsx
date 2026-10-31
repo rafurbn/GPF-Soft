@@ -28,11 +28,11 @@ export const BackButton: React.FC<BackButtonProps> = ({ onBack }) => (
   <button
     type="button"
     onClick={onBack}
-    className="group flex items-center gap-2.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 hover:from-slate-800 hover:to-emerald-900 text-white shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer border border-emerald-500/40 hover:scale-[1.02] active:scale-98 shrink-0"
+    className="group flex items-center gap-2.5 px-3.5 py-2 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-b from-slate-900 via-emerald-950 to-[#061217] hover:from-slate-850 hover:to-emerald-900 text-white shadow-[0_3px_0_0_#064e3b,0_5px_10px_rgba(0,0,0,0.35)] hover:shadow-[0_4px_0_0_#064e3b,0_7px_14px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 active:translate-y-[2px] active:shadow-[0_1px_0_0_#064e3b] transition-all duration-150 cursor-pointer border border-emerald-500/60 shrink-0 select-none"
     title="মূল ড্যাশবোর্ড বা ব্যাকপেইজে ফিরে যান"
   >
-    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all duration-200">
-      <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform duration-200" />
+    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-300 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all duration-150 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
+      <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform duration-150" />
     </div>
     <div className="text-left">
       <span className="block text-[10px] text-emerald-300 font-semibold leading-tight">ব্যাকপেইজ</span>

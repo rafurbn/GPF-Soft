@@ -180,19 +180,19 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#0a121e]/90 rounded-2xl border border-slate-800/80 p-5 sm:p-6 shadow-xl">
+    <div className="flex flex-col h-full bg-gradient-to-b from-[#0b162c] to-[#070e1c] rounded-2xl border border-slate-700/60 p-5 sm:p-6 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.12)]">
       {/* ব্যানার: এই পোর্টালে আপনাকে স্বাগতম */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#091e23]/80 via-[#0a1b24]/60 to-[#091522]/80 border border-emerald-600/40 mb-6 shadow-md">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#0a1e22] border border-emerald-500/70 flex items-center justify-center flex-shrink-0 text-emerald-400">
-            <BookmarkCheck className="w-6 h-6" />
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#092b2f]/90 via-[#0a232f]/80 to-[#0c182c]/90 border border-emerald-500/50 mb-6 shadow-[0_8px_20px_rgba(5,150,105,0.2),inset_0_1px_2px_rgba(255,255,255,0.15)] relative overflow-hidden group">
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-b from-emerald-500 to-teal-700 border border-emerald-300/40 flex items-center justify-center flex-shrink-0 text-white shadow-[0_4px_0_0_#064e3b,0_6px_12px_rgba(0,0,0,0.4)]">
+            <BookmarkCheck className="w-7 h-7" />
           </div>
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-wide text-white">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-wide text-white drop-shadow-sm">
               এই পোর্টালে আপনাকে স্বাগতম
             </h2>
-            <p className="text-xs text-slate-300 mt-0.5">
-              কর্মরত উপজেলা: <strong className="text-emerald-300">{currentUser?.upazila_name_bn}</strong>, {currentUser?.district_name_bn}
+            <p className="text-xs sm:text-sm text-slate-300 mt-0.5">
+              কর্মরত উপজেলা: <strong className="text-emerald-300 font-bold">{currentUser?.upazila_name_bn}</strong>, {currentUser?.district_name_bn}
             </p>
           </div>
         </div>
@@ -200,7 +200,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
         {/* ব্যবহারকারী-সংক্রান্ত পরিসংখ্যান ও সুপার এডমিন কন্ট্রোল বাটন */}
         {isAdmin && (
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-4 sm:gap-6 px-4 py-2 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+            <div className="flex items-center gap-4 sm:gap-6 px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-slate-700/70 shadow-[0_3px_0_0_#020617,inset_0_1px_1px_rgba(255,255,255,0.1)]">
               <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 border-r border-slate-800 pr-4">
                 <Activity className="w-4 h-4 text-emerald-400" />
                 <span>ইউজার পরিসংখ্যান</span>
@@ -219,7 +219,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
             <button
               type="button"
               onClick={() => onNavigateToApp?.('super_admin_suite')}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-950/60 border border-indigo-400/40 flex items-center justify-center gap-2 cursor-pointer transition animate-pulse"
+              className="btn-3d btn-3d-indigo px-4 py-2.5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
             >
               <ShieldCheck className="w-4 h-4 text-indigo-200" />
               <span>Super Admin Suite</span>
@@ -237,7 +237,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
             জিপিএফ ফাইল প্রসেসিং এ্যাপসমূহ:
           </h3>
         </div>
-        <span className="text-[11px] font-semibold text-slate-500 font-mono">
+        <span className="text-[11px] font-semibold text-slate-400 font-mono">
           মোট ৫টি স্লট • ৪টি চালু
         </span>
       </div>
@@ -257,13 +257,15 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
                 key={app.id}
                 type="button"
                 onClick={() => handleAppClick(app.id, app.tab)}
-                className={`group w-full text-left p-4 rounded-2xl bg-[#0d1829]/90 hover:bg-[#112036] border border-slate-800/80 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg flex items-center justify-between gap-3 active:scale-[0.99] ${
-                  lockedInfo.isLocked ? 'border-rose-800/80 bg-rose-950/15' : app.accent.hoverBorder
+                className={`group w-full text-left p-4.5 rounded-2xl transition-all duration-150 cursor-pointer flex items-center justify-between gap-3.5 select-none ${
+                  lockedInfo.isLocked
+                    ? 'border border-rose-800/80 bg-rose-950/20 shadow-[0_4px_0_0_#4c0519]'
+                    : 'card-3d-interactive'
                 }`}
               >
-                <div className="flex items-start gap-3 min-w-0">
-                  {/* নম্বর ব্যাজ */}
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 border mt-0.5 ${app.accent.badge}`}>
+                <div className="flex items-start gap-3.5 min-w-0">
+                  {/* ৩ডি নম্বর ব্যাজ */}
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-extrabold flex-shrink-0 border mt-0.5 shadow-[0_2px_0_0_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.25)] ${app.accent.badge}`}>
                     {lockedInfo.isLocked ? <Lock className="w-4 h-4 text-rose-400" /> : app.no}
                   </div>
 
@@ -278,18 +280,20 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
                           সাময়িক বন্ধ (রক্ষণাবেক্ষণ)
                         </span>
                       ) : (
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-medium border ${app.accent.tag}`}>
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border shadow-xs ${app.accent.tag}`}>
                           {app.badge}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 group-hover:text-slate-300 line-clamp-2">
+                    <p className="text-xs text-slate-400 group-hover:text-slate-200 line-clamp-2 transition-colors">
                       {lockedInfo.isLocked ? lockedInfo.lockReason : app.desc}
                     </p>
                   </div>
                 </div>
 
-                <ChevronRight className={`w-5 h-5 text-slate-500 group-hover:translate-x-1 transition-all flex-shrink-0 ${app.accent.hoverIcon}`} />
+                <div className="w-8 h-8 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-400 group-hover:text-emerald-300 group-hover:border-emerald-500/60 group-hover:bg-emerald-950/60 shadow-[0_2px_0_0_#0f172a] transition-all flex-shrink-0">
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </div>
               </button>
             );
           }
@@ -298,16 +302,16 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
           return (
             <div
               key={app.id}
-              className="w-full min-h-[104px] rounded-2xl bg-[#09121f]/60 border border-dashed border-slate-800/80 flex flex-col items-center justify-center gap-1.5 text-slate-600 select-none"
+              className="w-full min-h-[104px] rounded-2xl bg-[#09121f]/60 border border-dashed border-slate-700/70 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center gap-1.5 text-slate-500 select-none"
               title="ভবিষ্যতে এখানে নতুন এ্যাপ যোগ করা হবে"
             >
-              <div className="w-8 h-8 rounded-xl border border-dashed border-slate-700 flex items-center justify-center text-slate-600">
+              <div className="w-8 h-8 rounded-xl border border-dashed border-slate-600 flex items-center justify-center text-slate-500">
                 <Plus className="w-4 h-4" />
               </div>
-              <span className="text-xs font-semibold text-slate-500">
+              <span className="text-xs font-semibold text-slate-400">
                 এ্যাপ স্লট {app.no} — খালি
               </span>
-              <span className="text-[10px] font-mono tracking-wide text-slate-600 inline-flex items-center gap-1">
+              <span className="text-[10px] font-mono tracking-wide text-slate-500 inline-flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 শীঘ্রই যোগ করা হবে
               </span>

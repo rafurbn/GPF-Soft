@@ -100,7 +100,7 @@ export const FirstTimePasswordModal: React.FC<FirstTimePasswordModalProps> = ({
                 placeholder="আপনার ব্যক্তিগত ইমেইল"
                 autoComplete="email"
                 required
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-900 placeholder:text-slate-400"
               />
               <p className="mt-1 text-[11px] text-slate-500">
                 নতুন ইমেইল দিলে সেটি যাচাই করার জন্য confirmation link পাঠানো হবে।
@@ -116,7 +116,7 @@ export const FirstTimePasswordModal: React.FC<FirstTimePasswordModalProps> = ({
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="নতুন পাসওয়ার্ড লিখুন"
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-900 placeholder:text-slate-400"
               />
             </div>
 
@@ -129,7 +129,7 @@ export const FirstTimePasswordModal: React.FC<FirstTimePasswordModalProps> = ({
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="পুনরায় পাসওয়ার্ড লিখুন"
-                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-slate-900 placeholder:text-slate-400"
               />
             </div>
 
@@ -150,7 +150,7 @@ export const FirstTimePasswordModal: React.FC<FirstTimePasswordModalProps> = ({
             <div className="pt-3 flex gap-2">
               <button
                 type="submit"
-                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm transition cursor-pointer"
+                className="btn-3d btn-3d-indigo flex-1 py-3 text-white font-bold rounded-xl text-xs sm:text-sm cursor-pointer"
               >
                 সংরক্ষণ ও নিশ্চিত করুন
               </button>

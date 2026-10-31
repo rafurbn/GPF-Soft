@@ -13,6 +13,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { toEnglishDigits } from '../utils/bengaliConverter';
 
 interface ForgotPasswordOtpModalProps {
   initialEmail?: string;
@@ -66,7 +67,7 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
     e.preventDefault();
     setErrorMsg('');
 
-    const email = emailInput.trim();
+    const email = emailInput.trim().toLowerCase();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setErrorMsg('অনুগ্রহ করে সঠিক ইমেইল ঠিকানা লিখুন।');
       return;
@@ -85,7 +86,12 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
       setTimer(60);
       setCanResend(false);
     } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : 'ওটিপি পাঠানো যায়নি। আবার চেষ্টা করুন।');
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.toLowerCase().includes('rate limit')) {
+        setErrorMsg('ইমেইল ওটিপি পাঠানোর সীমা অতিক্রান্ত। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।');
+      } else {
+        setErrorMsg(msg || 'ওটিপি পাঠানো যায়নি। আবার চেষ্টা করুন।');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -98,7 +104,7 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
     setIsSubmitting(true);
     setErrorMsg('');
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(emailInput.trim(), {
+      const { error } = await supabase.auth.resetPasswordForEmail(emailInput.trim().toLowerCase(), {
         redirectTo: window.location.origin,
       });
       if (error) throw error;
@@ -120,17 +126,29 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
       setErrorMsg('Supabase Auth কনফিগার করা হয়নি।');
       return;
     }
+    const token = toEnglishDigits(enteredOtp).replace(/\D/g, '').trim();
+    if (token.length !== 6) {
+      setErrorMsg('অনুগ্রহ করে আপনার ইমেইলে প্রাপ্ত ৬-সংখ্যার ওটিপি কোডটি লিখুন।');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const { error } = await supabase.auth.verifyOtp({
-        email: emailInput.trim(),
-        token: enteredOtp.trim(),
+        email: emailInput.trim().toLowerCase(),
+        token,
         type: 'recovery',
       });
       if (error) throw error;
       setStep(3);
     } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : 'ওটিপি কোডটি সঠিক নয়। আবার চেষ্টা করুন।');
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.toLowerCase().includes('expired')) {
+        setErrorMsg('ওটিপি কোডের মেয়াদ উত্তীর্ণ হয়ে গেছে। অনুগ্রহ করে নতুন ওটিপি পাঠান।');
+      } else if (msg.toLowerCase().includes('invalid')) {
+        setErrorMsg('প্রদত্ত ওটিপি কোডটি সঠিক নয়। অনুগ্রহ করে ৬ ডিজিটের কোডটি পুনরায় চেক করুন।');
+      } else {
+        setErrorMsg(msg || 'ওটিপি কোডটি যাচাই করা যায়নি। আবার চেষ্টা করুন।');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -258,7 +276,7 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
                     placeholder="আপনার আমন্ত্রিত ইমেইল লিখুন"
                     autoComplete="email"
                     required
-                    className="w-full pl-11 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 font-mono"
+                    className="w-full pl-11 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 font-mono text-slate-900 placeholder:text-slate-400 font-medium"
                   />
                 </div>
                 <p className="text-[10px] text-slate-500 mt-1">
@@ -269,7 +287,7 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-600/20 transition cursor-pointer"
+                className="btn-3d btn-3d-indigo w-full py-3 px-4 rounded-xl text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isSubmitting ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -289,25 +307,27 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
               <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-1">
                 <div className="flex items-center gap-2 font-bold text-xs text-emerald-900">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>ওটিপি কোড পাঠানো হয়েছে!</span>
+                  <span>৬-সংখ্যার ওটিপি কোড পাঠানো হয়েছে!</span>
                 </div>
-                <p className="text-[11px] text-emerald-800">
-                  যাচাইকৃত ইমেইল <strong className="font-mono">{getMaskedEmail(emailInput)}</strong> ঠিকানায় recovery code পাঠানো হয়েছে।
+                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                  যাচাইকৃত ইমেইল <strong className="font-mono font-bold">{getMaskedEmail(emailInput)}</strong> ঠিকানায় Resend SMTP সার্ভারের মাধ্যমে recovery OTP কোড পাঠানো হয়েছে।
                 </p>
               </div>
 
               {/* OTP Input with Large Spaced Digits */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1.5 text-center">
-                  ৬-সংখ্যার ওটিপি কোড লিখুন
+                  ইমেইলে প্রাপ্ত ৬-সংখ্যার ওটিপি কোড লিখুন
                 </label>
                 <input
                   type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   maxLength={6}
                   value={enteredOtp}
-                  onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => setEnteredOtp(toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 6))}
                   placeholder="••••••"
-                  className="w-full py-3 px-4 text-center text-2xl font-mono font-bold tracking-[0.5em] bg-slate-50 border-2 border-indigo-300 rounded-xl focus:outline-hidden focus:bg-white focus:border-indigo-600 text-slate-900 placeholder:text-slate-400 placeholder:tracking-normal"
+                  className="w-full py-3.5 px-4 text-center text-2xl font-mono font-bold tracking-[0.5em] bg-slate-50 border-2 border-indigo-400 rounded-xl focus:outline-hidden focus:bg-white focus:border-indigo-600 text-slate-900 placeholder:text-slate-400 placeholder:tracking-normal shadow-inner"
                 />
               </div>
 
@@ -337,14 +357,14 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition cursor-pointer"
+                  className="btn-3d btn-3d-slate py-2.5 px-4 text-slate-200 font-semibold rounded-xl text-xs cursor-pointer"
                 >
                   পিছনে
                 </button>
 
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition cursor-pointer"
+                  className="btn-3d btn-3d-emerald flex-1 py-2.5 px-4 rounded-xl text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>ওটিপি যাচাই করুন</span>
                   <ArrowRight className="w-4 h-4" />
@@ -386,7 +406,7 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড"
-                    className={`w-full pl-11 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 font-bold transition-all ${
+                    className={`w-full pl-11 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 font-bold transition-all text-slate-900 placeholder:text-slate-400 ${
                       showPassword ? 'text-xs sm:text-sm font-mono' : 'text-xl sm:text-2xl tracking-[0.35em]'
                     }`}
                     style={{ letterSpacing: !showPassword && newPassword ? '0.35em' : 'normal' }}
@@ -408,7 +428,7 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="হুবহু একই পাসওয়ার্ড লিখুন"
-                    className={`w-full pl-11 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 font-bold transition-all ${
+                    className={`w-full pl-11 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 font-bold transition-all text-slate-900 placeholder:text-slate-400 ${
                       showPassword ? 'text-xs sm:text-sm font-mono' : 'text-xl sm:text-2xl tracking-[0.35em]'
                     }`}
                     style={{ letterSpacing: !showPassword && confirmPassword ? '0.35em' : 'normal' }}
@@ -419,7 +439,7 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-teal-600 hover:from-indigo-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition cursor-pointer"
+                className="btn-3d btn-3d-emerald w-full py-3.5 px-4 rounded-xl text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isSubmitting ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />

@@ -9,30 +9,30 @@ export const ICON_SIZE = 'w-4 h-4';
 export const ICON_SIZE_SMALL = 'w-3.5 h-3.5';
 
 /** Icon-only buttons inside a table row. */
-export const ROW_BASE = `p-1.5 ${RADIUS} border transition-colors cursor-pointer shrink-0`;
+export const ROW_BASE = `p-1.5 ${RADIUS} border transition-all duration-150 cursor-pointer shrink-0 select-none active:translate-y-[1px] hover:-translate-y-0.5`;
 /** Buttons with a text label in a card header or toolbar. */
-export const BAR_BASE = `inline-flex items-center gap-1.5 px-3 py-1.5 ${RADIUS} text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap`;
+export const BAR_BASE = `btn-3d inline-flex items-center gap-1.5 px-3.5 py-1.5 ${RADIUS} text-xs font-bold transition-all duration-150 cursor-pointer whitespace-nowrap select-none`;
 
 export type ActionKind = 'print' | 'edit' | 'delete' | 'download' | 'new' | 'save' | 'neutral';
 
 export const ROW_TONE: Record<ActionKind, string> = {
-  print: 'bg-amber-900/40 hover:bg-amber-800/60 text-amber-300 border-amber-700/40',
-  edit: 'bg-indigo-950/50 hover:bg-indigo-900/50 text-indigo-300 border-indigo-700/40',
-  delete: 'bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 hover:text-rose-300 border-rose-800/40',
-  download: 'bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 border-emerald-700/40',
-  new: 'bg-amber-900/40 hover:bg-amber-800/60 text-amber-300 border-amber-700/40',
-  save: 'bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 border-emerald-700/40',
-  neutral: 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700',
+  print: 'bg-gradient-to-b from-amber-900/60 to-amber-950/80 hover:from-amber-800/80 hover:to-amber-900 text-amber-300 border-amber-600/50 shadow-[0_2px_0_0_#78350f,0_3px_6px_rgba(0,0,0,0.3)] active:shadow-none',
+  edit: 'bg-gradient-to-b from-indigo-900/60 to-indigo-950/80 hover:from-indigo-800/80 hover:to-indigo-900 text-indigo-300 border-indigo-600/50 shadow-[0_2px_0_0_#312e81,0_3px_6px_rgba(0,0,0,0.3)] active:shadow-none',
+  delete: 'bg-gradient-to-b from-rose-900/60 to-rose-950/80 hover:from-rose-800/80 hover:to-rose-900 text-rose-300 border-rose-600/50 shadow-[0_2px_0_0_#881337,0_3px_6px_rgba(0,0,0,0.3)] active:shadow-none',
+  download: 'bg-gradient-to-b from-emerald-900/60 to-emerald-950/80 hover:from-emerald-800/80 hover:to-emerald-900 text-emerald-300 border-emerald-600/50 shadow-[0_2px_0_0_#064e3b,0_3px_6px_rgba(0,0,0,0.3)] active:shadow-none',
+  new: 'bg-gradient-to-b from-emerald-900/60 to-emerald-950/80 hover:from-emerald-800/80 hover:to-emerald-900 text-emerald-300 border-emerald-600/50 shadow-[0_2px_0_0_#064e3b,0_3px_6px_rgba(0,0,0,0.3)] active:shadow-none',
+  save: 'bg-gradient-to-b from-emerald-900/60 to-emerald-950/80 hover:from-emerald-800/80 hover:to-emerald-900 text-emerald-300 border-emerald-600/50 shadow-[0_2px_0_0_#064e3b,0_3px_6px_rgba(0,0,0,0.3)] active:shadow-none',
+  neutral: 'bg-gradient-to-b from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-slate-200 border-slate-600/60 shadow-[0_2px_0_0_#0f172a,0_3px_6px_rgba(0,0,0,0.3)] active:shadow-none',
 };
 
 export const BAR_TONE: Record<ActionKind, string> = {
-  print: 'bg-amber-600 hover:bg-amber-500 text-white border border-amber-500',
-  edit: 'bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500',
-  delete: 'bg-rose-600 hover:bg-rose-500 text-white border border-rose-500',
-  download: 'bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500',
-  new: 'bg-amber-600 hover:bg-amber-500 text-white border border-amber-500',
-  save: 'bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500',
-  neutral: 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700',
+  print: 'btn-3d-amber',
+  edit: 'btn-3d-indigo',
+  delete: 'btn-3d-rose',
+  download: 'btn-3d-emerald',
+  new: 'btn-3d-emerald',
+  save: 'btn-3d-emerald',
+  neutral: 'btn-3d-slate',
 };
 
 /** Bengali wording — one spelling per concept, used by every app. */
@@ -61,7 +61,7 @@ export const LABELS = {
 
 /** The one save call-to-action used by every input dashboard. */
 export const SAVE_CTA =
-  'px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 shadow-lg shadow-emerald-950/50 flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer hover:scale-102 active:scale-98';
+  'btn-3d btn-3d-emerald px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white flex items-center gap-2 whitespace-nowrap cursor-pointer';
 
 
 /** Title shown when a locked field is clicked; `{label}` becomes the field name. */

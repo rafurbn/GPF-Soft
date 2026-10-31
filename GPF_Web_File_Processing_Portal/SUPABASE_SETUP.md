@@ -107,6 +107,40 @@ The Super Admin Suite's OTP action also sends Supabase's recovery code to the ac
 registered email; the code itself is never stored in browser storage or shown to admins.
 Configure Supabase Auth email/SMTP delivery before using either recovery action.
 
+### Resend SMTP & 6-Digit Recovery OTP Configuration
+
+To deliver 6-digit recovery OTP codes to users via the **Resend** platform:
+
+1. **Configure Custom SMTP in Supabase**:
+   * Navigate to: **Project Settings** → **Authentication** → **SMTP Settings** (or **Email Provider** → **Custom SMTP**).
+   * **Sender Email**: Your verified sender address on Resend (e.g., `noreply@yourdomain.com` or `onboarding@resend.dev`).
+   * **Sender Name**: `GPF File Processing Portal`
+   * **Host**: `smtp.resend.com`
+   * **Port**: `465` (SSL) or `587` (TLS)
+   * **Username**: `resend`
+   * **Password**: Your Resend API Key (`re_...`)
+
+2. **Configure 6-Digit OTP Email Template in Supabase**:
+   * Navigate to: **Authentication** → **Email Templates** → **Reset Password**.
+   * **Subject**: `জিপিএফ পোর্টাল: পাসওয়ার্ড পুনরুদ্ধারের ওটিপি কোড`
+   * **Body**: Ensure `{{ .Token }}` is used for the 6-digit numeric OTP:
+     ```html
+     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px;">
+       <h2 style="color: #0f172a; margin-top: 0;">পাসওয়ার্ড পুনরুদ্ধারের ওটিপি (OTP)</h2>
+       <p style="color: #475569; font-size: 14px;">আপনার জিপিএফ ফাইল প্রসেসিং পোর্টাল একাউন্টের পাসওয়ার্ড পরিবর্তনের ৬-সংখ্যার ওটিপি কোড:</p>
+       <div style="background: #f1f5f9; padding: 16px; text-align: center; border-radius: 12px; margin: 20px 0;">
+         <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #4338ca; font-family: monospace;">{{ .Token }}</span>
+       </div>
+       <p style="color: #64748b; font-size: 12px;">নিরাপত্তার স্বার্থে এই কোডটি কাউকে জানাবেন না। আপনি এই অনুরোধ না করে থাকলে ইমেইলটি উপেক্ষা করুন।</p>
+     </div>
+     ```
+
+3. **Client Flow**:
+   * The client initiates `supabase.auth.resetPasswordForEmail(email)`.
+   * Resend delivers the 6-digit code via SMTP.
+   * The client validates the code with `supabase.auth.verifyOtp({ email, token, type: 'recovery' })`.
+   * Upon successful verification, the client sets the new password using `supabase.auth.updateUser({ password })`.
+
 ## 6. Super Admin data
 
 Super Admin account roles must be assigned in `public.profiles` by a trusted database

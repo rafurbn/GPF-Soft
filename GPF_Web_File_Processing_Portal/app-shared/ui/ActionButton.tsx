@@ -75,14 +75,14 @@ export const RowDeleteButton: React.FC<RowDeleteButtonProps> = ({ onConfirm, tit
           setConfirming(false);
           onConfirm();
         }}
-        className="px-2 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[11px] font-bold cursor-pointer"
+        className="btn-3d btn-3d-rose px-2.5 py-1 text-white rounded-lg text-[11px] font-bold cursor-pointer"
       >
         {LABELS.confirmDelete}
       </button>
       <button
         type="button"
         onClick={() => setConfirming(false)}
-        className="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-[11px] cursor-pointer"
+        className="btn-3d btn-3d-slate px-2.5 py-1 text-slate-200 rounded-lg text-[11px] cursor-pointer"
       >
         {LABELS.cancel}
       </button>

@@ -520,10 +520,10 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition cursor-pointer text-xs ${
+                    className={`btn-3d px-3 py-1.5 rounded-lg font-bold whitespace-nowrap cursor-pointer text-xs ${
                       selectedCategory === cat.id
-                        ? 'bg-emerald-600 text-white shadow-xs font-bold'
-                        : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/60 hover:text-white'
+                        ? 'btn-3d-emerald text-white'
+                        : 'btn-3d-slate text-slate-300 hover:text-white'
                     }`}
                   >
                     {cat.label}
@@ -723,10 +723,10 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       <button
                         type="button"
                         onClick={() => setShowRegionSettingsModal(true)}
-                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-300 hover:text-white bg-amber-900/40 hover:bg-amber-900/60 border border-amber-700/60 px-2.5 py-1 rounded-lg transition cursor-pointer"
+                        className="btn-3d btn-3d-amber inline-flex items-center gap-1.5 text-[11px] font-bold text-white px-2.5 py-1 rounded-lg cursor-pointer"
                         title="বিভাগ, জেলা, উপজেলা ও রিকভারি ই-মেইল সেটিংস পপআপ উইন্ডো খুলুন"
                       >
-                        <Unlock className="w-3 h-3 text-amber-300" />
+                        <Unlock className="w-3 h-3" />
                         <span>আনলক করুন</span>
                       </button>
                     </div>
@@ -842,7 +842,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full mt-2 py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-400 text-white font-bold shadow-lg shadow-emerald-950/50 transition-all duration-200 text-sm flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed active:scale-98"
+                    className="btn-3d btn-3d-emerald w-full mt-2 py-3.5 px-5 rounded-xl text-white font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span>{isSubmitting ? 'যাচাই হচ্ছে...' : 'সাইন ইন করুন'}</span>
                     <ArrowRight className="w-4 h-4" />

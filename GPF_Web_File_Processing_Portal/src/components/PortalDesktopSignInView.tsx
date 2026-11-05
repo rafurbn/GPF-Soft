@@ -739,7 +739,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                     <div className="flex items-center justify-between gap-2 mb-3">
                       <div className="flex items-center gap-1.5 font-bold text-amber-300 min-w-0">
                         {isRegionLocked ? <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" /> : <Unlock className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
-                        <span className="truncate">{isRegionLocked ? 'কর্মরত উপজেলা (লকড)' : 'উপজেলা নির্বাচন করুন'}</span>
+                        <span className="truncate">{isRegionLocked ? 'কর্মরত উপজেলা (লকড)' : 'নির্বাচন পরিবর্তন চালু আছে'}</span>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
@@ -763,9 +763,16 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       </div>
                     </div>
 
+                    <div className="mb-3 flex items-start gap-2.5 rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/25 via-amber-500/10 to-transparent px-3 py-2.5 shadow-inner">
+                      <Globe className="mt-0.5 w-4 h-4 shrink-0 text-amber-300" />
+                      <span className="text-[13px] sm:text-sm font-extrabold leading-snug tracking-tight text-amber-100">
+                        প্রথমে আপনার বিভাগ, জেলা ও উপজেলা নির্বাচন করুন
+                      </span>
+                    </div>
+
                     <div className="space-y-2.5">
                       <div>
-                        <label htmlFor="signin-region-division" className="block mb-1 text-[11px] font-bold text-amber-200">
+                        <label htmlFor="signin-region-division" className="sr-only">
                           আপনার বিভাগ নির্বাচন করুন:
                         </label>
                         <select
@@ -773,7 +780,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                           value={selectedDivisionObj?.en || ''}
                           disabled={isRegionLocked}
                           onChange={(e) => handleDivisionChange(e.target.value)}
-                          className="w-full rounded-lg border border-slate-700 bg-[#070e1c] px-3 py-2.5 text-xs sm:text-sm font-semibold text-white focus:outline-hidden focus:border-emerald-500 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
+                          className="w-full rounded-xl border border-slate-700 bg-[#070e1c] px-3.5 py-3 text-[13px] sm:text-[15px] font-semibold text-white focus:outline-hidden focus:border-emerald-500 focus:ring-2 focus:ring-amber-500/25 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {divisions.map((d) => (
                             <option key={d.en} value={d.en}>
@@ -784,7 +791,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       </div>
 
                       <div>
-                        <label htmlFor="signin-region-district" className="block mb-1 text-[11px] font-bold text-amber-200">
+                        <label htmlFor="signin-region-district" className="sr-only">
                           আপনার জেলা নির্বাচন করুন:
                         </label>
                         <select
@@ -792,7 +799,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                           value={selectedDistrictObj?.en || ''}
                           disabled={isRegionLocked}
                           onChange={(e) => handleDistrictChange(e.target.value)}
-                          className="w-full rounded-lg border border-slate-700 bg-[#070e1c] px-3 py-2.5 text-xs sm:text-sm font-semibold text-white focus:outline-hidden focus:border-emerald-500 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
+                          className="w-full rounded-xl border border-slate-700 bg-[#070e1c] px-3.5 py-3 text-[13px] sm:text-[15px] font-semibold text-white focus:outline-hidden focus:border-emerald-500 focus:ring-2 focus:ring-amber-500/25 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {currentDistricts.map((d) => (
                             <option key={d.en} value={d.en}>
@@ -803,7 +810,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       </div>
 
                       <div>
-                        <label htmlFor="signin-region-upazila" className="block mb-1 text-[11px] font-bold text-amber-200">
+                        <label htmlFor="signin-region-upazila" className="sr-only">
                           আপনার উপজেলা নির্বাচন করুন:
                         </label>
                         <select
@@ -811,7 +818,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                           value={selectedRegion?.defaultId || upazilaCode}
                           disabled={isRegionLocked}
                           onChange={(e) => handleUpazilaChange(e.target.value)}
-                          className="w-full rounded-lg border border-slate-700 bg-[#070e1c] px-3 py-2.5 text-xs sm:text-sm font-semibold text-white focus:outline-hidden focus:border-emerald-500 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
+                          className="w-full rounded-xl border border-slate-700 bg-[#070e1c] px-3.5 py-3 text-[13px] sm:text-[15px] font-semibold text-white focus:outline-hidden focus:border-emerald-500 focus:ring-2 focus:ring-amber-500/25 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {currentUpazilas.map((u) => (
                             <option key={u.defaultId} value={u.defaultId}>
@@ -861,7 +868,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       </div>
                       <input
                         id="portal-signin-password"
-                        name="password"
+                        name="portal-login-secret"
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => {
@@ -870,9 +877,8 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                           // previous message cannot mislead the next attempt.
                           if (errorMsg) setErrorMsg('');
                         }}
-                        placeholder="কমপক্ষে ৮ অক্ষর দিয়ে পাসওয়ার্ড তৈরি করুন"
-                        autoComplete="new-password"
-                        autoFocus
+                        placeholder="Please enter eight digits."
+                        autoComplete="off"
                         required
                         // NOTE: no custom letter-spacing / font here. The old 0.45em
                         // tracking plus the `caption` font made the masked dots look

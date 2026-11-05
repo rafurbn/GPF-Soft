@@ -24,6 +24,7 @@ import { RegionSettingsModal } from './RegionSettingsModal';
 import { OfficialDashboard } from './OfficialDashboard';
 import { persistUpazilaContext } from '../lib/upazilaSession';
 import { toBn } from '../lib/format';
+import { InstallAppButton } from '../../app-shared/ui/InstallAppButton';
 import { SUPPORT_PHONE, VERSION_LABEL } from '../lib/portalMeta';
 import {
   getAllDivisions,
@@ -463,11 +464,14 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
             </div>
           </div>
 
-          {isLoggedIn && (
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs uppercase tracking-wider">
-              অনলাইন
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {isLoggedIn && (
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-xs uppercase tracking-wider">
+                অনলাইন
+              </span>
+            )}
+            <InstallAppButton />
+          </div>
         </div>
       </header>
 

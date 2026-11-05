@@ -5,6 +5,7 @@ import type { UserSession } from '../src/types';
 import { isSupabaseConfigured, supabase } from '../src/lib/supabase';
 import { loadUserSession } from '../src/lib/authProfile';
 import { getRemoteMaintenanceState, isCurrentSessionTerminated, isCurrentAccountActive, touchCurrentSession, endCurrentSessionOnServer } from '../src/lib/centralAdminStore';
+import { registerPwa } from './pwa';
 
 /**
  * Shape every sub-app `App.tsx` exposes. Each app originally lived inside the
@@ -36,6 +37,8 @@ export const mountSubApp = async (
   options: SubAppOptions = {},
 ): Promise<void> => {
   const { loginUrl = '/', appId } = options;
+
+  registerPwa();
 
   if (!isSupabaseConfigured || !supabase) {
     window.location.replace(loginUrl);

@@ -3,6 +3,7 @@ import { ArrowLeft, Phone } from 'lucide-react';
 import type { UserSession } from '../../src/types';
 import { toBn } from '../../src/lib/format';
 import dashboardLogo from '../../src/assets/images/rf-logo.svg';
+import { InstallAppButton } from './InstallAppButton';
 import { ADMIN_NAME, DEPARTMENT_NAME, OFFICE_NAME, PORTAL_NAME, SUPPORT_LINK, SUPPORT_PHONE, VERSION_LABEL } from '../../src/lib/portalMeta';
 
 const appBadgeText = (appNumber: number) => `এ্যাপ ${toBn(appNumber)}`;
@@ -91,7 +92,10 @@ export const SubAppHeader: React.FC<SubAppHeaderProps> = ({
           </div>
         </div>
 
-        {actions && <div className="flex items-center gap-2 self-end sm:self-auto">{actions}</div>}
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <InstallAppButton />
+          {actions}
+        </div>
       </div>
     </div>
   </header>

@@ -157,7 +157,7 @@ export const RegionSettingsModal: React.FC<RegionSettingsModalProps> = ({
                 <span>বিভাগ, জেলা, উপজেলা ও রিকভারি সেটিংস</span>
               </h3>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                লক ও স্থায়ী কনফিগারেশন পপআপ উইন্ডো
+                রিকভারি ই-মেইল সহ সম্পূর্ণ সেটিংস পপআপ উইন্ডো
               </p>
             </div>
           </div>
@@ -177,7 +177,7 @@ export const RegionSettingsModal: React.FC<RegionSettingsModalProps> = ({
           <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-600/40 text-amber-200 text-xs leading-relaxed flex items-start gap-2.5">
             <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <span>
-              আপনার কর্মরত বিভাগ, জেলা ও উপজেলা নির্বাচন করুন এবং পাসওয়ার্ড উদ্ধারের জন্য রিকভারি ই-মেইল লিখুন। <strong>‘লক করুন’</strong> বাটনে ক্লিক করলে এটি স্থায়ীভাবে সংরক্ষিত হবে এবং মূল সাইন-ইন স্ক্রিনে পরবর্তীতে হাইড হয়ে থাকবে।
+              এখানে বিভাগ, জেলা ও উপজেলা পরিবর্তন করা যায় এবং পাসওয়ার্ড উদ্ধারের জন্য রিকভারি ই-মেইল লেখা যায়। <strong>সংরক্ষণ ও লক</strong> করলে সবকিছু স্থায়ীভাবে সংরক্ষিত হবে। বিভাগ, জেলা ও উপজেলার তিনটি ফিল্ড মূল সাইন-ইন উইন্ডোতেও সবসময় দেখা যায়।
             </span>
           </div>
 
@@ -272,7 +272,7 @@ export const RegionSettingsModal: React.FC<RegionSettingsModalProps> = ({
                 <span>Recovery email (রিকভারি ই-মেইল)</span>
               </label>
               <span className="text-[10px] text-amber-400/90 font-medium bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-800/50">
-                পরবর্তীতে হাইড থাকবে
+                সংরক্ষিত থাকবে
               </span>
             </div>
             <div className="relative">
@@ -289,7 +289,7 @@ export const RegionSettingsModal: React.FC<RegionSettingsModalProps> = ({
               />
             </div>
             <p className="mt-1.5 text-[11px] text-slate-400 leading-relaxed">
-              ✓ পাসওয়ার্ড ভুলে গেলে এই রিকভারি ই-মেইলে ওটিপি ভেরিফিকেশন পাঠানো হবে। এই ফিল্ডটি মূল সাইন-ইন স্ক্রিনে আর দৃশ্যমান থাকবে না।
+              ✓ পাসওয়ার্ড ভুলে গেলে এই রিকভারি ই-মেইলে ওটিপি ভেরিফিকেশন পাঠানো হবে।
             </p>
           </div>
 
@@ -307,7 +307,7 @@ export const RegionSettingsModal: React.FC<RegionSettingsModalProps> = ({
               className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-950/50 transition cursor-pointer active:scale-98"
             >
               <Lock className="w-3.5 h-3.5 text-white" />
-              <span>সংরক্ষণ ও লক করুন (হাইড থাকবে)</span>
+              <span>সংরক্ষণ ও লক করুন</span>
             </button>
           </div>
         </form>

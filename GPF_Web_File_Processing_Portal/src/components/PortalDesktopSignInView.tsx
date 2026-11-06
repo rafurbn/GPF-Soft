@@ -32,6 +32,45 @@ import {
   getAllUpazilas,
 } from '../data/upazilaData';
 
+// Logout clears the shared sub-app context (`clearUpazilaContext`), which also drops
+// the upazila code. This key is written only when the user actually picks a region,
+// so the sign-in window can still restore his own division/district/upazila afterwards.
+const REGION_CONFIG_KEY = 'gpf-region-config';
+
+interface RegionConfig {
+  divisionEn: string;
+  districtEn: string;
+  upazilaCode: string;
+  email: string;
+}
+
+const readRegionConfig = (): RegionConfig | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(REGION_CONFIG_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<RegionConfig>;
+    if (!parsed.upazilaCode) return null;
+    return {
+      divisionEn: parsed.divisionEn || '',
+      districtEn: parsed.districtEn || '',
+      upazilaCode: parsed.upazilaCode,
+      email: parsed.email || '',
+    };
+  } catch {
+    return null;
+  }
+};
+
+const writeRegionConfig = (config: RegionConfig): void => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(REGION_CONFIG_KEY, JSON.stringify(config));
+  } catch {
+    // Private browsing can block storage; nothing else depends on it.
+  }
+};
+
 interface PortalDesktopSignInViewProps {
   currentUser: UserSession | null;
   isLoggedIn: boolean;
@@ -160,9 +199,11 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 }) => {
   // Persistent Settings for Division, District, Upazila & Email
   const divisions = useMemo(() => getAllDivisions(), []);
+  const savedRegion = useMemo(() => readRegionConfig(), []);
 
   const [division, setDivision] = useState<string>(() => {
     if (typeof window === 'undefined') return 'Sylhet';
+    if (savedRegion?.divisionEn) return savedRegion.divisionEn;
     const storedEn = localStorage.getItem('gpf-active-upazila-division-en');
     if (storedEn) return storedEn;
     const storedBn = localStorage.getItem('gpf-active-upazila-division');
@@ -175,6 +216,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 
   const [district, setDistrict] = useState<string>(() => {
     if (typeof window === 'undefined') return 'Sylhet';
+    if (savedRegion?.districtEn) return savedRegion.districtEn;
     const storedEn = localStorage.getItem('gpf-active-upazila-district-en');
     if (storedEn) return storedEn;
     const storedBn = localStorage.getItem('gpf-active-upazila-district');
@@ -184,20 +226,21 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 
   const [upazilaCode, setUpazilaCode] = useState<string>(() => {
     if (typeof window === 'undefined') return 'Bea002';
+    if (savedRegion?.upazilaCode) return savedRegion.upazilaCode;
     return localStorage.getItem('gpf-active-upazila-code') || 'Bea002';
   });
 
   const [email, setEmail] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
+    if (savedRegion?.email) return savedRegion.email;
     return localStorage.getItem('gpf-active-user-email') || '';
   });
 
-  // Lock status: default to true so it stays locked permanently once set
+  // Locked only after the user has really saved a region. Before that the fields
+  // stay open so a first-time user can pick his own upazila directly.
   const [isRegionLocked, setIsRegionLocked] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
-    const stored = localStorage.getItem('gpf-lock-region');
-    if (stored === 'false') return false;
-    return true; // default locked permanently
+    return localStorage.getItem('gpf-lock-region') === 'true';
   });
 
   // Matched division object
@@ -244,6 +287,16 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
   // Auto-persist and link context to all 4 apps via localStorage & persistUpazilaContext
   useEffect(() => {
     if (typeof window === 'undefined' || !selectedRegion) return;
+    // Adopt a region saved before the durable key existed. Only when a code is
+    // already in storage, so the fallback right after a logout is never stored.
+    if (!savedRegion && localStorage.getItem('gpf-active-upazila-code')) {
+      writeRegionConfig({
+        divisionEn: selectedRegion.division,
+        districtEn: selectedRegion.district,
+        upazilaCode: selectedRegion.defaultId,
+        email,
+      });
+    }
     localStorage.setItem('gpf-active-upazila-division-en', selectedRegion.division);
     localStorage.setItem('gpf-active-upazila-division', selectedRegion.divisionBn);
     localStorage.setItem('gpf-active-upazila-district-en', selectedRegion.district);
@@ -275,6 +328,12 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     if (firstUpazila) {
       setUpazilaCode(firstUpazila.defaultId);
     }
+    writeRegionConfig({
+      divisionEn: newDivEn,
+      districtEn: firstDistrict,
+      upazilaCode: firstUpazila?.defaultId || upazilaCode,
+      email,
+    });
   };
 
   const handleDistrictChange = (newDistEn: string) => {
@@ -288,10 +347,22 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     if (firstUpazila) {
       setUpazilaCode(firstUpazila.defaultId);
     }
+    writeRegionConfig({
+      divisionEn: selectedDivisionObj?.en || division,
+      districtEn: newDistEn,
+      upazilaCode: firstUpazila?.defaultId || upazilaCode,
+      email,
+    });
   };
 
   const handleUpazilaChange = (newCode: string) => {
     setUpazilaCode(newCode);
+    writeRegionConfig({
+      divisionEn: selectedDivisionObj?.en || division,
+      districtEn: selectedDistrictObj?.en || district,
+      upazilaCode: newCode,
+      email,
+    });
   };
 
   const [showRegionSettingsModal, setShowRegionSettingsModal] = useState(false);
@@ -313,6 +384,12 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
         localStorage.setItem('gpf-active-user-email', newEmail);
       }
     }
+    writeRegionConfig({
+      divisionEn: newDivEn,
+      districtEn: newDistEn,
+      upazilaCode: newUpazilaCode,
+      email: newEmail,
+    });
     setShowRegionSettingsModal(false);
     setToastNotification('বিভাগ, জেলা, উপজেলা ও রিকভারি ই-মেইল সফলভাবে লক ও সংরক্ষণ করা হয়েছে!');
     setTimeout(() => setToastNotification(null), 4000);

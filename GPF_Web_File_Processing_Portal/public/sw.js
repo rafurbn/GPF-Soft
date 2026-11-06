@@ -4,7 +4,7 @@
 // cached. Supabase, auth, API and every cross-origin request always go straight
 // to the network, so no claim data is ever stored on the installed device.
 
-const CACHE = 'gpf-portal-shell-v1';
+const CACHE = 'gpf-portal-shell-v2';
 
 const SHELL = [
   '/',

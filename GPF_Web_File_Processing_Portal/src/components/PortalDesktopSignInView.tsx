@@ -9,6 +9,7 @@ import {
   ArrowRight,
   LogOut,
   Phone,
+  Mail,
   ShieldCheck,
   UserCheck,
   Award,
@@ -16,11 +17,9 @@ import {
   BookmarkCheck,
   Eye,
   EyeOff,
-  Settings,
 } from 'lucide-react';
 import { UserSession, ActiveAppTab } from '../types';
 import { ForgotPasswordOtpModal } from './ForgotPasswordOtpModal';
-import { RegionSettingsModal } from './RegionSettingsModal';
 import { OfficialDashboard } from './OfficialDashboard';
 import { persistUpazilaContext } from '../lib/upazilaSession';
 import { toBn } from '../lib/format';
@@ -36,6 +35,8 @@ import {
 // the upazila code. This key is written only when the user actually picks a region,
 // so the sign-in window can still restore his own division/district/upazila afterwards.
 const REGION_CONFIG_KEY = 'gpf-region-config';
+
+const REGION_REQUIRED_MESSAGE = 'আগে আপনার বিভাগ, জেলা ও উপজেলা নির্বাচন করুন';
 
 interface RegionConfig {
   divisionEn: string;
@@ -243,6 +244,30 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     return localStorage.getItem('gpf-lock-region') === 'true';
   });
 
+  const [wasLockedOnLoad] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('gpf-lock-region') === 'true';
+  });
+
+  // Someone who already locked a region has chosen all three, so his fields come
+  // back filled. Everyone else must pick বিভাগ → জেলা → উপজেলা in order - that is
+  // what stops a sign-in attempt against some other upazila's ID (and therefore a
+  // 15-minute lockout on the real owner's account).
+  const regionRestored = Boolean(savedRegion) || wasLockedOnLoad;
+  const [divisionChosen, setDivisionChosen] = useState<boolean>(regionRestored);
+  const [districtChosen, setDistrictChosen] = useState<boolean>(regionRestored);
+  const [upazilaChosen, setUpazilaChosen] = useState<boolean>(regionRestored);
+  const [regionNotice, setRegionNotice] = useState<string | null>(null);
+
+  const regionComplete = divisionChosen && districtChosen && upazilaChosen;
+  const isDistrictDisabled = isRegionLocked || !divisionChosen;
+  const isUpazilaDisabled = isRegionLocked || !districtChosen;
+
+  const showRegionNotice = () => {
+    setRegionNotice(REGION_REQUIRED_MESSAGE);
+    window.setTimeout(() => setRegionNotice(null), 4500);
+  };
+
   // Matched division object
   const selectedDivisionObj = useMemo(() => {
     return (
@@ -287,9 +312,9 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
   // Auto-persist and link context to all 4 apps via localStorage & persistUpazilaContext
   useEffect(() => {
     if (typeof window === 'undefined' || !selectedRegion) return;
-    // Adopt a region saved before the durable key existed. Only when a code is
-    // already in storage, so the fallback right after a logout is never stored.
-    if (!savedRegion && localStorage.getItem('gpf-active-upazila-code')) {
+    // Adopt a region saved before the durable key existed. Only for someone who
+    // already locked once, so never-chosen defaults are never stored as his own.
+    if (!savedRegion && wasLockedOnLoad && localStorage.getItem('gpf-active-upazila-code')) {
       writeRegionConfig({
         divisionEn: selectedRegion.division,
         districtEn: selectedRegion.district,
@@ -328,12 +353,9 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     if (firstUpazila) {
       setUpazilaCode(firstUpazila.defaultId);
     }
-    writeRegionConfig({
-      divisionEn: newDivEn,
-      districtEn: firstDistrict,
-      upazilaCode: firstUpazila?.defaultId || upazilaCode,
-      email,
-    });
+    setDivisionChosen(true);
+    setDistrictChosen(false);
+    setUpazilaChosen(false);
   };
 
   const handleDistrictChange = (newDistEn: string) => {
@@ -347,16 +369,15 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     if (firstUpazila) {
       setUpazilaCode(firstUpazila.defaultId);
     }
-    writeRegionConfig({
-      divisionEn: selectedDivisionObj?.en || division,
-      districtEn: newDistEn,
-      upazilaCode: firstUpazila?.defaultId || upazilaCode,
-      email,
-    });
+    setDistrictChosen(true);
+    setUpazilaChosen(false);
   };
 
+  // The durable region key means "he finished choosing all three",
+  // so it is only written once the upazila itself is picked.
   const handleUpazilaChange = (newCode: string) => {
     setUpazilaCode(newCode);
+    setUpazilaChosen(true);
     writeRegionConfig({
       divisionEn: selectedDivisionObj?.en || division,
       districtEn: selectedDistrictObj?.en || district,
@@ -365,7 +386,17 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     });
   };
 
-  const [showRegionSettingsModal, setShowRegionSettingsModal] = useState(false);
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (regionComplete) {
+      writeRegionConfig({
+        divisionEn: selectedDivisionObj?.en || division,
+        districtEn: selectedDistrictObj?.en || district,
+        upazilaCode: selectedRegion?.defaultId || upazilaCode,
+        email: value,
+      });
+    }
+  };
 
   const handleSaveRegionSettings = (
     newDivEn: string,
@@ -378,6 +409,10 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     setUpazilaCode(newUpazilaCode);
     setEmail(newEmail);
     setIsRegionLocked(true);
+    setDivisionChosen(true);
+    setDistrictChosen(true);
+    setUpazilaChosen(true);
+    setRegionNotice(null);
     if (typeof window !== 'undefined') {
       localStorage.setItem('gpf-lock-region', 'true');
       if (newEmail) {
@@ -390,7 +425,6 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
       upazilaCode: newUpazilaCode,
       email: newEmail,
     });
-    setShowRegionSettingsModal(false);
     setToastNotification('বিভাগ, জেলা, উপজেলা ও রিকভারি ই-মেইল সফলভাবে লক ও সংরক্ষণ করা হয়েছে!');
     setTimeout(() => setToastNotification(null), 4000);
   };
@@ -403,6 +437,10 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
       }
       setToastNotification('লক আনলক হয়েছে — বিভাগ, জেলা ও উপজেলা নির্বাচন ফিল্ড এখন খোলা আছে.');
       setTimeout(() => setToastNotification(null), 4000);
+      return;
+    }
+    if (!regionComplete) {
+      showRegionNotice();
       return;
     }
     handleSaveRegionSettings(
@@ -456,6 +494,12 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     // The permanent upazila ID is ALWAYS the login identity. The Recovery email box
     // only supplies the address for OTP / password recovery - it must never replace
     // the ID here, or a leftover address in localStorage would hijack the sign-in.
+    // Nothing may reach the server until his own region is fully chosen, otherwise a
+    // wrong upazila ID would burn failures (and a lockout) on the real owner's account.
+    if (!regionComplete) {
+      showRegionNotice();
+      return;
+    }
     const effectiveLoginId = (selectedRegion?.defaultId || upazilaCode).trim();
     if (!effectiveLoginId) {
       setErrorMsg('উপজেলা ID পাওয়া যায়নি। অনুগ্রহ করে পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।');
@@ -811,6 +855,19 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                     </div>
                   )}
 
+                  {regionNotice && (
+                    <div
+                      role="alert"
+                      aria-live="assertive"
+                      className="pointer-events-none fixed inset-x-0 top-1/2 z-50 flex -translate-y-1/2 justify-center px-4"
+                    >
+                      <div className="flex max-w-md items-center gap-3 rounded-2xl border-2 border-amber-400/70 bg-[#0a1426]/95 px-5 py-4 shadow-2xl backdrop-blur-sm">
+                        <Globe className="h-7 w-7 shrink-0 text-amber-300" />
+                        <span className="text-base sm:text-lg font-extrabold leading-snug text-amber-100">{regionNotice}</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* বিভাগ, জেলা ও উপজেলা নির্বাচন — সবসময় দৃশ্যমান */}
                   <div className="rounded-xl border border-amber-600/50 bg-amber-950/25 p-3.5 text-xs text-amber-100 shadow-inner">
                     <div className="flex items-center justify-between gap-2 mb-3">
@@ -819,15 +876,6 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                         <span className="truncate">{isRegionLocked ? 'কর্মরত উপজেলা (লকড)' : 'নির্বাচন পরিবর্তন চালু আছে'}</span>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setShowRegionSettingsModal(true)}
-                          className="btn-3d btn-3d-slate inline-flex items-center gap-1 text-[11px] font-bold text-white px-2 py-1 rounded-lg cursor-pointer"
-                          title="রিকভারি ই-মেইলসহ সব সেটিংস পপআপ উইন্ডো"
-                        >
-                          <Settings className="w-3 h-3" />
-                          <span>সেটিংস</span>
-                        </button>
                         <button
                           type="button"
                           onClick={toggleRegionLock}
@@ -874,7 +922,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                         <select
                           id="signin-region-district"
                           value={selectedDistrictObj?.en || ''}
-                          disabled={isRegionLocked}
+                          disabled={isDistrictDisabled}
                           onChange={(e) => handleDistrictChange(e.target.value)}
                           className="w-full rounded-xl border border-slate-700 bg-[#070e1c] px-3.5 py-3 text-[13px] sm:text-[15px] font-semibold text-white focus:outline-hidden focus:border-emerald-500 focus:ring-2 focus:ring-amber-500/25 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
                         >
@@ -893,7 +941,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                         <select
                           id="signin-region-upazila"
                           value={selectedRegion?.defaultId || upazilaCode}
-                          disabled={isRegionLocked}
+                          disabled={isUpazilaDisabled}
                           onChange={(e) => handleUpazilaChange(e.target.value)}
                           className="w-full rounded-xl border border-slate-700 bg-[#070e1c] px-3.5 py-3 text-[13px] sm:text-[15px] font-semibold text-white focus:outline-hidden focus:border-emerald-500 focus:ring-2 focus:ring-amber-500/25 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
                         >
@@ -906,10 +954,40 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       </div>
                     </div>
 
+                    <div className="mt-3">
+                      <label htmlFor="signin-recovery-email" className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-200">
+                        <span>Recovery email (রিকভারি ই-মেইল)</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute left-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg bg-slate-800">
+                          <Mail className="h-4 w-4 text-emerald-400" />
+                        </div>
+                        <input
+                          id="signin-recovery-email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => handleEmailChange(e.target.value)}
+                          placeholder="আপনার ইমেইল ঠিকানা"
+                          autoComplete="email"
+                          disabled={isRegionLocked}
+                          className="w-full rounded-xl border border-slate-700/80 bg-[#070e1c] py-2.5 pl-11 pr-3 text-[13px] sm:text-sm font-medium text-white shadow-inner placeholder:text-slate-500 focus:border-emerald-500 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-60"
+                        />
+                      </div>
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+                        পাসওয়ার্ড ভুলে গেলে এই রিকভারি ই-মেইলে ওটিপি ভেরিফিকেশন পাঠানো হবে।
+                      </p>
+                    </div>
+
                     <p className="mt-2 text-[10px] leading-relaxed text-amber-300/85">
                       {isRegionLocked
                         ? '✓ বিভাগ, জেলা ও উপজেলা লক আছে, তাই পরবর্তীতে আবার এন্ট্রি দিতে হবে না। পরিবর্তন করতে আনলক করুন।'
-                        : '→ নিজের উপজেলা বেছে নিন — Login ID স্বয়ংক্রিয়ভাবে বসে যাবে, তারপর নিচে পাসওয়ার্ড দিয়ে সাইন ইন করুন.'}
+                        : !divisionChosen
+                          ? 'প্রথমে বিভাগ নির্বাচন করুন'
+                          : !districtChosen
+                            ? 'প্রথমে জেলা নির্বাচন করুন'
+                            : !upazilaChosen
+                              ? 'প্রথমে উপজেলা নির্বাচন করুন'
+                              : '→ নিজের উপজেলা বেছে নিন — Login ID স্বয়ংক্রিয়ভাবে বসে যাবে, তারপর নিচে পাসওয়ার্ড দিয়ে সাইন ইন করুন.'}
                     </p>
                   </div>
 
@@ -926,7 +1004,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                         <KeyRound className="w-4 h-4" />
                       </div>
                       <span className="font-mono text-xl sm:text-2xl font-extrabold tracking-wider text-emerald-400">
-                        {selectedRegion?.defaultId || upazilaCode}
+                        {regionComplete ? (selectedRegion?.defaultId || upazilaCode) : '—'}
                       </span>
                     </div>
                   </div>
@@ -1082,16 +1160,6 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
         />
       )}
 
-      {/* Settings Popup Modal for Division, District, Upazila & Recovery Email */}
-      <RegionSettingsModal
-        isOpen={showRegionSettingsModal}
-        onClose={() => setShowRegionSettingsModal(false)}
-        currentDivisionEn={selectedDivisionObj.en}
-        currentDistrictEn={selectedDistrictObj.en}
-        currentUpazilaCode={selectedRegion?.defaultId || upazilaCode}
-        currentEmail={email}
-        onSaveAndLock={handleSaveRegionSettings}
-      />
     </div>
   );
 };

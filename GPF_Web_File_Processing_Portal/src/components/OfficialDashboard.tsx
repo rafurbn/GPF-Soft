@@ -200,7 +200,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#0b162c] to-[#070e1c] rounded-2xl border border-slate-700/60 p-5 sm:p-6 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.12)]">
+    <div className="flex flex-col min-h-full bg-gradient-to-b from-[#0b162c] to-[#070e1c] rounded-2xl border border-slate-700/60 p-4 sm:p-6 pb-8 sm:pb-10 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.12)]">
       {/* ব্যানার: এই পোর্টালে আপনাকে স্বাগতম */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#092b2f]/90 via-[#0a232f]/80 to-[#0c182c]/90 border border-emerald-500/50 mb-6 shadow-[0_8px_20px_rgba(5,150,105,0.2),inset_0_1px_2px_rgba(255,255,255,0.15)] relative overflow-hidden group">
         <div className="flex items-center gap-4 relative z-10">
@@ -263,7 +263,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
       </div>
 
       {/* ২-কলামের গ্রিড (৫টি সচল বাটন) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 mb-2">
         {APPS.map((app) => {
           const lockedInfo = maintenanceStates.find((state) => state.appId === app.id) || {
             isLocked: false,
@@ -277,7 +277,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
                 key={app.id}
                 type="button"
                 onClick={() => handleAppClick(app.id, app.tab, app.externalUrl)}
-                className={`group w-full text-left p-4.5 rounded-2xl transition-all duration-150 cursor-pointer flex items-center justify-between gap-3.5 select-none ${
+                className={`group w-full text-left p-3.5 sm:p-4 rounded-2xl transition-all duration-150 cursor-pointer flex items-center justify-between gap-3.5 select-none ${
                   lockedInfo.isLocked
                     ? 'border border-rose-800/80 bg-rose-950/20 shadow-[0_4px_0_0_#4c0519]'
                     : 'card-3d-interactive'

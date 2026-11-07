@@ -743,8 +743,8 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
           ----------------------------------------------------------------------
         */}
         <div
-          className={`bg-slate-950/70 p-5 sm:p-6 lg:p-7 flex flex-col relative overflow-hidden ${
-            isLoggedIn ? 'w-full' : 'lg:col-span-4 justify-between'
+          className={`bg-slate-950/70 p-4 sm:p-6 lg:p-7 flex flex-col relative ${
+            isLoggedIn ? 'w-full overflow-visible min-h-0' : 'lg:col-span-4 justify-between overflow-hidden'
           }`}
         >
           {/* Top Decorative Border Strip */}

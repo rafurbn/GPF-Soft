@@ -1,3 +1,16 @@
+declare global {
+  interface Window {
+    __gpfDeferredPrompt?: any;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.__gpfDeferredPrompt = e;
+  });
+}
+
 /**
  * Registers the service worker. Every entry point (root dashboard and the four
  * sub-apps) calls this once. The worker caches nothing — it only makes the site

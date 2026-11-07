@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, Share } from 'lucide-react';
+import { Download, Share, X } from 'lucide-react';
 
 /** The Chromium install event; not part of the DOM lib types. */
 interface BeforeInstallPromptEvent extends Event {
@@ -24,6 +24,7 @@ const isIosSafari = (): boolean =>
 
 export const InstallAppButton: React.FC = () => {
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [canPrompt, setCanPrompt] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const [hintOpen, setHintOpen] = useState(false);
@@ -59,11 +60,38 @@ export const InstallAppButton: React.FC = () => {
     };
   }, []);
 
+  // The hint must never sit on top of the form: close it on an outside click,
+  // on Escape, and on any scroll (the header is sticky, so it would otherwise
+  // stay pinned over the fields while the user works).
+  useEffect(() => {
+    if (!hintOpen) return;
+
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) setHintOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setHintOpen(false);
+    };
+    const onScroll = () => setHintOpen(false);
+
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [hintOpen]);
+
   // The button is always visible. Chrome only fires `beforeinstallprompt` when it
   // decides the site is installable, and it never fires again once the icon is
   // already on the device — hiding the button in that case made it look broken.
   // Without the event the click opens the manual "Add to Home screen" hint.
-  const showHint = hintOpen || !canPrompt;
+  const showHint = hintOpen || (!canPrompt && isIos);
 
   const onClick = async () => {
     if (hintOpen) {
@@ -85,10 +113,11 @@ export const InstallAppButton: React.FC = () => {
   };
 
   return (
-    <div className="relative shrink-0">
+    <div className="relative shrink-0" ref={wrapperRef}>
       <button
         type="button"
         onClick={onClick}
+        aria-expanded={showHint}
         className="group flex items-center gap-2 min-h-[44px] px-3.5 py-2.5 sm:min-h-0 sm:px-3.5 sm:py-2 rounded-xl bg-gradient-to-b from-emerald-600 via-emerald-700 to-teal-800 text-white shadow-[0_3px_0_0_#064e3b,0_5px_10px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 hover:shadow-[0_4px_0_0_#064e3b,0_7px_14px_rgba(0,0,0,0.4)] active:translate-y-[2px] active:shadow-[0_1px_0_0_#064e3b] transition-all duration-150 cursor-pointer border border-emerald-500/60 select-none"
         title="হোম স্ক্রিনে gpf-app আইকন তৈরি করুন — এটি শুধু এই ওয়েবসাইটের শর্টকাট, কোনো অ্যাপ ইনস্টল হয় না"
       >
@@ -97,11 +126,25 @@ export const InstallAppButton: React.FC = () => {
       </button>
 
       {showHint && (
-        <div className="absolute right-0 top-full mt-2 w-64 rounded-xl bg-slate-900 border border-emerald-500/40 shadow-xl p-3 text-left z-50">
-          <p className="flex items-center gap-2 text-[13px] font-bold text-white">
-            <Share className="w-4 h-4 text-emerald-400" />
-            হোম স্ক্রিনে “gpf-app” আইকন তৈরি করুন
-          </p>
+        <div
+          role="dialog"
+          aria-label="হোম স্ক্রিনে আইকন তৈরি করার নিয়ম"
+          className="absolute right-0 top-full mt-2 w-64 rounded-xl bg-slate-900 border border-emerald-500/40 shadow-xl p-3 text-left z-50"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <p className="flex items-center gap-2 text-[13px] font-bold text-white">
+              <Share className="w-4 h-4 text-emerald-400" />
+              হোম স্ক্রিনে “gpf-app” আইকন তৈরি করুন
+            </p>
+            <button
+              type="button"
+              onClick={() => setHintOpen(false)}
+              aria-label="বন্ধ করুন"
+              className="shrink-0 rounded p-0.5 text-slate-400 hover:text-white cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
           <p className="mt-1.5 text-[12px] leading-relaxed text-slate-300">
             এতে কোনো অ্যাপ ইনস্টল হবে না — শুধু এই ওয়েবসাইটের একটি শর্টকাট আইকন তৈরি হবে, যা
             চাপ দিলে ব্রাউজারে সাইটটি খুলবে।

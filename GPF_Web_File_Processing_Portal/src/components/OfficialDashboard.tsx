@@ -8,13 +8,13 @@
  * for apps that will be added later.
  */
 import React from 'react';
-import { BookmarkCheck, Sparkles, ChevronRight, Clock, Plus, Activity, ShieldCheck, Lock } from 'lucide-react';
+import { BookmarkCheck, Sparkles, ChevronRight, Clock, Plus, Activity, ShieldCheck, Lock, ExternalLink } from 'lucide-react';
 import { ActiveAppTab, UserSession } from '../types';
 import { getAppMaintenanceStates, getRemoteMaintenanceState, hydrateMaintenanceStates } from '../lib/centralAdminStore';
 import { toBn } from '../lib/format';
 import { Toast, useToast } from '../../app-shared/ui/Toast';
 
-// ৪টি সক্রিয় এ্যাপ + ১টি খালি স্লট (ভবিষ্যতে এখানে নতুন এ্যাপ যোগ করা হবে)।
+// ৫টি সক্রিয় এ্যাপ
 type LauncherApp = {
   id: string;
   no: string;
@@ -23,6 +23,7 @@ type LauncherApp = {
   badge?: string;
   desc?: string;
   tab?: ActiveAppTab;
+  externalUrl?: string;
   accent?: {
     badge: string;
     tag: string;
@@ -97,8 +98,22 @@ const APPS: LauncherApp[] = [
       hoverIcon: 'group-hover:text-blue-400',
     },
   },
-  // খালি স্লট — পরে এখানে নতুন এ্যাপ যোগ করা হবে।
-  { id: 'app5', no: '৫', isActive: false },
+  { 
+    id: 'app5',
+    no: '৫',
+    isActive: true,
+    title: 'দরখাস্ত প্রস্তুতকারক এ্যাপ',
+    badge: 'অনলাইন আবেদন',
+    desc: 'কয়েকটি তথ্য ইনপুট দিয়ে স্বয়ংক্রিয় কাঙ্খিত আবেদনপত্র প্রস্তুত করুন',
+    externalUrl: 'https://application-maker-tau.vercel.app/',
+    accent: {
+      badge: 'bg-purple-950/70 border-purple-700/60 text-purple-400 group-hover:border-purple-400',
+      tag: 'bg-purple-950/80 text-purple-300 border-purple-800/60',
+      hoverBorder: 'hover:border-purple-600/70',
+      hoverTitle: 'group-hover:text-purple-300',
+      hoverIcon: 'group-hover:text-purple-400',
+    },
+  },
 ];
 
 interface OfficialDashboardProps {
@@ -134,7 +149,12 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
     };
   }, []);
 
-  const handleAppClick = async (appId: string, tab?: ActiveAppTab) => {
+  const handleAppClick = async (appId: string, tab?: ActiveAppTab, externalUrl?: string) => {
+    if (externalUrl) {
+      window.open(externalUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     // Check maintenance lock
     const localInfo = maintenanceStates.find((state) => state.appId === appId);
     let lockInfo = {
@@ -238,11 +258,11 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
           </h3>
         </div>
         <span className="text-[11px] font-semibold text-slate-400 font-mono">
-          মোট ৫টি স্লট • ৪টি চালু
+          মোট ৫টি স্লট • ৫টি চালু
         </span>
       </div>
 
-      {/* ২-কলামের গ্রিড (৪টি সচল বাটন + ১টি খালি স্লট) */}
+      {/* ২-কলামের গ্রিড (৫টি সচল বাটন) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
         {APPS.map((app) => {
           const lockedInfo = maintenanceStates.find((state) => state.appId === app.id) || {
@@ -256,7 +276,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
               <button
                 key={app.id}
                 type="button"
-                onClick={() => handleAppClick(app.id, app.tab)}
+                onClick={() => handleAppClick(app.id, app.tab, app.externalUrl)}
                 className={`group w-full text-left p-4.5 rounded-2xl transition-all duration-150 cursor-pointer flex items-center justify-between gap-3.5 select-none ${
                   lockedInfo.isLocked
                     ? 'border border-rose-800/80 bg-rose-950/20 shadow-[0_4px_0_0_#4c0519]'
@@ -291,8 +311,12 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="w-8 h-8 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-400 group-hover:text-emerald-300 group-hover:border-emerald-500/60 group-hover:bg-emerald-950/60 shadow-[0_2px_0_0_#0f172a] transition-all flex-shrink-0">
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                <div className="w-8 h-8 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-400 group-hover:text-purple-300 group-hover:border-purple-500/60 group-hover:bg-purple-950/60 shadow-[0_2px_0_0_#0f172a] transition-all flex-shrink-0">
+                  {app.externalUrl ? (
+                    <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  )}
                 </div>
               </button>
             );

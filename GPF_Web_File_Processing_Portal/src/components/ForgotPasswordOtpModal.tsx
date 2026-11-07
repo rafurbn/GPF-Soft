@@ -40,7 +40,7 @@ export const ForgotPasswordOtpModal: React.FC<ForgotPasswordOtpModalProps> = ({
 
   // Countdown timer for OTP resend
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (step === 2 && timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => prev - 1);

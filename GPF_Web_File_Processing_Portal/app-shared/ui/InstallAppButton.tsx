@@ -59,9 +59,10 @@ export const InstallAppButton: React.FC = () => {
     };
   }, []);
 
-  // Android/Chrome only fire `beforeinstallprompt` once; if it never arrives the
-  // button still shows the manual "Add to Home screen" route instead of hiding.
-  if (!canPrompt && !isIos && !hintOpen) return null;
+  // The button is always visible. Chrome only fires `beforeinstallprompt` when it
+  // decides the site is installable, and it never fires again once the icon is
+  // already on the device — hiding the button in that case made it look broken.
+  // Without the event the click opens the manual "Add to Home screen" hint.
   const showHint = hintOpen || !canPrompt;
 
   const onClick = async () => {
@@ -102,11 +103,24 @@ export const InstallAppButton: React.FC = () => {
             হোম স্ক্রিনে “gpf-app” আইকন তৈরি করুন
           </p>
           <p className="mt-1.5 text-[12px] leading-relaxed text-slate-300">
-            ব্রাউজারের <span className="text-emerald-300 font-semibold">Share</span> বোতাম চেপে{' '}
-            <span className="text-emerald-300 font-semibold">Add to Home Screen</span> নির্বাচন করুন।
             এতে কোনো অ্যাপ ইনস্টল হবে না — শুধু এই ওয়েবসাইটের একটি শর্টকাট আইকন তৈরি হবে, যা
             চাপ দিলে ব্রাউজারে সাইটটি খুলবে।
           </p>
+          <ul className="mt-2 space-y-1 text-[12px] leading-relaxed text-slate-300">
+            <li>
+              <span className="text-emerald-300 font-semibold">Android Chrome:</span> উপরে ডান দিকের ⋮
+              মেনু → <span className="text-emerald-300 font-semibold">Add to Home screen</span> / Install app
+            </li>
+            <li>
+              <span className="text-emerald-300 font-semibold">iPhone / iPad (Safari):</span> Share বোতাম →{' '}
+              <span className="text-emerald-300 font-semibold">Add to Home Screen</span>
+            </li>
+            <li>
+              <span className="text-emerald-300 font-semibold">কম্পিউটার (Chrome / Edge):</span> অ্যাড্রেস
+              বারের ডান পাশের ইনস্টল আইকন, অথবা ⋮ মেনু →{' '}
+              <span className="text-emerald-300 font-semibold">Cast, save and share → Install page as app</span>
+            </li>
+          </ul>
           <button
             type="button"
             onClick={() => setHintOpen(false)}

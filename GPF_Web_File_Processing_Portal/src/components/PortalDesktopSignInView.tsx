@@ -743,18 +743,18 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
           ----------------------------------------------------------------------
         */}
         <div
-          className={`bg-slate-950/70 p-4 sm:p-6 lg:p-7 flex flex-col relative ${
-            isLoggedIn ? 'w-full overflow-visible min-h-0' : 'lg:col-span-4 justify-between overflow-hidden'
+          className={`bg-slate-950/70 p-3.5 sm:p-5 flex flex-col relative ${
+            isLoggedIn ? 'w-full' : 'lg:col-span-4 justify-between overflow-hidden'
           }`}
         >
           {/* Top Decorative Border Strip */}
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/40 via-slate-700 to-emerald-500/40"></div>
 
-          <div className="flex-1">
+          <div className="w-full">
             {/* Signed-in strip: who is using the portal + optional link back to the
                 14-condition notice board (which is hidden from this page). */}
             {isLoggedIn && currentUser && (
-              <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
+              <div className="mb-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-3.5 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-emerald-950/70 border border-emerald-800/60 flex items-center justify-center shrink-0">
                     <UserCheck className="w-5 h-5 text-emerald-400" />
@@ -1126,7 +1126,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
         WhatsApp+Mobile: ০১৭৩২-৬৭৯৫৫১
         ========================================================================
       */}
-      <footer className="border-t border-slate-800 bg-slate-950 text-slate-300 py-4 px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <footer className="border-t border-slate-800 bg-slate-950 text-slate-300 py-3 sm:py-3.5 px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2 text-center sm:text-left">
           <Award className="w-4 h-4 text-amber-400 shrink-0" />
           <span>

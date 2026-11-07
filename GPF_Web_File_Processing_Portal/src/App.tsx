@@ -395,7 +395,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-shell min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start p-2 sm:p-4 md:p-6 lg:p-8 font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="app-shell min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start p-2 sm:p-4 lg:p-5 font-sans selection:bg-emerald-500 selection:text-white">
       {/* Online-only portal: a dropped connection pauses the whole dashboard. */}
       <OfflineGuard context="জিপিএফ ফাইল প্রসেসিং পোর্টাল" />
 

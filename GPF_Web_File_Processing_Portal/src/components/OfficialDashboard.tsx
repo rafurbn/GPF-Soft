@@ -200,18 +200,18 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
   ];
 
   return (
-    <div className="flex flex-col min-h-full bg-gradient-to-b from-[#0b162c] to-[#070e1c] rounded-2xl border border-slate-700/60 p-4 sm:p-6 pb-8 sm:pb-10 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.12)]">
+    <div className="flex flex-col bg-gradient-to-b from-[#0b162c] to-[#070e1c] rounded-2xl border border-slate-700/60 p-3.5 sm:p-5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.12)]">
       {/* ব্যানার: এই পোর্টালে আপনাকে স্বাগতম */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#092b2f]/90 via-[#0a232f]/80 to-[#0c182c]/90 border border-emerald-500/50 mb-6 shadow-[0_8px_20px_rgba(5,150,105,0.2),inset_0_1px_2px_rgba(255,255,255,0.15)] relative overflow-hidden group">
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-b from-emerald-500 to-teal-700 border border-emerald-300/40 flex items-center justify-center flex-shrink-0 text-white shadow-[0_4px_0_0_#064e3b,0_6px_12px_rgba(0,0,0,0.4)]">
-            <BookmarkCheck className="w-7 h-7" />
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-[#092b2f]/90 via-[#0a232f]/80 to-[#0c182c]/90 border border-emerald-500/50 mb-3.5 shadow-[0_6px_16px_rgba(5,150,105,0.18),inset_0_1px_2px_rgba(255,255,255,0.15)] relative overflow-hidden group">
+        <div className="flex items-center gap-3.5 relative z-10">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-b from-emerald-500 to-teal-700 border border-emerald-300/40 flex items-center justify-center flex-shrink-0 text-white shadow-[0_3px_0_0_#064e3b,0_4px_8px_rgba(0,0,0,0.35)]">
+            <BookmarkCheck className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-wide text-white drop-shadow-sm">
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-wide text-white drop-shadow-sm">
               এই পোর্টালে আপনাকে স্বাগতম
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 mt-0.5">
+            <p className="text-xs text-slate-300 mt-0.5">
               কর্মরত উপজেলা: <strong className="text-emerald-300 font-bold">{currentUser?.upazila_name_bn}</strong>, {currentUser?.district_name_bn}
             </p>
           </div>
@@ -219,17 +219,17 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
 
         {/* ব্যবহারকারী-সংক্রান্ত পরিসংখ্যান ও সুপার এডমিন কন্ট্রোল বাটন */}
         {isAdmin && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-4 sm:gap-6 px-4 py-2.5 rounded-2xl bg-slate-950/80 border border-slate-700/70 shadow-[0_3px_0_0_#020617,inset_0_1px_1px_rgba(255,255,255,0.1)]">
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 border-r border-slate-800 pr-4">
-                <Activity className="w-4 h-4 text-emerald-400" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+            <div className="flex items-center gap-3 sm:gap-5 px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-700/70 shadow-[0_2px_0_0_#020617,inset_0_1px_1px_rgba(255,255,255,0.1)]">
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 border-r border-slate-800 pr-3">
+                <Activity className="w-3.5 h-3.5 text-emerald-400" />
                 <span>ইউজার পরিসংখ্যান</span>
               </div>
               {stats.map((stat) => (
                 <div key={stat.id} className="flex items-center gap-2">
-                  <span className={`w-1.5 h-6 rounded-full ${stat.dotClass}`} />
+                  <span className={`w-1.5 h-5 rounded-full ${stat.dotClass}`} />
                   <div className="leading-tight">
-                    <div className="text-xl font-black text-white font-mono">{toBn(stat.value)}</div>
+                    <div className="text-lg font-black text-white font-mono">{toBn(stat.value)}</div>
                     <div className="text-[10px] font-semibold text-slate-400 whitespace-nowrap">{stat.label}</div>
                   </div>
                 </div>
@@ -239,18 +239,18 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
             <button
               type="button"
               onClick={() => onNavigateToApp?.('super_admin_suite')}
-              className="btn-3d btn-3d-indigo px-4 py-2.5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
+              className="btn-3d btn-3d-indigo px-3.5 py-2 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <ShieldCheck className="w-4 h-4 text-indigo-200" />
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-200" />
               <span>Super Admin Suite</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-3 h-3" />
             </button>
           </div>
         )}
       </div>
 
       {/* টাইটেল */}
-      <div className="flex items-center justify-between gap-2 mb-4">
+      <div className="flex items-center justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-emerald-400" />
           <h3 className="text-sm sm:text-base font-bold text-slate-100">
@@ -263,7 +263,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
       </div>
 
       {/* ২-কলামের গ্রিড (৫টি সচল বাটন) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 mb-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-1">
         {APPS.map((app) => {
           const lockedInfo = maintenanceStates.find((state) => state.appId === app.id) || {
             isLocked: false,
@@ -277,22 +277,22 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
                 key={app.id}
                 type="button"
                 onClick={() => handleAppClick(app.id, app.tab, app.externalUrl)}
-                className={`group w-full text-left p-3.5 sm:p-4 rounded-2xl transition-all duration-150 cursor-pointer flex items-center justify-between gap-3.5 select-none ${
+                className={`group w-full text-left p-3 sm:p-3.5 rounded-xl transition-all duration-150 cursor-pointer flex items-center justify-between gap-3 select-none ${
                   lockedInfo.isLocked
                     ? 'border border-rose-800/80 bg-rose-950/20 shadow-[0_4px_0_0_#4c0519]'
                     : 'card-3d-interactive'
                 }`}
               >
-                <div className="flex items-start gap-3.5 min-w-0">
+                <div className="flex items-start gap-3 min-w-0">
                   {/* ৩ডি নম্বর ব্যাজ */}
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-extrabold flex-shrink-0 border mt-0.5 shadow-[0_2px_0_0_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.25)] ${app.accent.badge}`}>
-                    {lockedInfo.isLocked ? <Lock className="w-4 h-4 text-rose-400" /> : app.no}
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-extrabold flex-shrink-0 border mt-0.5 shadow-[0_2px_0_0_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.25)] ${app.accent.badge}`}>
+                    {lockedInfo.isLocked ? <Lock className="w-3.5 h-3.5 text-rose-400" /> : app.no}
                   </div>
 
                   {/* এ্যাপের বিবরণ */}
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className={`font-bold text-sm sm:text-[15px] text-white ${app.accent.hoverTitle}`}>
+                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                      <span className={`font-bold text-sm text-white ${app.accent.hoverTitle}`}>
                         {app.title}
                       </span>
                       {lockedInfo.isLocked ? (
@@ -300,22 +300,22 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
                           সাময়িক বন্ধ (রক্ষণাবেক্ষণ)
                         </span>
                       ) : (
-                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border shadow-xs ${app.accent.tag}`}>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border shadow-xs ${app.accent.tag}`}>
                           {app.badge}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 group-hover:text-slate-200 line-clamp-2 transition-colors">
+                    <p className="text-xs text-slate-400 group-hover:text-slate-200 line-clamp-1 sm:line-clamp-2 transition-colors">
                       {lockedInfo.isLocked ? lockedInfo.lockReason : app.desc}
                     </p>
                   </div>
                 </div>
 
-                <div className="w-8 h-8 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-400 group-hover:text-purple-300 group-hover:border-purple-500/60 group-hover:bg-purple-950/60 shadow-[0_2px_0_0_#0f172a] transition-all flex-shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-400 group-hover:text-purple-300 group-hover:border-purple-500/60 group-hover:bg-purple-950/60 shadow-[0_2px_0_0_#0f172a] transition-all flex-shrink-0">
                   {app.externalUrl ? (
-                    <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                    <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   )}
                 </div>
               </button>

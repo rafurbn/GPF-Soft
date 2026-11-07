@@ -4,6 +4,7 @@ import type { UserSession } from '../../src/types';
 import { toBn } from '../../src/lib/format';
 import dashboardLogo from '../../src/assets/images/rf-logo.svg';
 import { InstallAppButton } from './InstallAppButton';
+import { OfflineGuard } from './OfflineGuard';
 import { ADMIN_NAME, DEPARTMENT_NAME, OFFICE_NAME, PORTAL_NAME, SUPPORT_LINK, SUPPORT_PHONE, VERSION_LABEL } from '../../src/lib/portalMeta';
 
 const appBadgeText = (appNumber: number) => `এ্যাপ ${toBn(appNumber)}`;
@@ -63,42 +64,46 @@ export const SubAppHeader: React.FC<SubAppHeaderProps> = ({
   savedCountUnit = 'টি সংরক্ষিত',
   actions,
 }) => (
-  <header className="sticky top-0 z-50 border-b border-slate-800/90 bg-[#0c1427]/95 backdrop-blur-md print:hidden">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-        <div className="flex items-center gap-3">
-          <BackButton onBack={onBack} />
+  <>
+    {/* Online-only portal: a dropped connection pauses the whole app. */}
+    <OfflineGuard context={`${appBadgeText(appNumber)} — ${title}`} />
+    <header className="sticky top-0 z-50 border-b border-slate-800/90 bg-[#0c1427]/95 backdrop-blur-md print:hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-3">
+            <BackButton onBack={onBack} />
 
-          <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+            <div className="h-4 w-px bg-slate-800 hidden sm:block" />
 
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
-              <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  {appBadgeText(appNumber)}
-                </span>
-                <h1 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight">{title}</h1>
-                {savedCount !== undefined && (
-                  <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                    {toBn(savedCount)} {savedCountUnit}
-                  </span>
-                )}
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-emerald-400/50 shadow-md shadow-emerald-950/40 shrink-0">
+                <img src={dashboardLogo} alt="" className="w-full h-full object-cover" />
               </div>
-              <p className="text-[11px] text-slate-400">{officeLine(currentUser)}</p>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    {appBadgeText(appNumber)}
+                  </span>
+                  <h1 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-tight">{title}</h1>
+                  {savedCount !== undefined && (
+                    <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      {toBn(savedCount)} {savedCountUnit}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400">{officeLine(currentUser)}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <InstallAppButton />
-          {actions}
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <InstallAppButton />
+            {actions}
+          </div>
         </div>
       </div>
-    </div>
-  </header>
+    </header>
+  </>
 );
 
 export interface SubAppFooterProps {

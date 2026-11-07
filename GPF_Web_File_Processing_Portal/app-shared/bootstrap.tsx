@@ -6,6 +6,7 @@ import { isSupabaseConfigured, supabase } from '../src/lib/supabase';
 import { loadUserSession } from '../src/lib/authProfile';
 import { getRemoteMaintenanceState, isCurrentSessionTerminated, isCurrentAccountActive, touchCurrentSession, endCurrentSessionOnServer } from '../src/lib/centralAdminStore';
 import { registerPwa } from './pwa';
+import { OfflineGuard } from './ui/OfflineGuard';
 
 /**
  * Shape every sub-app `App.tsx` exposes. Each app originally lived inside the
@@ -40,6 +41,21 @@ export const mountSubApp = async (
 
   registerPwa();
 
+  const container = document.getElementById('root');
+
+  // The portal is online-only. Without a connection the app must say so instead
+  // of silently bouncing the user back to the sign-in page.
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    if (container) {
+      createRoot(container).render(
+        <StrictMode>
+          <OfflineGuard context="অ্যাপটি চালু করা যায়নি — ইন্টারনেট সংযোগ প্রয়োজন" />
+        </StrictMode>,
+      );
+    }
+    return;
+  }
+
   if (!isSupabaseConfigured || !supabase) {
     window.location.replace(loginUrl);
     return;
@@ -60,12 +76,20 @@ export const mountSubApp = async (
       return;
     }
   } catch {
+    // A network failure is not a bad account: keep the session and explain.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false && container) {
+      createRoot(container).render(
+        <StrictMode>
+          <OfflineGuard context="প্রোফাইল যাচাই করা যায়নি — ইন্টারনেট সংযোগ প্রয়োজন" />
+        </StrictMode>,
+      );
+      return;
+    }
     await client.auth.signOut();
     window.location.replace(loginUrl);
     return;
   }
 
-  const container = document.getElementById('root');
   if (!container) return;
 
   if (appId) {
@@ -84,6 +108,15 @@ export const mountSubApp = async (
         return;
       }
     } catch {
+      // Offline is not a security failure — say what actually happened.
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        createRoot(container).render(
+          <StrictMode>
+            <OfflineGuard context="অ্যাপের অবস্থা যাচাই করা যায়নি — ইন্টারনেট সংযোগ প্রয়োজন" />
+          </StrictMode>,
+        );
+        return;
+      }
       createRoot(container).render(
         <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
           <section className="max-w-xl rounded-2xl border border-rose-700/60 bg-rose-950/40 p-8 text-center">
@@ -97,7 +130,20 @@ export const mountSubApp = async (
     }
   }
 
-  const { default: RootComponent } = await moduleLoader();
+  let loaded: SubAppModule;
+  try {
+    loaded = await moduleLoader();
+  } catch {
+    // The page shell itself could not be fetched (connection dropped mid-load).
+    createRoot(container).render(
+      <StrictMode>
+        <OfflineGuard context="অ্যাপটি লোড করা যায়নি — ইন্টারনেট সংযোগ প্রয়োজন" />
+      </StrictMode>,
+    );
+    return;
+  }
+
+  const RootComponent = loaded.default;
 
   // Returning to the dashboard is a real navigation back to the root page.
   const handleBack = () => window.location.assign(loginUrl);

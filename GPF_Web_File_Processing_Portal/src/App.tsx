@@ -12,6 +12,7 @@ import { persistUpazilaContext, clearUpazilaContext } from './lib/upazilaSession
 import { registerActiveSession, addAuditLog, isCurrentSessionTerminated, isCurrentAccountActive, endCurrentSessionOnServer, touchCurrentSession } from './lib/centralAdminStore';
 import type { User } from '@supabase/supabase-js';
 import { Toast, useToast } from '../app-shared/ui/Toast';
+import { OfflineGuard } from '../app-shared/ui/OfflineGuard';
 
 // ---------------------------------------------------------------------------
 // Multi-Page Application (MPA) routes.
@@ -395,6 +396,9 @@ export default function App() {
 
   return (
     <div className="app-shell min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start p-2 sm:p-4 md:p-6 lg:p-8 font-sans selection:bg-emerald-500 selection:text-white">
+      {/* Online-only portal: a dropped connection pauses the whole dashboard. */}
+      <OfflineGuard context="জিপিএফ ফাইল প্রসেসিং পোর্টাল" />
+
       {/* কেন্দ্রীয় নোটিশ ও ব্রডকাস্ট ব্যানার (মডিউল ৪) */}
       {currentUser && <BroadcastNoticeMarquee userUpazilaCode={currentUser.upazila_code} />}
 

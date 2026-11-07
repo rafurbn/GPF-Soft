@@ -26,5 +26,8 @@ self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
-// No `fetch` listener: the browser talks to the network directly, so nothing is
-// ever served from a stale cache and offline always means offline.
+// Pass-through network fetch listener: satisfies PWA installability criteria
+// across Chromium/Edge/Android while ensuring zero caching (pure online access).
+self.addEventListener('fetch', (event) => {
+  event.respondWith(fetch(event.request));
+});

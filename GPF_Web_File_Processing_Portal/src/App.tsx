@@ -133,7 +133,8 @@ export default function App() {
         setCurrentUser(profile);
         setIsLoggedIn(true);
         setUsers(accountUsers);
-        if (profile.is_first_login) setShowPasswordModal(true);
+        // ইচ্ছাকৃত: প্রথম লগইনে পাসওয়ার্ড/শর্তাবলী মডাল আর জোর করে খোলে না।
+        // ফিচারটি `onOpenPasswordModal` (ঐচ্ছিক পাসওয়ার্ড পরিবর্তন) হিসেবেই রয়ে গেছে।
       } catch {
         // A stored session without an approved upazila profile is dropped quietly
         // so the sign-in screen never reports a backend error to the visitor.

@@ -211,7 +211,8 @@ export default function App() {
     setCurrentUser(profile);
     setIsLoggedIn(true);
     setUsers(accountUsers);
-    setShowPasswordModal(profile.is_first_login);
+    // ইচ্ছাকৃত: প্রথম লগইনে পাসওয়ার্ড/শর্তাবলী মডাল আর জোর করে খোলে না। ফিচারটি
+    // `onOpenPasswordModal` (পাসওয়ার্ড পরিবর্তন → ১৪ শর্তাবলী) হিসেবেই রয়ে গেছে।
     setShowRegistrationModal(false);
 
     // Register active session & audit log (মডিউল ৩)
@@ -286,9 +287,9 @@ export default function App() {
       throw new Error('Supabase Auth কনফিগার করা হয়নি।');
     }
 
-    // The pre-check RPC is a convenience only. When it has not been provisioned the
-    // signup is still attempted: the create_upazila_profile_for_signup trigger is the
-    // real guard and it rejects a second account for the same upazila on its own.
+    // এক উপজেলা = একটি অ্যাকাউন্ট — এই নিয়ম অপরিবর্তিত। Pre-check RPC সুবিধামাত্র;
+    // create_upazila_profile_for_signup trigger-ই আসল প্রহরী এবং দ্বিতীয় অ্যাকাউন্ট
+    // একই উপজেলায় হলে সেটি নিজেই প্রত্যাখ্যান করে।
     const { data: available, error: availabilityError } = await supabase.rpc('is_upazila_available', {
       requested_upazila_code: region.defaultId,
     });
@@ -296,11 +297,13 @@ export default function App() {
       throw new Error('এই উপজেলার জন্য account ইতিমধ্যে তৈরি হয়েছে।');
     }
 
+    // ইচ্ছাকৃত: `emailRedirectTo` নেই, তাই ইমেইল কনফার্মেশন লিংকের ধাপ বাদ। সাইন-আপ
+    // সফল হলে সোজা সেশন নিয়ে ড্যাশবোর্ডে ঢুকে যায়। পাসওয়ার্ড ভুলে গেলে সাইন-ইন
+    // স্ক্রিনের OTP ফ্লো আগের মতোই ইমেইলটি ব্যবহার করে।
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
         data: {
           account_type: 'upazila_user',
           upazila_code: region.defaultId,
@@ -329,7 +332,11 @@ export default function App() {
       setShowRegistrationModal(false);
       return true;
     }
-    return false;
+    // Email confirmation is switched off for this flow; if the server still withholds
+    // a session, tell the user to sign in instead of asking for a confirmation link.
+    throw new Error(
+      `অ্যাকাউন্ট তৈরি হয়েছে। এখন লগইন আইডি ${region.defaultId} ও আপনার পাসওয়ার্ড দিয়ে সাইন-ইন করুন।`,
+    );
   };
 
   // Handle Logout
@@ -419,6 +426,7 @@ export default function App() {
           onLogin={handleLogin}
           onOpenRegistration={() => setShowRegistrationModal(true)}
           onLogout={handleLogout}
+          /* ১৪ শর্তাবলী/পাসওয়ার্ড সেট মডাল এখন শুধু এখান থেকেই (ঐচ্ছিকভাবে) খোলে */
           onOpenPasswordModal={() => setShowPasswordModal(true)}
           // The 14 conditions are a post-login notice board again; the launcher
           // itself no longer renders them.
@@ -474,7 +482,7 @@ export default function App() {
           isOpen={showPasswordModal && isLoggedIn}
           currentUser={currentUser}
           onPasswordChanged={handlePasswordChanged}
-          canDismiss={!currentUser.is_first_login}
+          canDismiss
           onClose={() => setShowPasswordModal(false)}
         />
       )}

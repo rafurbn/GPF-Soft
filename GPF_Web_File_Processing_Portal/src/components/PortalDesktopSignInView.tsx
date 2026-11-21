@@ -29,6 +29,7 @@ import {
   getAllDivisions,
   getDistrictsByDivision,
   getAllUpazilas,
+  type UpazilaRecord,
 } from '../data/upazilaData';
 
 // Logout clears the shared sub-app context (`clearUpazilaContext`), which also drops
@@ -75,7 +76,12 @@ const writeRegionConfig = (config: RegionConfig): void => {
 interface PortalDesktopSignInViewProps {
   currentUser: UserSession | null;
   isLoggedIn: boolean;
-  onLogin: (loginId: string, password: string) => Promise<void>;
+  onLogin: (
+    loginId: string,
+    password: string,
+    recoveryEmail?: string,
+    regionRecord?: UpazilaRecord | null,
+  ) => Promise<void>;
   onOpenRegistration?: () => void;
   onLogout: () => void;
   onOpenPasswordModal: () => void;
@@ -270,25 +276,27 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 
   // Matched division object
   const selectedDivisionObj = useMemo(() => {
+    if (!divisionChosen) return null;
     return (
       divisions.find((d) => d.en.toLowerCase() === division.toLowerCase() || d.bn === division) ||
-      divisions.find((d) => d.en === 'Sylhet') ||
-      divisions[0]
+      null
     );
-  }, [divisions, division]);
+  }, [divisions, division, divisionChosen]);
 
   // Districts for current division
   const currentDistricts = useMemo(() => {
-    return getDistrictsByDivision(selectedDivisionObj?.en);
+    if (!selectedDivisionObj) return [];
+    return getDistrictsByDivision(selectedDivisionObj.en);
   }, [selectedDivisionObj]);
 
   // Matched district object
   const selectedDistrictObj = useMemo(() => {
+    if (!districtChosen) return null;
     return (
       currentDistricts.find((d) => d.en.toLowerCase() === district.toLowerCase() || d.bn === district) ||
-      currentDistricts[0]
+      null
     );
-  }, [currentDistricts, district]);
+  }, [currentDistricts, district, districtChosen]);
 
   // Upazilas for current division and district
   const currentUpazilas = useMemo(() => {
@@ -302,16 +310,16 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 
   // Selected upazila record
   const selectedRegion = useMemo(() => {
+    if (!upazilaChosen) return null;
     return (
       currentUpazilas.find((u) => u.defaultId.toLowerCase() === upazilaCode.toLowerCase()) ||
-      currentUpazilas[0] ||
       null
     );
-  }, [currentUpazilas, upazilaCode]);
+  }, [currentUpazilas, upazilaCode, upazilaChosen]);
 
   // Auto-persist and link context to all 4 apps via localStorage & persistUpazilaContext
   useEffect(() => {
-    if (typeof window === 'undefined' || !selectedRegion) return;
+    if (typeof window === 'undefined' || !regionComplete || !selectedRegion) return;
     // Adopt a region saved before the durable key existed. Only for someone who
     // already locked once, so never-chosen defaults are never stored as his own.
     if (!savedRegion && wasLockedOnLoad && localStorage.getItem('gpf-active-upazila-code')) {
@@ -339,51 +347,40 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
       division_name_bn: selectedRegion.divisionBn,
       email: email,
     });
-  }, [selectedRegion, email]);
+  }, [regionComplete, selectedRegion, email, savedRegion, wasLockedOnLoad]);
 
   const handleDivisionChange = (newDivEn: string) => {
     setDivision(newDivEn);
-    const newDistricts = getDistrictsByDivision(newDivEn);
-    const firstDistrict = newDistricts[0]?.en || '';
-    setDistrict(firstDistrict);
-    const newUpazilas = getAllUpazilas().filter(
-      (u) => u.division.toLowerCase() === newDivEn.toLowerCase() && u.district.toLowerCase() === firstDistrict.toLowerCase()
-    );
-    const firstUpazila = newUpazilas[0];
-    if (firstUpazila) {
-      setUpazilaCode(firstUpazila.defaultId);
-    }
-    setDivisionChosen(true);
+    setDistrict('');
+    setUpazilaCode('');
+    setDivisionChosen(Boolean(newDivEn));
     setDistrictChosen(false);
     setUpazilaChosen(false);
+    if (errorMsg) setErrorMsg('');
   };
 
   const handleDistrictChange = (newDistEn: string) => {
     setDistrict(newDistEn);
-    const newUpazilas = getAllUpazilas().filter(
-      (u) =>
-        u.division.toLowerCase() === selectedDivisionObj.en.toLowerCase() &&
-        (u.district.toLowerCase() === newDistEn.toLowerCase() || u.districtBn === newDistEn)
-    );
-    const firstUpazila = newUpazilas[0];
-    if (firstUpazila) {
-      setUpazilaCode(firstUpazila.defaultId);
-    }
-    setDistrictChosen(true);
+    setUpazilaCode('');
+    setDistrictChosen(Boolean(newDistEn));
     setUpazilaChosen(false);
+    if (errorMsg) setErrorMsg('');
   };
 
   // The durable region key means "he finished choosing all three",
   // so it is only written once the upazila itself is picked.
   const handleUpazilaChange = (newCode: string) => {
     setUpazilaCode(newCode);
-    setUpazilaChosen(true);
-    writeRegionConfig({
-      divisionEn: selectedDivisionObj?.en || division,
-      districtEn: selectedDistrictObj?.en || district,
-      upazilaCode: newCode,
-      email,
-    });
+    setUpazilaChosen(Boolean(newCode));
+    if (errorMsg) setErrorMsg('');
+    if (newCode) {
+      writeRegionConfig({
+        divisionEn: selectedDivisionObj?.en || division,
+        districtEn: selectedDistrictObj?.en || district,
+        upazilaCode: newCode,
+        email,
+      });
+    }
   };
 
   const handleEmailChange = (value: string) => {
@@ -491,18 +488,18 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 
   const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // The permanent upazila ID is ALWAYS the login identity. The Recovery email box
-    // only supplies the address for OTP / password recovery - it must never replace
-    // the ID here, or a leftover address in localStorage would hijack the sign-in.
-    // Nothing may reach the server until his own region is fully chosen, otherwise a
-    // wrong upazila ID would burn failures (and a lockout) on the real owner's account.
-    if (!regionComplete) {
+    if (!regionComplete || !selectedRegion) {
       showRegionNotice();
       return;
     }
     const effectiveLoginId = (selectedRegion?.defaultId || upazilaCode).trim();
     if (!effectiveLoginId) {
       setErrorMsg('উপজেলা ID পাওয়া যায়নি। অনুগ্রহ করে পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।');
+      return;
+    }
+    const trimmedEmail = email.trim();
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setErrorMsg('সঠিক ইমেইল ঠিকানা লিখুন');
       return;
     }
     if (!password.trim()) {
@@ -520,7 +517,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     setErrorMsg('');
     setIsSubmitting(true);
     try {
-      await onLogin(effectiveLoginId, password);
+      await onLogin(effectiveLoginId, password, trimmedEmail, selectedRegion);
     } catch (error) {
       setErrorMsg(error instanceof Error ? error.message : 'সাইন ইন করা যায়নি। আবার চেষ্টা করুন।');
     } finally {
@@ -902,11 +899,12 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                         </label>
                         <select
                           id="signin-region-division"
-                          value={selectedDivisionObj?.en || ''}
+                          value={divisionChosen ? (selectedDivisionObj?.en || '') : ''}
                           disabled={isRegionLocked}
                           onChange={(e) => handleDivisionChange(e.target.value)}
                           className="w-full rounded-xl border border-slate-700 bg-[#070e1c] px-3.5 py-3 text-[13px] sm:text-[15px] font-semibold text-white focus:outline-hidden focus:border-emerald-500 focus:ring-2 focus:ring-amber-500/25 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
                         >
+                          <option value="">বিভাগ নির্বাচন করুন</option>
                           {divisions.map((d) => (
                             <option key={d.en} value={d.en}>
                               {d.bn} ({d.en})
@@ -921,11 +919,12 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                         </label>
                         <select
                           id="signin-region-district"
-                          value={selectedDistrictObj?.en || ''}
+                          value={districtChosen ? (selectedDistrictObj?.en || '') : ''}
                           disabled={isDistrictDisabled}
                           onChange={(e) => handleDistrictChange(e.target.value)}
                           className="w-full rounded-xl border border-slate-700 bg-[#070e1c] px-3.5 py-3 text-[13px] sm:text-[15px] font-semibold text-white focus:outline-hidden focus:border-emerald-500 focus:ring-2 focus:ring-amber-500/25 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
                         >
+                          <option value="">জেলা নির্বাচন করুন</option>
                           {currentDistricts.map((d) => (
                             <option key={d.en} value={d.en}>
                               {d.bn} ({d.en})
@@ -940,11 +939,12 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                         </label>
                         <select
                           id="signin-region-upazila"
-                          value={selectedRegion?.defaultId || upazilaCode}
+                          value={upazilaChosen ? (selectedRegion?.defaultId || '') : ''}
                           disabled={isUpazilaDisabled}
                           onChange={(e) => handleUpazilaChange(e.target.value)}
                           className="w-full rounded-xl border border-slate-700 bg-[#070e1c] px-3.5 py-3 text-[13px] sm:text-[15px] font-semibold text-white focus:outline-hidden focus:border-emerald-500 focus:ring-2 focus:ring-amber-500/25 shadow-inner disabled:cursor-not-allowed disabled:opacity-60"
                         >
+                          <option value="">উপজেলা নির্বাচন করুন</option>
                           {currentUpazilas.map((u) => (
                             <option key={u.defaultId} value={u.defaultId}>
                               {u.upazilaBn} (ID: {u.defaultId})
@@ -1032,7 +1032,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                           // previous message cannot mislead the next attempt.
                           if (errorMsg) setErrorMsg('');
                         }}
-                        placeholder="Please enter eight digits."
+                        placeholder="যেকোনো ৮ ডিজিটের পাসওয়ার্ড দিন"
                         autoComplete="off"
                         required
                         // NOTE: no custom letter-spacing / font here. The old 0.45em

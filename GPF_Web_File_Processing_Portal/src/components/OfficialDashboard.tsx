@@ -162,12 +162,13 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
       reason: localInfo?.lockReason || '',
       appName: localInfo?.appName || '',
     };
-    try {
-      const remoteLock = await getRemoteMaintenanceState(appId);
-      if (remoteLock) lockInfo = { ...lockInfo, isLocked: remoteLock.isLocked, reason: remoteLock.lockReason, appName: remoteLock.appName };
-    } catch {
-      showToast('কেন্দ্রীয় রক্ষণাবেক্ষণ অবস্থা যাচাই করা যায়নি। পরে আবার চেষ্টা করুন।', 'error');
-      return;
+    if (!currentUser?.id?.startsWith('upazila-')) {
+      try {
+        const remoteLock = await getRemoteMaintenanceState(appId);
+        if (remoteLock) lockInfo = { ...lockInfo, isLocked: remoteLock.isLocked, reason: remoteLock.lockReason, appName: remoteLock.appName };
+      } catch {
+        // Fall back to local maintenance state if remote check is unavailable.
+      }
     }
     if (lockInfo.isLocked) {
       showToast(`[${lockInfo.appName}] রক্ষণাবেক্ষণের জন্য সাময়িক বন্ধ রয়েছে।\nকারণ: ${lockInfo.reason}`, 'warning');

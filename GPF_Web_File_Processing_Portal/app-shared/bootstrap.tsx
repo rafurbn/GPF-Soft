@@ -4,7 +4,8 @@ import '../src/index.css';
 import type { UserSession } from '../src/types';
 import { isSupabaseConfigured, supabase } from '../src/lib/supabase';
 import { loadUserSession } from '../src/lib/authProfile';
-import { getRemoteMaintenanceState, isCurrentSessionTerminated, isCurrentAccountActive, touchCurrentSession, endCurrentSessionOnServer } from '../src/lib/centralAdminStore';
+import { getAppMaintenanceStates, getRemoteMaintenanceState, isCurrentSessionTerminated, isCurrentAccountActive, touchCurrentSession, endCurrentSessionOnServer } from '../src/lib/centralAdminStore';
+import { isInstantSession, readInstantUpazilaSession } from '../src/lib/localUpazilaAuth';
 import { registerPwa } from './pwa';
 import { OfflineGuard } from './ui/OfflineGuard';
 
@@ -56,36 +57,41 @@ export const mountSubApp = async (
     return;
   }
 
-  if (!isSupabaseConfigured || !supabase) {
-    window.location.replace(loginUrl);
-    return;
-  }
-  const client = supabase;
-  const { data: sessionData } = await client.auth.getSession();
-  if (!sessionData.session?.user) {
-    window.location.replace(loginUrl);
-    return;
+  let currentUser: UserSession | null = null;
+  let hasSupabaseSession = false;
+
+  if (isSupabaseConfigured && supabase) {
+    const client = supabase;
+    const { data: sessionData } = await client.auth.getSession();
+    if (sessionData.session?.user) {
+      try {
+        const loadedUser = await loadUserSession(sessionData.session.user);
+        if (loadedUser.account_status && loadedUser.account_status !== 'active') {
+          await client.auth.signOut();
+          window.location.replace(loginUrl);
+          return;
+        }
+        currentUser = loadedUser;
+        hasSupabaseSession = true;
+      } catch {
+        if (typeof navigator !== 'undefined' && navigator.onLine === false && container) {
+          createRoot(container).render(
+            <StrictMode>
+              <OfflineGuard context="প্রোফাইল যাচাই করা যায়নি — ইন্টারনেট সংযোগ প্রয়োজন" />
+            </StrictMode>,
+          );
+          return;
+        }
+        await client.auth.signOut();
+      }
+    }
   }
 
-  let currentUser: UserSession;
-  try {
-    currentUser = await loadUserSession(sessionData.session.user);
-    if (currentUser.account_status && currentUser.account_status !== 'active') {
-      await client.auth.signOut();
-      window.location.replace(loginUrl);
-      return;
-    }
-  } catch {
-    // A network failure is not a bad account: keep the session and explain.
-    if (typeof navigator !== 'undefined' && navigator.onLine === false && container) {
-      createRoot(container).render(
-        <StrictMode>
-          <OfflineGuard context="প্রোফাইল যাচাই করা যায়নি — ইন্টারনেট সংযোগ প্রয়োজন" />
-        </StrictMode>,
-      );
-      return;
-    }
-    await client.auth.signOut();
+  if (!currentUser) {
+    currentUser = readInstantUpazilaSession();
+  }
+
+  if (!currentUser) {
     window.location.replace(loginUrl);
     return;
   }
@@ -93,35 +99,22 @@ export const mountSubApp = async (
   if (!container) return;
 
   if (appId) {
-    try {
-      const maintenance = await getRemoteMaintenanceState(appId);
-      if (maintenance?.isLocked) {
-        createRoot(container).render(
-          <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
-            <section className="max-w-xl rounded-2xl border border-amber-700/60 bg-amber-950/40 p-8 text-center">
-              <h1 className="text-2xl font-bold">{maintenance.appName} — সাময়িক রক্ষণাবেক্ষণ</h1>
-              <p className="mt-4 text-amber-100">{maintenance.lockReason || 'সিস্টেম রক্ষণাবেক্ষণের জন্য অ্যাপটি সাময়িক বন্ধ আছে।'}</p>
-              <a className="mt-6 inline-block rounded-lg bg-slate-800 px-4 py-2" href={loginUrl}>ড্যাশবোর্ডে ফিরুন</a>
-            </section>
-          </main>,
-        );
-        return;
+    const localMaintenance = getAppMaintenanceStates().find((state) => state.appId === appId);
+    let maintenance = localMaintenance;
+    if (hasSupabaseSession && !isInstantSession(currentUser)) {
+      try {
+        const remote = await getRemoteMaintenanceState(appId);
+        if (remote) maintenance = remote;
+      } catch {
+        // Fall back to local maintenance state on transient fetch error.
       }
-    } catch {
-      // Offline is not a security failure — say what actually happened.
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        createRoot(container).render(
-          <StrictMode>
-            <OfflineGuard context="অ্যাপের অবস্থা যাচাই করা যায়নি — ইন্টারনেট সংযোগ প্রয়োজন" />
-          </StrictMode>,
-        );
-        return;
-      }
+    }
+    if (maintenance?.isLocked) {
       createRoot(container).render(
         <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
-          <section className="max-w-xl rounded-2xl border border-rose-700/60 bg-rose-950/40 p-8 text-center">
-            <h1 className="text-xl font-bold">অ্যাপের নিরাপত্তা অবস্থা যাচাই করা যায়নি</h1>
-            <p className="mt-4 text-rose-100">কেন্দ্রীয় রক্ষণাবেক্ষণ সেটিংস পাওয়া যাচ্ছে না। পরে আবার চেষ্টা করুন।</p>
+          <section className="max-w-xl rounded-2xl border border-amber-700/60 bg-amber-950/40 p-8 text-center">
+            <h1 className="text-2xl font-bold">{maintenance.appName} — সাময়িক রক্ষণাবেক্ষণ</h1>
+            <p className="mt-4 text-amber-100">{maintenance.lockReason || 'সিস্টেম রক্ষণাবেক্ষণের জন্য অ্যাপটি সাময়িক বন্ধ আছে।'}</p>
             <a className="mt-6 inline-block rounded-lg bg-slate-800 px-4 py-2" href={loginUrl}>ড্যাশবোর্ডে ফিরুন</a>
           </section>
         </main>,
@@ -158,32 +151,35 @@ export const mountSubApp = async (
     </StrictMode>,
   );
 
-  let checking = false;
-  const monitor = window.setInterval(async () => {
-    if (checking) return;
-    checking = true;
-    try {
-      const [terminated, accountActive] = await Promise.all([
-        isCurrentSessionTerminated(),
-        isCurrentAccountActive(),
-      ]);
-      if (terminated || !accountActive) {
-        try {
-          await endCurrentSessionOnServer();
-        } catch {
-          // Sign out locally even if presence cleanup fails.
+  if (hasSupabaseSession && supabase && !isInstantSession(currentUser)) {
+    const client = supabase;
+    let checking = false;
+    const monitor = window.setInterval(async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        const [terminated, accountActive] = await Promise.all([
+          isCurrentSessionTerminated(),
+          isCurrentAccountActive(),
+        ]);
+        if (terminated || !accountActive) {
+          try {
+            await endCurrentSessionOnServer();
+          } catch {
+            // Sign out locally even if presence cleanup fails.
+          }
+          await client.auth.signOut();
+          window.sessionStorage.removeItem('gpf-active-session-id');
+          window.location.replace(loginUrl);
+        } else {
+          await touchCurrentSession();
         }
-        await client.auth.signOut();
-        window.sessionStorage.removeItem('gpf-active-session-id');
-        window.location.replace(loginUrl);
-      } else {
-        await touchCurrentSession();
+      } catch {
+        // Keep the app available through a short network interruption.
+      } finally {
+        checking = false;
       }
-    } catch {
-      // Keep the app available through a short network interruption.
-    } finally {
-      checking = false;
-    }
-  }, 15000);
-  window.addEventListener('pagehide', () => window.clearInterval(monitor), { once: true });
+    }, 15000);
+    window.addEventListener('pagehide', () => window.clearInterval(monitor), { once: true });
+  }
 };

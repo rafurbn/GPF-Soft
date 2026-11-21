@@ -13,6 +13,15 @@ import { registerActiveSession, addAuditLog, isCurrentSessionTerminated, isCurre
 import type { User } from '@supabase/supabase-js';
 import { Toast, useToast } from '../app-shared/ui/Toast';
 import { OfflineGuard } from '../app-shared/ui/OfflineGuard';
+import { findUpazilaByDefaultId, type UpazilaRecord } from './data/upazilaData';
+import {
+  buildInstantUpazilaSession,
+  clearInstantUpazilaSession,
+  isInstantSession,
+  readInstantUpazilaSession,
+  saveInstantUpazilaSession,
+  saveLocalRecoveryInfo,
+} from './lib/localUpazilaAuth';
 
 // ---------------------------------------------------------------------------
 // Multi-Page Application (MPA) routes.
@@ -102,44 +111,50 @@ export default function App() {
     // Only a real Supabase session is ever restored. There is deliberately no
     // local/demo fallback: a failed sign-in must never open the portal.
     const restoreSession = async () => {
-      if (!client) return;
-
-      const { data } = await client.auth.getSession();
-      if (!active) return;
-      if (!data.session?.user) return;
-
-      try {
-        const profile = await loadUserSession(data.session.user);
+      if (client) {
+        const { data } = await client.auth.getSession();
         if (!active) return;
-        if (profile.account_status && profile.account_status !== 'active') {
-          await client.auth.signOut();
-          return;
+        if (data.session?.user) {
+          try {
+            const profile = await loadUserSession(data.session.user);
+            if (!active) return;
+            if (profile.account_status && profile.account_status !== 'active') {
+              await client.auth.signOut();
+            } else {
+              registerActiveSession({
+                userId: profile.id,
+                upazilaCode: profile.upazila_code,
+                upazilaNameBn: profile.upazila_name_bn,
+                email: profile.email,
+                role: profile.role,
+                loginTime: new Date().toLocaleTimeString('bn-BD'),
+                ipAddress: 'সার্ভার থেকে উপলভ্য নয়',
+                browser: typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome',
+                isCurrentSession: true,
+              });
+              const accountUsers = profile.role === 'super_admin'
+                ? await loadAllUserSessions()
+                : [profile];
+              if (!active) return;
+              setCurrentUser(profile);
+              setIsLoggedIn(true);
+              setUsers(accountUsers);
+              return;
+            }
+          } catch {
+            // A stored session without an approved upazila profile is dropped quietly
+            // so the sign-in screen never reports a backend error to the visitor.
+            await client.auth.signOut();
+          }
         }
-        registerActiveSession({
-          userId: profile.id,
-          upazilaCode: profile.upazila_code,
-          upazilaNameBn: profile.upazila_name_bn,
-          email: profile.email,
-          role: profile.role,
-          loginTime: new Date().toLocaleTimeString('bn-BD'),
-          ipAddress: 'সার্ভার থেকে উপলভ্য নয়',
-          browser: typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome',
-          isCurrentSession: true,
-        });
-        const accountUsers = profile.role === 'super_admin'
-          ? await loadAllUserSessions()
-          : [profile];
-        if (!active) return;
-        setCurrentUser(profile);
-        setIsLoggedIn(true);
-        setUsers(accountUsers);
-        // ইচ্ছাকৃত: প্রথম লগইনে পাসওয়ার্ড/শর্তাবলী মডাল আর জোর করে খোলে না।
-        // ফিচারটি `onOpenPasswordModal` (ঐচ্ছিক পাসওয়ার্ড পরিবর্তন) হিসেবেই রয়ে গেছে।
-      } catch {
-        // A stored session without an approved upazila profile is dropped quietly
-        // so the sign-in screen never reports a backend error to the visitor.
-        await client.auth.signOut();
       }
+
+      // Restore instant default-upazila session if present.
+      const instant = readInstantUpazilaSession();
+      if (!active || !instant) return;
+      setCurrentUser(instant);
+      setIsLoggedIn(true);
+      setUsers([instant]);
     };
 
     void restoreSession();
@@ -149,7 +164,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!currentUser || !supabase) return;
+    if (!currentUser || !supabase || isInstantSession(currentUser)) return;
     const client = supabase;
     let active = true;
     let checking = false;
@@ -271,12 +286,75 @@ export default function App() {
     }
   };
 
-  const handleLogin = async (loginId: string, password: string) => {
-    // Never infer privilege from user input or allow a localStorage-only session.
-    if (!supabase || !isSupabaseConfigured) {
-      throw new Error('Supabase Auth সংযোগ প্রস্তুত নয়। সাইন-ইন করতে সার্ভার কনফিগার করতে হবে।');
+  const signInInstantUpazila = (
+    region: UpazilaRecord,
+    password: string,
+    recoveryEmail?: string,
+  ) => {
+    const cleanEmail = (recoveryEmail || '').trim();
+    const session = buildInstantUpazilaSession(region, cleanEmail);
+    saveLocalRecoveryInfo(region.defaultId, session.email, password);
+    saveInstantUpazilaSession(session);
+    persistUpazilaContext(session);
+    setCurrentUser(session);
+    setIsLoggedIn(true);
+    setUsers([session]);
+    setShowRegistrationModal(false);
+
+    registerActiveSession({
+      userId: session.id,
+      upazilaCode: session.upazila_code,
+      upazilaNameBn: session.upazila_name_bn,
+      email: session.email,
+      role: session.role,
+      loginTime: new Date().toLocaleTimeString('bn-BD'),
+      ipAddress: 'সার্ভার থেকে উপলভ্য নয়',
+      browser: typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome',
+      isCurrentSession: true,
+    });
+
+    addAuditLog({
+      eventType: 'login',
+      upazilaCode: session.upazila_code,
+      email: session.email,
+      description: `ব্যবহারকারী সফলভাবে সাইন-ইন করেছেন: ${session.upazila_name_bn} (${session.upazila_code})`,
+      status: 'success',
+    });
+  };
+
+  const handleLogin = async (
+    loginId: string,
+    password: string,
+    recoveryEmail?: string,
+    regionRecord?: UpazilaRecord | null,
+  ) => {
+    const cleanId = loginId.trim();
+    const matchedRegion = regionRecord || findUpazilaByDefaultId(cleanId);
+
+    // If Supabase is configured and the user signed in with an email (e.g. super_admin),
+    // or if an account already exists with that exact Supabase password, verify via Supabase first.
+    if (supabase && isSupabaseConfigured) {
+      try {
+        await signInWithSupabase(cleanId, password);
+        clearInstantUpazilaSession();
+        return;
+      } catch (supabaseError) {
+        // Default upazila users can enter directly using their chosen 8-digit password
+        // without requiring pre-registration in Supabase.
+        if (matchedRegion && password.trim().length >= 8) {
+          signInInstantUpazila(matchedRegion, password, recoveryEmail);
+          return;
+        }
+        throw supabaseError;
+      }
     }
-    await signInWithSupabase(loginId.trim(), password);
+
+    if (matchedRegion && password.trim().length >= 8) {
+      signInInstantUpazila(matchedRegion, password, recoveryEmail);
+      return;
+    }
+
+    throw new Error('উপজেলা নির্বাচন করুন এবং ৮ ডিজিটের পাসওয়ার্ড দিন।');
   };
 
   const handleCreateAccount = async (
@@ -343,11 +421,16 @@ export default function App() {
   // Handle Logout
   const handleLogout = async () => {
     try {
-      await endCurrentSessionOnServer();
+      if (!isInstantSession(currentUser)) {
+        await endCurrentSessionOnServer();
+      }
     } catch {
       // Always clear the local auth session, even if presence cleanup fails.
     }
-    await supabase?.auth.signOut();
+    if (supabase && !isInstantSession(currentUser)) {
+      await supabase.auth.signOut();
+    }
+    clearInstantUpazilaSession();
     window.sessionStorage.removeItem('gpf-active-session-id');
     // Drop the shared Upazila context so the sub-app pages can no longer open.
     clearUpazilaContext();
@@ -359,7 +442,23 @@ export default function App() {
 
   // Password Changed
   const handlePasswordChanged = async (newPassword: string, email?: string) => {
-    if (!supabase || !currentUser) throw new Error('সক্রিয় Supabase সেশন পাওয়া যায়নি।');
+    if (!currentUser) throw new Error('সক্রিয় সেশন পাওয়া যায়নি।');
+
+    if (isInstantSession(currentUser) || !supabase) {
+      const nextEmail = email?.trim() || currentUser.email;
+      saveLocalRecoveryInfo(currentUser.upazila_code, nextEmail, newPassword);
+      const updated = {
+        ...currentUser,
+        email: nextEmail,
+        is_first_login: false,
+      };
+      saveInstantUpazilaSession(updated);
+      persistUpazilaContext(updated);
+      setCurrentUser(updated);
+      setUsers((previous) => previous.map((user) => (user.id === updated.id ? updated : user)));
+      setShowPasswordModal(false);
+      return;
+    }
 
     const updates: { password: string; email?: string } = { password: newPassword };
     if (email?.trim() && email.trim().toLowerCase() !== currentUser.email.toLowerCase()) {

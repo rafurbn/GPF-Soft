@@ -25,6 +25,7 @@ const RPC_ERRORS: Record<string, string> = {
   INVALID_ROLE: 'অনুমোদিত ভূমিকা নয়।',
   CANNOT_CHANGE_OWN_ROLE: 'নিজের ভূমিকা নিজে পরিবর্তন করা যাবে না।',
   LAST_SUPER_ADMIN_PROTECTED: 'সর্বশেষ সক্রিয় সুপার এডমিনের ভূমিকা সরানো যাবে না।',
+  CANNOT_MODIFY_SUPER_ADMIN_STATUS: 'সুপার এডমিন অ্যাকাউন্টের স্ট্যাটাস এখান থেকে পরিবর্তন করা যাবে না।',
 };
 
 export const describeRpcError = (error: { message?: string; code?: string } | null): string => {

@@ -91,6 +91,40 @@ export interface ActiveSession {
   isCurrentSession?: boolean;
 }
 
+export interface UpazilaUsageStat {
+  upazilaCode: string;
+  upazilaNameBn: string;
+  districtNameBn: string;
+  divisionNameBn: string;
+  recoveryEmail: string;
+  accountStatus: UserAccountStatus;
+  loginCount: number;
+  app1Opens: number;
+  app2Opens: number;
+  app3Opens: number;
+  app4Opens: number;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  lastBrowser: string;
+  updatedAt: string;
+}
+
+export interface PortalPublicState {
+  announcements: SystemAnnouncement[];
+  maintenance: AppMaintenanceControl[];
+}
+
+export interface UpazilaCheckinResult {
+  allowed: boolean;
+  accountStatus: string;
+  sessionId: string | null;
+}
+
+export interface HeartbeatResult {
+  terminated: boolean;
+  accountStatus: string;
+}
+
 export type GpfType = 'refundable' | 'non_refundable' | 'final';
 
 export interface GpfApplication {

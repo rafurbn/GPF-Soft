@@ -81,6 +81,7 @@ interface PortalDesktopSignInViewProps {
     password: string,
     recoveryEmail?: string,
     regionRecord?: UpazilaRecord | null,
+    mode?: 'upazila' | 'admin_strict',
   ) => Promise<void>;
   onOpenRegistration?: () => void;
   onLogout: () => void;
@@ -448,6 +449,8 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     );
   };
 
+  const [loginMode, setLoginMode] = useState<'upazila' | 'admin_strict'>('upazila');
+  const [adminIdentifier, setAdminIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(true);
@@ -459,7 +462,6 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
   // Search and category state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [showForgotModal, setShowForgotModal] = useState(false);
 
   const categories = [
     { id: 'all', label: 'সকল শর্ত (১৪)' },
@@ -488,6 +490,28 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 
   const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loginMode === 'admin_strict') {
+      const cleanAdminId = adminIdentifier.trim();
+      if (!cleanAdminId) {
+        setErrorMsg('অ্যাডমিন ইমেইল বা আইডি লিখুন');
+        return;
+      }
+      if (!password.trim()) {
+        setErrorMsg('অনুগ্রহ করে পাসওয়ার্ড লিখুন');
+        return;
+      }
+      setErrorMsg('');
+      setIsSubmitting(true);
+      try {
+        await onLogin(cleanAdminId, password, undefined, null, 'admin_strict');
+      } catch (error) {
+        setErrorMsg(error instanceof Error ? error.message : 'সাইন ইন করা যায়নি। আবার চেষ্টা করুন।');
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     if (!regionComplete || !selectedRegion) {
       showRegionNotice();
       return;
@@ -517,7 +541,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
     setErrorMsg('');
     setIsSubmitting(true);
     try {
-      await onLogin(effectiveLoginId, password, trimmedEmail, selectedRegion);
+      await onLogin(effectiveLoginId, password, trimmedEmail, selectedRegion, 'upazila');
     } catch (error) {
       setErrorMsg(error instanceof Error ? error.message : 'সাইন ইন করা যায়নি। আবার চেষ্টা করুন।');
     } finally {
@@ -822,17 +846,56 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
 
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-950/70 border border-emerald-800/60 flex items-center justify-center text-emerald-400 font-bold text-lg shrink-0">
-                      <UserCheck className="w-5 h-5 text-emerald-400" />
+                      {loginMode === 'admin_strict' ? (
+                        <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                      ) : (
+                        <UserCheck className="w-5 h-5 text-emerald-400" />
+                      )}
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-white tracking-tight">
-                        স্বাগতম
+                        {loginMode === 'admin_strict' ? 'অ্যাডমিন / ইমেইল সাইন-ইন' : 'স্বাগতম'}
                       </h3>
                       <p className="text-xs text-slate-400">
-                        উপজেলা আইডি ও পাসওয়ার্ড দিয়ে সাইন-ইন করুন
+                        {loginMode === 'admin_strict'
+                          ? 'সুপার অ্যাডমিন বা নিবন্ধিত ইমেইল দিয়ে নিরাপদ প্রবেশ'
+                          : 'বিভাগ, জেলা ও উপজেলা বেছে নিয়ে পাসওয়ার্ড দিন'}
                       </p>
                     </div>
                   </div>
+                </div>
+
+                {/* Login Mode Toggle */}
+                <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginMode('upazila');
+                      setErrorMsg('');
+                    }}
+                    className={`py-2 px-3 rounded-lg font-bold transition cursor-pointer ${
+                      loginMode === 'upazila'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    উপজেলা প্রবেশ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginMode('admin_strict');
+                      setErrorMsg('');
+                    }}
+                    className={`py-2 px-3 rounded-lg font-bold transition cursor-pointer inline-flex items-center justify-center gap-1.5 ${
+                      loginMode === 'admin_strict'
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>অ্যাডমিন / ইমেইল</span>
+                  </button>
                 </div>
 
                 {/* Form */}
@@ -865,6 +928,45 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                     </div>
                   )}
 
+                  {loginMode === 'admin_strict' ? (
+                    <div className="rounded-xl border border-indigo-700/50 bg-indigo-950/25 p-3.5 text-xs space-y-3 shadow-inner">
+                      <div>
+                        <label htmlFor="admin-login-identifier" className="mb-1.5 block text-xs font-bold text-indigo-200">
+                          অ্যাডমিন ইমেইল অথবা আইডি কোড
+                        </label>
+                        <div className="relative">
+                          <div className="absolute left-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg bg-slate-800">
+                            <Mail className="h-4 w-4 text-indigo-400" />
+                          </div>
+                          <input
+                            id="admin-login-identifier"
+                            type="text"
+                            value={adminIdentifier}
+                            onChange={(e) => {
+                              setAdminIdentifier(e.target.value);
+                              if (errorMsg) setErrorMsg('');
+                            }}
+                            placeholder="ueo.s.beanibazar@gmail.com বা কোড"
+                            autoComplete="username"
+                            className="w-full rounded-xl border border-slate-700/80 bg-[#070e1c] py-2.5 pl-11 pr-3 text-[13px] sm:text-sm font-medium text-white shadow-inner placeholder:text-slate-500 focus:border-indigo-500 focus:outline-hidden"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-indigo-200/80">
+                        নিবন্ধিত সুপার অ্যাডমিন বা উপজেলা অ্যাকাউন্ট সরাসরি ইমেইল/কোড ও পাসওয়ার্ড দিয়ে যাচাই হবে।
+                      </p>
+                      {onOpenRegistration && (
+                        <button
+                          type="button"
+                          onClick={onOpenRegistration}
+                          className="text-[11px] font-semibold text-indigo-300 hover:text-indigo-200 underline cursor-pointer"
+                        >
+                          নতুন ইমেইল অ্যাকাউন্ট নিবন্ধন করতে চান?
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                  <>
                   {/* বিভাগ, জেলা ও উপজেলা নির্বাচন — সবসময় দৃশ্যমান */}
                   <div className="rounded-xl border border-amber-600/50 bg-amber-950/25 p-3.5 text-xs text-amber-100 shadow-inner">
                     <div className="flex items-center justify-between gap-2 mb-3">
@@ -1008,12 +1110,14 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       </span>
                     </div>
                   </div>
+                  </>
+                  )}
 
                   {/* ৪. গোপন পাসওয়ার্ড */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label htmlFor="portal-signin-password" className="block text-xs font-bold text-slate-300">
-                        পাসওয়ার্ড তৈরি করুন
+                        {loginMode === 'admin_strict' ? 'অ্যাকাউন্ট পাসওয়ার্ড' : 'পাসওয়ার্ড দিন'}
                       </label>
                     </div>
 
@@ -1028,23 +1132,13 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                         value={password}
                         onChange={(e) => {
                           setPassword(e.target.value);
-                          // Clear a stale error as soon as the field is edited so the
-                          // previous message cannot mislead the next attempt.
                           if (errorMsg) setErrorMsg('');
                         }}
-                        placeholder="যেকোনো ৮ ডিজিটের পাসওয়ার্ড দিন"
-                        autoComplete="off"
+                        placeholder={loginMode === 'admin_strict' ? 'আপনার পাসওয়ার্ড লিখুন' : 'যেকোনো ৮ ডিজিটের পাসওয়ার্ড দিন'}
+                        autoComplete={loginMode === 'admin_strict' ? 'current-password' : 'off'}
                         required
-                        // NOTE: no custom letter-spacing / font here. The old 0.45em
-                        // tracking plus the `caption` font made the masked dots look
-                        // broken and the final character appear cut off, which users
-                        // read as "the field is not accepting my password".
                         className="w-full pl-11 pr-11 py-2.5 bg-[#0a1526] border border-slate-700/80 rounded-xl focus:outline-hidden focus:border-emerald-500 shadow-2xs font-bold transition-all text-white placeholder-slate-500 text-sm tracking-normal"
                       />
-                      {/* One single eye toggle. The previous version rendered TWO
-                          buttons controlling the same state (one beside the label,
-                          one inside the field), which looked like a duplicated and
-                          broken control. */}
                       <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
@@ -1057,7 +1151,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
                       </button>
                     </div>
 
-                    {password.length > 0 && password.length < 8 && (
+                    {loginMode === 'upazila' && password.length > 0 && password.length < 8 && (
                       <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-bold text-rose-400">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                         <span>পাসওয়ার্ড আট ডিজিট হতে হবে</span>
@@ -1150,7 +1244,7 @@ export const PortalDesktopSignInView: React.FC<PortalDesktopSignInViewProps> = (
       {/* Forgot Password OTP Modal */}
       {showForgotOtpModal && (
         <ForgotPasswordOtpModal
-          initialEmail={email.trim()}
+          initialEmail={loginMode === 'admin_strict' && adminIdentifier.includes('@') ? adminIdentifier.trim() : email.trim()}
           onClose={() => setShowForgotOtpModal(false)}
           onSuccessReset={() => {
             setPassword('');

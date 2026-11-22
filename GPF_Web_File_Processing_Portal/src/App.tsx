@@ -9,7 +9,18 @@ import { ArchitectureDocsView } from './components/ArchitectureDocsView';
 import { loadAllUserSessions, loadUserSession } from './lib/authProfile';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { persistUpazilaContext, clearUpazilaContext } from './lib/upazilaSession';
-import { registerActiveSession, addAuditLog, isCurrentSessionTerminated, isCurrentAccountActive, endCurrentSessionOnServer, touchCurrentSession } from './lib/centralAdminStore';
+import {
+  registerActiveSession,
+  addAuditLog,
+  isCurrentSessionTerminated,
+  isCurrentAccountActive,
+  endCurrentSessionOnServer,
+  touchCurrentSession,
+  recordUpazilaCheckin,
+  heartbeatUpazilaSession,
+  endUpazilaSessionOnServer,
+  setCurrentSessionId,
+} from './lib/centralAdminStore';
 import type { User } from '@supabase/supabase-js';
 import { Toast, useToast } from '../app-shared/ui/Toast';
 import { OfflineGuard } from '../app-shared/ui/OfflineGuard';
@@ -22,15 +33,8 @@ import {
   saveInstantUpazilaSession,
   saveLocalRecoveryInfo,
 } from './lib/localUpazilaAuth';
+import { resolveLoginRoutePlan, type LoginFlowMode } from './lib/loginRouting';
 
-// ---------------------------------------------------------------------------
-// Multi-Page Application (MPA) routes.
-//
-// Each GPF processing app is now its own HTML page (see `vite.config.ts`).
-// The root dashboard is only the secure sign-in window and the app launcher;
-// it opens a sub-app as a full page navigation so the sub-app reads the
-// selected Upazila straight from localStorage.
-// ---------------------------------------------------------------------------
 type SubAppRoute = 'gpf_refundable' | 'gpf_non_refundable' | 'gpf_final' | 'gpf_DeathClaim';
 
 const SUB_APP_URLS: Record<SubAppRoute, string> = {
@@ -42,21 +46,21 @@ const SUB_APP_URLS: Record<SubAppRoute, string> = {
 
 const isSubAppRoute = (tab: string): tab is SubAppRoute => tab in SUB_APP_URLS;
 
-// Turns edge-function failures into a short Bangla message for the sign-in form
-// instead of exposing raw backend errors to the user.
+const detectBrowserName = (): string =>
+  typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome';
+
 const describeLoginError = async (
   loginError: unknown,
   response: Response | undefined,
   fallback?: string,
 ): Promise<string> => {
-  // The edge function was unreachable (offline, DNS, CORS preflight blocked).
   const err = loginError as { message?: string; name?: string } | null;
   if (err?.name === 'FunctionsFetchError' || /failed to fetch|networkerror|load failed/i.test(err?.message || '')) {
     return 'সার্ভারের সাথে সংযোগ করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।';
   }
 
   if (response?.status === 404) {
-    return 'উপজেলা ID সেবা এখনো চালু হয়নি। ইমেইল দিয়ে সাইন-ইন করুন অথবা অ্যাডমিনের সঙ্গে যোগাযোগ করুন।';
+    return 'সাইন-ইন ফাংশন (sign-in-by-upazila) এখনো ডিপ্লয় করা হয়নি। ইমেইল দিয়ে চেষ্টা করুন অথবা অ্যাডমিনের সঙ্গে যোগাযোগ করুন।';
   }
   if (response?.status === 429) {
     return 'অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।';
@@ -71,7 +75,7 @@ const describeLoginError = async (
       const body = (await context.json()) as { error?: string };
       if (body?.error) return body.error;
     } catch {
-      // The body was already consumed or is not JSON - use the default message.
+      // Body was already consumed or is not JSON.
     }
   }
 
@@ -80,7 +84,6 @@ const describeLoginError = async (
 
 export default function App() {
   const { toast, showToast } = useToast();
-  // No built-in account directory: every sign-in is verified by Supabase Auth.
   const [users, setUsers] = useState<UserSession[]>([]);
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -88,19 +91,14 @@ export default function App() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
 
-  // Publish the selected Upazila to localStorage so the standalone sub-app
-  // pages (app1/app2/app3) can read the same region without sharing React state.
   useEffect(() => {
     if (currentUser) {
       persistUpazilaContext(currentUser);
     }
   }, [currentUser]);
 
-  // Open a sub-app as a real page navigation (MPA), not an in-tab React switch.
   const openSubApp = (tab: SubAppRoute) => {
     if (currentUser) persistUpazilaContext(currentUser);
-    // A real navigation keeps the sub-app out of the dashboard's React state; the
-    // browser Back button then returns to the dashboard without re-opening the app.
     window.location.assign(SUB_APP_URLS[tab]);
   };
 
@@ -108,8 +106,6 @@ export default function App() {
     const client = supabase;
     let active = true;
 
-    // Only a real Supabase session is ever restored. There is deliberately no
-    // local/demo fallback: a failed sign-in must never open the portal.
     const restoreSession = async () => {
       if (client) {
         const { data } = await client.auth.getSession();
@@ -128,9 +124,8 @@ export default function App() {
                 email: profile.email,
                 role: profile.role,
                 loginTime: new Date().toLocaleTimeString('bn-BD'),
-                ipAddress: 'সার্ভার থেকে উপলভ্য নয়',
-                browser: typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome',
-                isCurrentSession: true,
+                ipAddress: 'পোর্টাল সেশন',
+                browser: detectBrowserName(),
               });
               const accountUsers = profile.role === 'super_admin'
                 ? await loadAllUserSessions()
@@ -142,16 +137,29 @@ export default function App() {
               return;
             }
           } catch {
-            // A stored session without an approved upazila profile is dropped quietly
-            // so the sign-in screen never reports a backend error to the visitor.
             await client.auth.signOut();
           }
         }
       }
 
-      // Restore instant default-upazila session if present.
       const instant = readInstantUpazilaSession();
       if (!active || !instant) return;
+
+      if (client && isSupabaseConfigured) {
+        try {
+          const check = await heartbeatUpazilaSession(instant.upazila_code);
+          if (!active) return;
+          if (check.terminated || check.accountStatus !== 'active') {
+            clearInstantUpazilaSession();
+            clearUpazilaContext();
+            setCurrentSessionId('');
+            return;
+          }
+        } catch {
+          // Keep local session active on transient network error.
+        }
+      }
+
       setCurrentUser(instant);
       setIsLoggedIn(true);
       setUsers([instant]);
@@ -163,54 +171,80 @@ export default function App() {
     };
   }, []);
 
+  // Live 15s session heartbeat & remote force-logout/suspension check for BOTH
+  // Supabase-authenticated users and Instant Upazila users.
   useEffect(() => {
-    if (!currentUser || !supabase || isInstantSession(currentUser)) return;
+    if (!currentUser || !supabase || !isSupabaseConfigured) return;
     const client = supabase;
+    const activeUser = currentUser;
     let active = true;
     let checking = false;
+
+    const forceSignOutLocal = (message: string) => {
+      setCurrentSessionId('');
+      clearInstantUpazilaSession();
+      clearUpazilaContext();
+      setIsLoggedIn(false);
+      setCurrentUser(null);
+      setUsers([]);
+      setActiveTab('gpf_dashboard');
+      showToast(message, 'warning');
+    };
+
     const checkAccess = async () => {
       if (checking) return;
       checking = true;
       try {
-        const [terminated, accountActive] = await Promise.all([
-          isCurrentSessionTerminated(),
-          isCurrentAccountActive(),
-        ]);
-        if (!active) return;
-        if (!terminated && accountActive) {
-          await touchCurrentSession();
-          return;
+        if (!isInstantSession(activeUser)) {
+          const [terminated, accountActive] = await Promise.all([
+            isCurrentSessionTerminated(),
+            isCurrentAccountActive(),
+          ]);
+          if (!active) return;
+          if (!terminated && accountActive) {
+            await touchCurrentSession();
+            return;
+          }
+          try {
+            await endCurrentSessionOnServer();
+          } catch {
+            // Continue clearing auth session locally.
+          }
+          await client.auth.signOut();
+          forceSignOutLocal(
+            !accountActive
+              ? 'অ্যাডমিন কর্তৃক আপনার অ্যাকাউন্ট স্থগিত বা নিষ্ক্রিয় করা হয়েছে।'
+              : 'অ্যাডমিন কর্তৃক আপনার সেশনটি লগআউট করা হয়েছে।',
+          );
+        } else {
+          const heartbeat = await heartbeatUpazilaSession(activeUser.upazila_code);
+          if (!active) return;
+          if (heartbeat.terminated || heartbeat.accountStatus !== 'active') {
+            await endUpazilaSessionOnServer();
+            forceSignOutLocal(
+              heartbeat.accountStatus !== 'active'
+                ? 'অ্যাডমিন কর্তৃক আপনার উপজেলার অ্যাক্সেস সাময়িকভাবে বন্ধ করা হয়েছে।'
+                : 'অ্যাডমিন কর্তৃক আপনার সেশনটি লগআউট করা হয়েছে।',
+            );
+          }
         }
-        try {
-          await endCurrentSessionOnServer();
-        } catch {
-          // Auth is still cleared if the server cannot close presence state.
-        }
-        await client.auth.signOut();
-        window.sessionStorage.removeItem('gpf-active-session-id');
-        clearUpazilaContext();
-        setIsLoggedIn(false);
-        setCurrentUser(null);
-        setUsers([]);
-        setActiveTab('gpf_dashboard');
       } catch {
-        // Keep the current screen during a transient network failure.
+        // Keep current screen during transient network drop.
       } finally {
         checking = false;
       }
     };
+
     const interval = window.setInterval(() => void checkAccess(), 15000);
     return () => {
       active = false;
       window.clearInterval(interval);
     };
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.upazila_code]);
 
-  // Shared post-authentication step: load the approved profile and open the portal.
   const applySignedInUser = async (authUser: User) => {
     const profile = await loadUserSession(authUser);
 
-    // Check account status (মডিউল ১: এক ক্লিকে সাসপেন্ড বা ডিঅ্যাক্টিভেশন কার্যকর করা)
     if (profile.account_status === 'suspended') {
       throw new Error('আপনার উপজেলার অ্যাকাউন্টটি কেন্দ্রীয় অ্যাডমিন কর্তৃক সাময়িকভাবে স্থগিত (Suspended) রাখা হয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।');
     }
@@ -227,11 +261,8 @@ export default function App() {
     setCurrentUser(profile);
     setIsLoggedIn(true);
     setUsers(accountUsers);
-    // ইচ্ছাকৃত: প্রথম লগইনে পাসওয়ার্ড/শর্তাবলী মডাল আর জোর করে খোলে না। ফিচারটি
-    // `onOpenPasswordModal` (পাসওয়ার্ড পরিবর্তন → ১৪ শর্তাবলী) হিসেবেই রয়ে গেছে।
     setShowRegistrationModal(false);
 
-    // Register active session & audit log (মডিউল ৩)
     registerActiveSession({
       userId: profile.id,
       upazilaCode: profile.upazila_code,
@@ -239,9 +270,8 @@ export default function App() {
       email: profile.email,
       role: profile.role,
       loginTime: new Date().toLocaleTimeString('bn-BD'),
-      ipAddress: 'সার্ভার থেকে উপলভ্য নয়',
-      browser: typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome',
-      isCurrentSession: true,
+      ipAddress: 'পোর্টাল সেশন',
+      browser: detectBrowserName(),
     });
 
     addAuditLog({
@@ -253,10 +283,8 @@ export default function App() {
     });
   };
 
-  // All login identifiers go through the server function so lockouts and account status
-  // are enforced consistently for email and upazila-code sign-ins.
-  const signInWithSupabase = async (identifier: string, password: string) => {
-    if (!supabase) {
+  const signInWithSupabaseStrict = async (identifier: string, password: string) => {
+    if (!supabase || !isSupabaseConfigured) {
       throw new Error('Supabase Auth সংযোগ প্রস্তুত নয়। আবার চেষ্টা করুন।');
     }
 
@@ -267,6 +295,25 @@ export default function App() {
     }>('sign-in-by-upazila', {
       body: { identifier, password },
     });
+
+    // If the edge function is not yet deployed (404) and the user provided an email,
+    // authenticate directly with Supabase Auth so admin sign-in still works.
+    if (response?.status === 404 && identifier.includes('@')) {
+      const { data: directData, error: directError } = await supabase.auth.signInWithPassword({
+        email: identifier.toLowerCase(),
+        password,
+      });
+      if (directError || !directData.user) {
+        throw new Error('ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।');
+      }
+      try {
+        await applySignedInUser(directData.user);
+        return;
+      } catch (profileError) {
+        await supabase.auth.signOut();
+        throw profileError;
+      }
+    }
 
     if (loginError || !tokenData?.access_token || !tokenData?.refresh_token) {
       throw new Error(await describeLoginError(loginError, response, tokenData?.error));
@@ -286,12 +333,29 @@ export default function App() {
     }
   };
 
-  const signInInstantUpazila = (
+  const signInInstantUpazila = async (
     region: UpazilaRecord,
     password: string,
     recoveryEmail?: string,
   ) => {
     const cleanEmail = (recoveryEmail || '').trim();
+    const checkin = await recordUpazilaCheckin({
+      upazilaCode: region.defaultId,
+      upazilaNameBn: region.upazilaBn,
+      districtNameBn: region.districtBn,
+      divisionNameBn: region.divisionBn,
+      recoveryEmail: cleanEmail,
+      browser: detectBrowserName(),
+    });
+
+    if (!checkin.allowed) {
+      throw new Error(
+        checkin.accountStatus === 'deactivated'
+          ? 'আপনার উপজেলার অ্যাক্সেস কেন্দ্রীয় অ্যাডমিন কর্তৃক স্থায়ীভাবে নিষ্ক্রিয় (Deactivated) করা হয়েছে।'
+          : 'আপনার উপজেলার অ্যাক্সেস কেন্দ্রীয় অ্যাডমিন কর্তৃক সাময়িকভাবে স্থগিত (Suspended) করা হয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।',
+      );
+    }
+
     const session = buildInstantUpazilaSession(region, cleanEmail);
     saveLocalRecoveryInfo(region.defaultId, session.email, password);
     saveInstantUpazilaSession(session);
@@ -308,17 +372,8 @@ export default function App() {
       email: session.email,
       role: session.role,
       loginTime: new Date().toLocaleTimeString('bn-BD'),
-      ipAddress: 'সার্ভার থেকে উপলভ্য নয়',
-      browser: typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome',
-      isCurrentSession: true,
-    });
-
-    addAuditLog({
-      eventType: 'login',
-      upazilaCode: session.upazila_code,
-      email: session.email,
-      description: `ব্যবহারকারী সফলভাবে সাইন-ইন করেছেন: ${session.upazila_name_bn} (${session.upazila_code})`,
-      status: 'success',
+      ipAddress: 'উপজেলা পোর্টাল',
+      browser: detectBrowserName(),
     });
   };
 
@@ -327,38 +382,26 @@ export default function App() {
     password: string,
     recoveryEmail?: string,
     regionRecord?: UpazilaRecord | null,
+    mode: LoginFlowMode = 'upazila',
   ) => {
-    const cleanId = loginId.trim();
-    const matchedRegion = regionRecord || findUpazilaByDefaultId(cleanId);
+    const matchedRegion = regionRecord || findUpazilaByDefaultId(loginId.trim());
+    const route = resolveLoginRoutePlan({ loginId, mode, matchedRegion });
 
-    // If Supabase is configured and the user signed in with an email (e.g. super_admin),
-    // or if an account already exists with that exact Supabase password, verify via Supabase first.
-    if (supabase && isSupabaseConfigured) {
-      try {
-        await signInWithSupabase(cleanId, password);
-        clearInstantUpazilaSession();
-        return;
-      } catch (supabaseError) {
-        // Default upazila users can enter directly using their chosen 8-digit password
-        // without requiring pre-registration in Supabase.
-        if (matchedRegion && password.trim().length >= 8) {
-          signInInstantUpazila(matchedRegion, password, recoveryEmail);
-          return;
-        }
-        throw supabaseError;
-      }
-    }
-
-    if (matchedRegion && password.trim().length >= 8) {
-      signInInstantUpazila(matchedRegion, password, recoveryEmail);
+    if (route.strategy === 'supabase_strict') {
+      await signInWithSupabaseStrict(route.identifier, password);
+      clearInstantUpazilaSession();
       return;
     }
 
-    throw new Error('উপজেলা নির্বাচন করুন এবং ৮ ডিজিটের পাসওয়ার্ড দিন।');
+    if (!matchedRegion || password.trim().length < 8) {
+      throw new Error('উপজেলা নির্বাচন করুন এবং ৮ ডিজিটের পাসওয়ার্ড দিন।');
+    }
+
+    await signInInstantUpazila(matchedRegion, password, recoveryEmail);
   };
 
   const handleCreateAccount = async (
-    region: import('./data/upazilaData').UpazilaRecord,
+    region: UpazilaRecord,
     email: string,
     password: string,
   ) => {
@@ -366,9 +409,6 @@ export default function App() {
       throw new Error('Supabase Auth কনফিগার করা হয়নি।');
     }
 
-    // এক উপজেলা = একটি অ্যাকাউন্ট — এই নিয়ম অপরিবর্তিত। Pre-check RPC সুবিধামাত্র;
-    // create_upazila_profile_for_signup trigger-ই আসল প্রহরী এবং দ্বিতীয় অ্যাকাউন্ট
-    // একই উপজেলায় হলে সেটি নিজেই প্রত্যাখ্যান করে।
     const { data: available, error: availabilityError } = await supabase.rpc('is_upazila_available', {
       requested_upazila_code: region.defaultId,
     });
@@ -376,9 +416,6 @@ export default function App() {
       throw new Error('এই উপজেলার জন্য account ইতিমধ্যে তৈরি হয়েছে।');
     }
 
-    // ইচ্ছাকৃত: `emailRedirectTo` নেই, তাই ইমেইল কনফার্মেশন লিংকের ধাপ বাদ। সাইন-আপ
-    // সফল হলে সোজা সেশন নিয়ে ড্যাশবোর্ডে ঢুকে যায়। পাসওয়ার্ড ভুলে গেলে সাইন-ইন
-    // স্ক্রিনের OTP ফ্লো আগের মতোই ইমেইলটি ব্যবহার করে।
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -411,28 +448,27 @@ export default function App() {
       setShowRegistrationModal(false);
       return true;
     }
-    // Email confirmation is switched off for this flow; if the server still withholds
-    // a session, tell the user to sign in instead of asking for a confirmation link.
+
     throw new Error(
-      `অ্যাকাউন্ট তৈরি হয়েছে। এখন লগইন আইডি ${region.defaultId} ও আপনার পাসওয়ার্ড দিয়ে সাইন-ইন করুন।`,
+      `অ্যাকাউন্ট তৈরি হয়েছে। এখন অ্যাডমিন/ইমেইল ট্যাব থেকে ইমেইল অথবা আইডি ${region.defaultId} ও পাসওয়ার্ড দিয়ে সাইন-ইন করুন।`,
     );
   };
 
-  // Handle Logout
   const handleLogout = async () => {
     try {
-      if (!isInstantSession(currentUser)) {
+      if (isInstantSession(currentUser)) {
+        await endUpazilaSessionOnServer();
+      } else {
         await endCurrentSessionOnServer();
       }
     } catch {
-      // Always clear the local auth session, even if presence cleanup fails.
+      // Always clear local auth session.
     }
     if (supabase && !isInstantSession(currentUser)) {
       await supabase.auth.signOut();
     }
     clearInstantUpazilaSession();
-    window.sessionStorage.removeItem('gpf-active-session-id');
-    // Drop the shared Upazila context so the sub-app pages can no longer open.
+    setCurrentSessionId('');
     clearUpazilaContext();
     setIsLoggedIn(false);
     setCurrentUser(null);
@@ -440,7 +476,6 @@ export default function App() {
     setActiveTab('gpf_dashboard');
   };
 
-  // Password Changed
   const handlePasswordChanged = async (newPassword: string, email?: string) => {
     if (!currentUser) throw new Error('সক্রিয় সেশন পাওয়া যায়নি।');
 
@@ -479,60 +514,27 @@ export default function App() {
       is_first_login: false,
     };
     setCurrentUser(updated);
-    setUsers((previous) => previous.map((user) => user.id === updated.id ? updated : user));
+    setUsers((previous) => previous.map((user) => (user.id === updated.id ? updated : user)));
     setShowPasswordModal(false);
-  };
-
-  // Send a Supabase recovery email without exposing admin credentials in the browser.
-  const handleResetPassword = async (upazilaCode: string) => {
-    const target = users.find((user) => user.upazila_code === upazilaCode);
-    if (!supabase || !target?.email) {
-      showToast('এই অ্যাকাউন্টের ইমেইল Supabase profile-এ পাওয়া যায়নি।', 'error');
-      return;
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(target.email, {
-      redirectTo: window.location.origin,
-    });
-    if (error) {
-      showToast('পাসওয়ার্ড রিকভারি ইমেইল পাঠানো যায়নি। Supabase SMTP সেটিংস যাচাই করুন।', 'error');
-      return;
-    }
-    showToast('পাসওয়ার্ড রিকভারি কোড ব্যবহারকারীর যাচাইকৃত ইমেইলে পাঠানো হয়েছে।', 'success');
   };
 
   return (
     <div className="app-shell min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start p-2 sm:p-4 lg:p-5 font-sans selection:bg-emerald-500 selection:text-white">
-      {/* Online-only portal: a dropped connection pauses the whole dashboard. */}
       <OfflineGuard context="জিপিএফ ফাইল প্রসেসিং পোর্টাল" />
 
-      {/* কেন্দ্রীয় নোটিশ ও ব্রডকাস্ট ব্যানার (মডিউল ৪) */}
       {currentUser && <BroadcastNoticeMarquee userUpazilaCode={currentUser.upazila_code} />}
 
-      {/*
-        MAIN DESKTOP SCREEN:
-        - Layout based on Image 3
-        - Pre-login: Clean sign-in with 14 bullet lines
-        - Post-login: Dynamic, colorful right panel with bigger, attractive GPF app cards
-        - Automatic first-time password modal removed upon login as requested
-      */}
       {activeTab === 'gpf_dashboard' && (
         <PortalDesktopSignInView
           currentUser={currentUser}
           isLoggedIn={isLoggedIn}
-          // A super-admin session receives every account; a upazila user only
-          // receives its own, so the launcher statistics stay admin-only.
           visibleUsers={users}
           onLogin={handleLogin}
           onOpenRegistration={() => setShowRegistrationModal(true)}
           onLogout={handleLogout}
-          /* ১৪ শর্তাবলী/পাসওয়ার্ড সেট মডাল এখন শুধু এখান থেকেই (ঐচ্ছিকভাবে) খোলে */
           onOpenPasswordModal={() => setShowPasswordModal(true)}
-          // The 14 conditions are a post-login notice board again; the launcher
-          // itself no longer renders them.
           onOpenConditionNotice={() => setActiveTab('architecture_guide')}
           onNavigateToApp={(tab) => {
-            // Every GPF processing app (app1-app4) is its own MPA page.
             if (isSubAppRoute(tab)) {
               openSubApp(tab);
               return;
@@ -543,7 +545,6 @@ export default function App() {
         />
       )}
 
-      {/* Super Admin Control Suite (মডিউল ১ থেকে ৬) */}
       {(activeTab === 'super_admin_suite' || activeTab === 'admin_overview') && currentUser?.role === 'super_admin' && (
         <SuperAdminSuite
           users={users}
@@ -561,7 +562,6 @@ export default function App() {
         />
       )}
 
-      {/* Architecture Guide (if selected) */}
       {activeTab === 'architecture_guide' && (
         <div className="w-full max-w-[1300px] mx-auto">
           <div className="mb-4">
@@ -576,7 +576,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Manual Password Change Modal (Only when explicitly clicked by user) */}
       {currentUser && (
         <FirstTimePasswordModal
           isOpen={showPasswordModal && isLoggedIn}

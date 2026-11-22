@@ -4,8 +4,24 @@ import '../src/index.css';
 import type { UserSession } from '../src/types';
 import { isSupabaseConfigured, supabase } from '../src/lib/supabase';
 import { loadUserSession } from '../src/lib/authProfile';
-import { getAppMaintenanceStates, getRemoteMaintenanceState, isCurrentSessionTerminated, isCurrentAccountActive, touchCurrentSession, endCurrentSessionOnServer } from '../src/lib/centralAdminStore';
-import { isInstantSession, readInstantUpazilaSession } from '../src/lib/localUpazilaAuth';
+import {
+  getAppMaintenanceStates,
+  getRemoteMaintenanceState,
+  isCurrentSessionTerminated,
+  isCurrentAccountActive,
+  touchCurrentSession,
+  endCurrentSessionOnServer,
+  heartbeatUpazilaSession,
+  endUpazilaSessionOnServer,
+  recordUpazilaAppOpen,
+  setCurrentSessionId,
+} from '../src/lib/centralAdminStore';
+import {
+  clearInstantUpazilaSession,
+  isInstantSession,
+  readInstantUpazilaSession,
+} from '../src/lib/localUpazilaAuth';
+import { clearUpazilaContext } from '../src/lib/upazilaSession';
 import { registerPwa } from './pwa';
 import { OfflineGuard } from './ui/OfflineGuard';
 
@@ -31,8 +47,8 @@ export interface SubAppOptions {
 }
 
 /**
- * Boots a standalone GPF sub-app only after checking the Supabase session and
- * authoritative profile. Browser storage is not an authentication source.
+ * Boots a standalone GPF sub-app after verifying either a Supabase session or an
+ * active instant Upazila session, enforcing maintenance locks and heartbeats.
  */
 export const mountSubApp = async (
   moduleLoader: () => Promise<SubAppModule>,
@@ -44,8 +60,6 @@ export const mountSubApp = async (
 
   const container = document.getElementById('root');
 
-  // The portal is online-only. Without a connection the app must say so instead
-  // of silently bouncing the user back to the sign-in page.
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     if (container) {
       createRoot(container).render(
@@ -89,6 +103,20 @@ export const mountSubApp = async (
 
   if (!currentUser) {
     currentUser = readInstantUpazilaSession();
+    if (currentUser && isSupabaseConfigured && supabase) {
+      try {
+        const check = await heartbeatUpazilaSession(currentUser.upazila_code);
+        if (check.terminated || check.accountStatus !== 'active') {
+          clearInstantUpazilaSession();
+          clearUpazilaContext();
+          setCurrentSessionId('');
+          window.location.replace(loginUrl);
+          return;
+        }
+      } catch {
+        // Keep available during transient network/migration fallback.
+      }
+    }
   }
 
   if (!currentUser) {
@@ -101,7 +129,7 @@ export const mountSubApp = async (
   if (appId) {
     const localMaintenance = getAppMaintenanceStates().find((state) => state.appId === appId);
     let maintenance = localMaintenance;
-    if (hasSupabaseSession && !isInstantSession(currentUser)) {
+    if (isSupabaseConfigured && supabase) {
       try {
         const remote = await getRemoteMaintenanceState(appId);
         if (remote) maintenance = remote;
@@ -121,13 +149,15 @@ export const mountSubApp = async (
       );
       return;
     }
+
+    // Track non-sensitive app open count for admin statistics
+    void recordUpazilaAppOpen(currentUser, appId);
   }
 
   let loaded: SubAppModule;
   try {
     loaded = await moduleLoader();
   } catch {
-    // The page shell itself could not be fetched (connection dropped mid-load).
     createRoot(container).render(
       <StrictMode>
         <OfflineGuard context="অ্যাপটি লোড করা যায়নি — ইন্টারনেট সংযোগ প্রয়োজন" />
@@ -137,8 +167,6 @@ export const mountSubApp = async (
   }
 
   const RootComponent = loaded.default;
-
-  // Returning to the dashboard is a real navigation back to the root page.
   const handleBack = () => window.location.assign(loginUrl);
 
   createRoot(container).render(
@@ -146,33 +174,43 @@ export const mountSubApp = async (
       <RootComponent
         currentUser={currentUser}
         onBack={handleBack}
-        
       />
     </StrictMode>,
   );
 
-  if (hasSupabaseSession && supabase && !isInstantSession(currentUser)) {
+  if (isSupabaseConfigured && supabase) {
     const client = supabase;
+    const activeUser = currentUser;
     let checking = false;
     const monitor = window.setInterval(async () => {
       if (checking) return;
       checking = true;
       try {
-        const [terminated, accountActive] = await Promise.all([
-          isCurrentSessionTerminated(),
-          isCurrentAccountActive(),
-        ]);
-        if (terminated || !accountActive) {
-          try {
-            await endCurrentSessionOnServer();
-          } catch {
-            // Sign out locally even if presence cleanup fails.
+        if (hasSupabaseSession && !isInstantSession(activeUser)) {
+          const [terminated, accountActive] = await Promise.all([
+            isCurrentSessionTerminated(),
+            isCurrentAccountActive(),
+          ]);
+          if (terminated || !accountActive) {
+            try {
+              await endCurrentSessionOnServer();
+            } catch {
+              // Sign out locally even if presence cleanup fails.
+            }
+            await client.auth.signOut();
+            setCurrentSessionId('');
+            window.location.replace(loginUrl);
+          } else {
+            await touchCurrentSession();
           }
-          await client.auth.signOut();
-          window.sessionStorage.removeItem('gpf-active-session-id');
-          window.location.replace(loginUrl);
         } else {
-          await touchCurrentSession();
+          const heartbeat = await heartbeatUpazilaSession(activeUser.upazila_code);
+          if (heartbeat.terminated || heartbeat.accountStatus !== 'active') {
+            await endUpazilaSessionOnServer();
+            clearInstantUpazilaSession();
+            clearUpazilaContext();
+            window.location.replace(loginUrl);
+          }
         }
       } catch {
         // Keep the app available through a short network interruption.

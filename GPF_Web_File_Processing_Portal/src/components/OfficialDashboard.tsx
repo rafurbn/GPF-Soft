@@ -10,7 +10,15 @@
 import React from 'react';
 import { BookmarkCheck, Sparkles, ChevronRight, Clock, Plus, Activity, ShieldCheck, Lock, ExternalLink } from 'lucide-react';
 import { ActiveAppTab, UserSession } from '../types';
-import { getAppMaintenanceStates, getRemoteMaintenanceState, hydrateMaintenanceStates } from '../lib/centralAdminStore';
+import {
+  computeUsageSummary,
+  fetchUpazilaUsageStats,
+  getAppMaintenanceStates,
+  getRemoteMaintenanceState,
+  getUpazilaUsageStats,
+  hydrateActiveSessions,
+  hydrateMaintenanceStates,
+} from '../lib/centralAdminStore';
 import { toBn } from '../lib/format';
 import { Toast, useToast } from '../../app-shared/ui/Toast';
 
@@ -128,8 +136,11 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
   users = [],
 }) => {
   const [maintenanceStates, setMaintenanceStates] = React.useState(getAppMaintenanceStates());
+  const [usageStats, setUsageStats] = React.useState(getUpazilaUsageStats());
+  const [liveSessionsCount, setLiveSessionsCount] = React.useState(0);
 
   const { toast, showToast } = useToast();
+  const isAdmin = currentUser?.role === 'super_admin';
 
   React.useEffect(() => {
     let active = true;
@@ -140,6 +151,20 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
       } catch {
         // App opening still performs a server-side availability check.
       }
+      if (isAdmin) {
+        try {
+          const [statsRows, sessions] = await Promise.all([
+            fetchUpazilaUsageStats(),
+            hydrateActiveSessions(),
+          ]);
+          if (active) {
+            setUsageStats(statsRows);
+            setLiveSessionsCount(sessions.length);
+          }
+        } catch {
+          // Keep cached stats on transient fetch failure.
+        }
+      }
     };
     void load();
     const interval = window.setInterval(() => void load(), 30000);
@@ -147,7 +172,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
       active = false;
       window.clearInterval(interval);
     };
-  }, []);
+  }, [isAdmin]);
 
   const handleAppClick = async (appId: string, tab?: ActiveAppTab, externalUrl?: string) => {
     if (externalUrl) {
@@ -155,20 +180,18 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
       return;
     }
 
-    // Check maintenance lock
+    // Check maintenance lock for ALL users (both instant and registered)
     const localInfo = maintenanceStates.find((state) => state.appId === appId);
     let lockInfo = {
       isLocked: localInfo?.isLocked || false,
       reason: localInfo?.lockReason || '',
       appName: localInfo?.appName || '',
     };
-    if (!currentUser?.id?.startsWith('upazila-')) {
-      try {
-        const remoteLock = await getRemoteMaintenanceState(appId);
-        if (remoteLock) lockInfo = { ...lockInfo, isLocked: remoteLock.isLocked, reason: remoteLock.lockReason, appName: remoteLock.appName };
-      } catch {
-        // Fall back to local maintenance state if remote check is unavailable.
-      }
+    try {
+      const remoteLock = await getRemoteMaintenanceState(appId);
+      if (remoteLock) lockInfo = { ...lockInfo, isLocked: remoteLock.isLocked, reason: remoteLock.lockReason, appName: remoteLock.appName };
+    } catch {
+      // Fall back to local maintenance state if remote check is unavailable.
     }
     if (lockInfo.isLocked) {
       showToast(`[${lockInfo.appName}] রক্ষণাবেক্ষণের জন্য সাময়িক বন্ধ রয়েছে।\nকারণ: ${lockInfo.reason}`, 'warning');
@@ -182,22 +205,17 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
     if (tab && onNavigateToApp) onNavigateToApp(tab);
   };
 
-  const isAdmin = currentUser?.role === 'super_admin';
+  const summary = computeUsageSummary(usageStats);
   const upazilaAccounts = users.filter((user) => user.role !== 'super_admin');
+  const activeUpazilaTotal = new Set([
+    ...upazilaAccounts.map((u) => u.upazila_code),
+    ...usageStats.map((s) => s.upazilaCode),
+  ]).size;
+
   const stats = [
-    { id: 'accounts', label: 'নিবন্ধিত উপজেলা', value: upazilaAccounts.length, dotClass: 'bg-emerald-400' },
-    {
-      id: 'reset',
-      label: 'পাসওয়ার্ড রিসেট বাকি',
-      value: upazilaAccounts.filter((user) => user.is_first_login).length,
-      dotClass: 'bg-amber-400',
-    },
-    {
-      id: 'active',
-      label: 'সক্রিয় একাউন্ট',
-      value: upazilaAccounts.filter((user) => !user.is_first_login).length,
-      dotClass: 'bg-sky-400',
-    },
+    { id: 'upazilas', label: 'ব্যবহারকারী উপজেলা', value: activeUpazilaTotal, dotClass: 'bg-emerald-400' },
+    { id: 'today', label: 'আজ সক্রিয়', value: summary.activeToday, dotClass: 'bg-sky-400' },
+    { id: 'live', label: 'অনলাইন সেশন', value: liveSessionsCount, dotClass: 'bg-amber-400' },
   ];
 
   return (

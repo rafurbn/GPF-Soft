@@ -324,15 +324,16 @@ create policy "Only super admins delete audit logs" on public.admin_audit_logs
 
 create table if not exists public.active_sessions (
   session_id text primary key,
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid references auth.users (id) on delete cascade,
   upazila_code text not null,
   record jsonb not null,
   terminated_at timestamptz,
   last_seen_at timestamptz not null default now()
 );
+alter table public.active_sessions alter column user_id drop not null;
 alter table public.active_sessions enable row level security;
 revoke all on public.active_sessions from anon;
-grant select, insert, update on public.active_sessions to authenticated;
+grant select, insert, update, delete on public.active_sessions to authenticated;
 drop policy if exists "Users read own sessions and admins read all" on public.active_sessions;
 create policy "Users read own sessions and admins read all" on public.active_sessions
   for select to authenticated using (public.is_super_admin() or (public.is_active_user() and user_id = auth.uid()));
@@ -347,6 +348,38 @@ drop policy if exists "Users can end their own sessions" on public.active_sessio
 create policy "Users can end their own sessions" on public.active_sessions
   for update to authenticated using (user_id = auth.uid())
   with check (user_id = auth.uid() and terminated_at is not null);
+drop policy if exists "Only super admins delete sessions" on public.active_sessions;
+create policy "Only super admins delete sessions" on public.active_sessions
+  for delete to authenticated using (public.is_super_admin());
+
+create table if not exists public.upazila_usage_stats (
+  upazila_code text primary key,
+  upazila_name_bn text not null default '',
+  district_name_bn text not null default '',
+  division_name_bn text not null default '',
+  recovery_email text not null default '',
+  account_status text not null default 'active'
+    check (account_status in ('active', 'suspended', 'deactivated')),
+  login_count integer not null default 0,
+  app1_opens integer not null default 0,
+  app2_opens integer not null default 0,
+  app3_opens integer not null default 0,
+  app4_opens integer not null default 0,
+  first_seen_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now(),
+  last_browser text not null default '',
+  updated_at timestamptz not null default now()
+);
+alter table public.upazila_usage_stats enable row level security;
+revoke all on public.upazila_usage_stats from anon, authenticated;
+grant select, update on public.upazila_usage_stats to authenticated;
+drop policy if exists "Super admins read usage stats" on public.upazila_usage_stats;
+create policy "Super admins read usage stats" on public.upazila_usage_stats
+  for select to authenticated using (public.is_super_admin());
+drop policy if exists "Super admins update usage stats" on public.upazila_usage_stats;
+create policy "Super admins update usage stats" on public.upazila_usage_stats
+  for update to authenticated using (public.is_super_admin())
+  with check (public.is_super_admin());
 
 create or replace function public.set_upazila_account_status(
   requested_upazila_code text,
@@ -357,6 +390,8 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_clean_code text := trim(coalesce(requested_upazila_code, ''));
 begin
   if not public.is_super_admin() then
     raise exception using message = 'SUPER_ADMIN_REQUIRED';
@@ -364,18 +399,39 @@ begin
   if requested_status not in ('active', 'suspended', 'deactivated', 'pending') then
     raise exception using message = 'INVALID_ACCOUNT_STATUS';
   end if;
+  if v_clean_code = '' then
+    raise exception using message = 'UPAZILA_PROFILE_NOT_FOUND';
+  end if;
+  if exists (
+    select 1 from public.profiles
+    where upazila_code = v_clean_code and role = 'super_admin'
+  ) then
+    raise exception using message = 'CANNOT_MODIFY_SUPER_ADMIN_STATUS';
+  end if;
 
   update public.profiles
   set account_status = requested_status
-  where upazila_code = requested_upazila_code
+  where upazila_code = v_clean_code
     and role <> 'super_admin';
 
-  if not found then
-    raise exception using message = 'UPAZILA_PROFILE_NOT_FOUND';
+  if requested_status in ('active', 'suspended', 'deactivated') then
+    insert into public.upazila_usage_stats (upazila_code, account_status, updated_at)
+    values (v_clean_code, requested_status, now())
+    on conflict (upazila_code) do update
+      set account_status = excluded.account_status,
+          updated_at = now();
   end if;
+
+  if requested_status in ('suspended', 'deactivated') then
+    update public.active_sessions
+    set terminated_at = now()
+    where upazila_code = v_clean_code
+      and terminated_at is null;
+  end if;
+
   if requested_status = 'active' then
     delete from public.login_security_state
-    where user_id = (select user_id from public.profiles where upazila_code = requested_upazila_code);
+    where user_id = (select user_id from public.profiles where upazila_code = v_clean_code);
   end if;
 end;
 $$;
@@ -537,7 +593,18 @@ as $$
   from public.profiles p
   left join public.login_security_state s on s.user_id = p.user_id
   where public.is_super_admin()
-  order by coalesce(s.failed_attempts, 0) desc, p.upazila_code;
+  union all
+  select
+    u.upazila_code,
+    null::uuid as user_id,
+    0::smallint as failed_attempts,
+    null::timestamptz as locked_until,
+    false as auto_locked,
+    u.account_status
+  from public.upazila_usage_stats u
+  where public.is_super_admin()
+    and not exists (select 1 from public.profiles p2 where p2.upazila_code = u.upazila_code)
+  order by failed_attempts desc, upazila_code;
 $$;
 revoke all on function public.admin_get_login_security() from public;
 grant execute on function public.admin_get_login_security() to authenticated;
@@ -553,6 +620,7 @@ set search_path = public
 as $$
 declare
   target public.profiles%rowtype;
+  v_found boolean := false;
 begin
   if not public.is_super_admin() then
     raise exception using message = 'SUPER_ADMIN_REQUIRED';
@@ -560,22 +628,34 @@ begin
 
   select * into target from public.profiles
   where upazila_code = requested_upazila_code;
-  if not found then
-    raise exception using message = 'UPAZILA_PROFILE_NOT_FOUND';
+  if found then
+    v_found := true;
+    delete from public.login_security_state where user_id = target.user_id;
+    update public.profiles set account_status = 'active' where user_id = target.user_id;
   end if;
 
-  delete from public.login_security_state where user_id = target.user_id;
-  update public.profiles set account_status = 'active' where user_id = target.user_id;
+  update public.upazila_usage_stats
+  set account_status = 'active', updated_at = now()
+  where upazila_code = requested_upazila_code;
+  if found then
+    v_found := true;
+  end if;
+
+  if not v_found then
+    raise exception using message = 'UPAZILA_PROFILE_NOT_FOUND';
+  end if;
 
   insert into public.admin_audit_logs (id, upazila_code, user_id, payload)
   values (
     'unlock-' || gen_random_uuid(),
-    target.upazila_code,
+    requested_upazila_code,
     target.user_id,
     jsonb_build_object(
+      'id', 'unlock-' || gen_random_uuid(),
       'timestamp', now(),
-      'eventType', 'account_unlocked',
-      'upazilaCode', target.upazila_code,
+      'eventType', 'status_change',
+      'upazilaCode', requested_upazila_code,
+      'email', coalesce(target.email, 'instant-upazila'),
       'description', 'সুপার এডমিন কর্তৃক অ্যাকাউন্টের লকআউট ও ব্যর্থ লগইন গণনা রিসেট করা হয়েছে।',
       'status', 'success'
     )
@@ -633,9 +713,11 @@ begin
     target.upazila_code,
     target.user_id,
     jsonb_build_object(
+      'id', 'role-' || gen_random_uuid(),
       'timestamp', now(),
-      'eventType', 'role_changed',
+      'eventType', 'status_change',
       'upazilaCode', target.upazila_code,
+      'email', target.email,
       'description', format('ভূমিকা পরিবর্তন: %s -> %s', target.role, requested_role),
       'status', 'warning'
     )
@@ -735,6 +817,330 @@ end;
 $$;
 revoke all on function public.admin_purge_trashed_central_claims() from public;
 grant execute on function public.admin_purge_trashed_central_claims() to authenticated;
+
+-- ============================================================================
+-- Zero-friction Upazila check-in, session heartbeat, app usage counts & public
+-- portal state (notices + maintenance locks) for instant-login upazila users.
+-- No employee PII or financial amounts are stored or returned here.
+-- ============================================================================
+
+create or replace function public.record_upazila_checkin(
+  p_upazila_code text,
+  p_upazila_name_bn text,
+  p_district_name_bn text,
+  p_division_name_bn text default '',
+  p_recovery_email text default '',
+  p_session_id text default '',
+  p_browser text default 'Browser'
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_code text := trim(coalesce(p_upazila_code, ''));
+  v_name text := trim(coalesce(p_upazila_name_bn, ''));
+  v_dist text := trim(coalesce(p_district_name_bn, ''));
+  v_div text := trim(coalesce(p_division_name_bn, ''));
+  v_email text := coalesce(nullif(trim(coalesce(p_recovery_email, '')), ''), 'instant-upazila');
+  v_browser text := coalesce(nullif(trim(coalesce(p_browser, '')), ''), 'Browser');
+  v_profile_status text;
+  v_usage_status text;
+  v_effective_status text := 'active';
+  v_session_id text;
+  v_log_id text;
+begin
+  if v_code = '' then
+    return jsonb_build_object('allowed', false, 'account_status', 'invalid', 'session_id', null);
+  end if;
+
+  select account_status into v_profile_status
+  from public.profiles
+  where upazila_code = v_code
+  limit 1;
+
+  select account_status into v_usage_status
+  from public.upazila_usage_stats
+  where upazila_code = v_code
+  limit 1;
+
+  if v_profile_status in ('suspended', 'deactivated', 'pending') then
+    v_effective_status := v_profile_status;
+  elsif v_usage_status in ('suspended', 'deactivated') then
+    v_effective_status := v_usage_status;
+  end if;
+
+  if v_effective_status <> 'active' then
+    v_log_id := 'blocked-' || gen_random_uuid();
+    insert into public.admin_audit_logs (id, upazila_code, user_id, payload)
+    values (
+      v_log_id,
+      v_code,
+      null,
+      jsonb_build_object(
+        'id', v_log_id,
+        'timestamp', now(),
+        'eventType', 'failed_login',
+        'upazilaCode', v_code,
+        'email', v_email,
+        'description', format('প্রবেশ প্রত্যাখ্যাত (%s): %s (%s)', v_effective_status, coalesce(nullif(v_name, ''), v_code), v_code),
+        'status', 'danger'
+      )
+    );
+    return jsonb_build_object('allowed', false, 'account_status', v_effective_status, 'session_id', null);
+  end if;
+
+  insert into public.upazila_usage_stats (
+    upazila_code,
+    upazila_name_bn,
+    district_name_bn,
+    division_name_bn,
+    recovery_email,
+    account_status,
+    login_count,
+    first_seen_at,
+    last_seen_at,
+    last_browser,
+    updated_at
+  ) values (
+    v_code,
+    v_name,
+    v_dist,
+    v_div,
+    case when v_email = 'instant-upazila' then '' else v_email end,
+    'active',
+    1,
+    now(),
+    now(),
+    v_browser,
+    now()
+  )
+  on conflict (upazila_code) do update
+    set upazila_name_bn = coalesce(nullif(excluded.upazila_name_bn, ''), public.upazila_usage_stats.upazila_name_bn),
+        district_name_bn = coalesce(nullif(excluded.district_name_bn, ''), public.upazila_usage_stats.district_name_bn),
+        division_name_bn = coalesce(nullif(excluded.division_name_bn, ''), public.upazila_usage_stats.division_name_bn),
+        recovery_email = coalesce(nullif(excluded.recovery_email, ''), public.upazila_usage_stats.recovery_email),
+        login_count = public.upazila_usage_stats.login_count + 1,
+        last_seen_at = now(),
+        last_browser = excluded.last_browser,
+        updated_at = now();
+
+  v_session_id := coalesce(nullif(trim(coalesce(p_session_id, '')), ''), 'sess-' || gen_random_uuid());
+
+  insert into public.active_sessions (
+    session_id,
+    user_id,
+    upazila_code,
+    record,
+    terminated_at,
+    last_seen_at
+  ) values (
+    v_session_id,
+    null,
+    v_code,
+    jsonb_build_object(
+      'sessionId', v_session_id,
+      'userId', 'upazila-' || v_code,
+      'upazilaCode', v_code,
+      'upazilaNameBn', v_name,
+      'email', v_email,
+      'role', 'upazila_user',
+      'loginTime', to_char(now() at time zone 'Asia/Dhaka', 'HH12:MI AM'),
+      'lastActiveTime', 'এখনই সক্রিয়',
+      'ipAddress', 'উপজেলা পোর্টাল',
+      'browser', v_browser
+    ),
+    null,
+    now()
+  )
+  on conflict (session_id) do update
+    set upazila_code = excluded.upazila_code,
+        record = excluded.record,
+        terminated_at = null,
+        last_seen_at = now();
+
+  v_log_id := 'login-' || gen_random_uuid();
+  insert into public.admin_audit_logs (id, upazila_code, user_id, payload)
+  values (
+    v_log_id,
+    v_code,
+    null,
+    jsonb_build_object(
+      'id', v_log_id,
+      'timestamp', now(),
+      'eventType', 'login',
+      'upazilaCode', v_code,
+      'email', v_email,
+      'description', format('উপজেলা প্রবেশ সম্পন্ন: %s (%s)', coalesce(nullif(v_name, ''), v_code), v_code),
+      'status', 'success'
+    )
+  );
+
+  return jsonb_build_object('allowed', true, 'account_status', 'active', 'session_id', v_session_id);
+end;
+$$;
+revoke all on function public.record_upazila_checkin(text, text, text, text, text, text, text) from public;
+grant execute on function public.record_upazila_checkin(text, text, text, text, text, text, text) to anon, authenticated;
+
+create or replace function public.heartbeat_upazila_session(
+  p_session_id text,
+  p_upazila_code text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_terminated boolean := false;
+  v_profile_status text;
+  v_usage_status text;
+  v_status text := 'active';
+  v_code text := trim(coalesce(p_upazila_code, ''));
+  v_sid text := trim(coalesce(p_session_id, ''));
+begin
+  if v_sid <> '' then
+    select (terminated_at is not null) into v_terminated
+    from public.active_sessions
+    where session_id = v_sid
+    limit 1;
+    v_terminated := coalesce(v_terminated, false);
+  end if;
+
+  if v_code <> '' then
+    select account_status into v_profile_status from public.profiles where upazila_code = v_code limit 1;
+    select account_status into v_usage_status from public.upazila_usage_stats where upazila_code = v_code limit 1;
+    if v_profile_status in ('suspended', 'deactivated', 'pending') then
+      v_status := v_profile_status;
+    elsif v_usage_status in ('suspended', 'deactivated') then
+      v_status := v_usage_status;
+    end if;
+  end if;
+
+  if not v_terminated and v_status = 'active' then
+    if v_sid <> '' then
+      update public.active_sessions
+      set last_seen_at = now()
+      where session_id = v_sid and terminated_at is null;
+    end if;
+    if v_code <> '' then
+      update public.upazila_usage_stats
+      set last_seen_at = now(), updated_at = now()
+      where upazila_code = v_code;
+    end if;
+  end if;
+
+  return jsonb_build_object('terminated', v_terminated, 'account_status', v_status);
+end;
+$$;
+revoke all on function public.heartbeat_upazila_session(text, text) from public;
+grant execute on function public.heartbeat_upazila_session(text, text) to anon, authenticated;
+
+create or replace function public.end_upazila_session(p_session_id text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.active_sessions
+  set terminated_at = now()
+  where session_id = trim(coalesce(p_session_id, ''))
+    and terminated_at is null;
+$$;
+revoke all on function public.end_upazila_session(text) from public;
+grant execute on function public.end_upazila_session(text) to anon, authenticated;
+
+create or replace function public.record_upazila_app_open(
+  p_upazila_code text,
+  p_app_id text,
+  p_upazila_name_bn text default '',
+  p_district_name_bn text default '',
+  p_division_name_bn text default ''
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_code text := trim(coalesce(p_upazila_code, ''));
+begin
+  if v_code = '' or p_app_id not in ('app1', 'app2', 'app3', 'app4') then
+    return;
+  end if;
+
+  insert into public.upazila_usage_stats (
+    upazila_code,
+    upazila_name_bn,
+    district_name_bn,
+    division_name_bn,
+    app1_opens,
+    app2_opens,
+    app3_opens,
+    app4_opens,
+    first_seen_at,
+    last_seen_at,
+    updated_at
+  ) values (
+    v_code,
+    trim(coalesce(p_upazila_name_bn, '')),
+    trim(coalesce(p_district_name_bn, '')),
+    trim(coalesce(p_division_name_bn, '')),
+    case when p_app_id = 'app1' then 1 else 0 end,
+    case when p_app_id = 'app2' then 1 else 0 end,
+    case when p_app_id = 'app3' then 1 else 0 end,
+    case when p_app_id = 'app4' then 1 else 0 end,
+    now(),
+    now(),
+    now()
+  )
+  on conflict (upazila_code) do update
+    set upazila_name_bn = coalesce(nullif(excluded.upazila_name_bn, ''), public.upazila_usage_stats.upazila_name_bn),
+        district_name_bn = coalesce(nullif(excluded.district_name_bn, ''), public.upazila_usage_stats.district_name_bn),
+        division_name_bn = coalesce(nullif(excluded.division_name_bn, ''), public.upazila_usage_stats.division_name_bn),
+        app1_opens = public.upazila_usage_stats.app1_opens + case when p_app_id = 'app1' then 1 else 0 end,
+        app2_opens = public.upazila_usage_stats.app2_opens + case when p_app_id = 'app2' then 1 else 0 end,
+        app3_opens = public.upazila_usage_stats.app3_opens + case when p_app_id = 'app3' then 1 else 0 end,
+        app4_opens = public.upazila_usage_stats.app4_opens + case when p_app_id = 'app4' then 1 else 0 end,
+        last_seen_at = now(),
+        updated_at = now();
+end;
+$$;
+revoke all on function public.record_upazila_app_open(text, text, text, text, text) from public;
+grant execute on function public.record_upazila_app_open(text, text, text, text, text) to anon, authenticated;
+
+create or replace function public.get_portal_public_state(p_upazila_code text default null)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'announcements', coalesce((
+      select jsonb_agg(sa.payload order by sa.created_at desc)
+      from public.system_announcements sa
+      where sa.is_active = true
+        and (sa.target_upazila_code is null or sa.target_upazila_code = nullif(trim(coalesce(p_upazila_code, '')), ''))
+    ), '[]'::jsonb),
+    'maintenance', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'appId', m.app_id,
+          'appName', m.app_name,
+          'isLocked', m.is_locked,
+          'lockReason', m.lock_reason,
+          'updatedAt', m.updated_at
+        )
+        order by m.app_id
+      )
+      from public.app_maintenance_controls m
+    ), '[]'::jsonb)
+  );
+$$;
+revoke all on function public.get_portal_public_state(text) from public;
+grant execute on function public.get_portal_public_state(text) to anon, authenticated;
 
 -- Live notices: push announcement writes to subscribers so a broadcast reaches every
 -- upazila screen without waiting for the next poll. Wrapped so re-running the schema

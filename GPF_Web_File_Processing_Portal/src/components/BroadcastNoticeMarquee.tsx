@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Radio, AlertTriangle, X } from 'lucide-react';
 import { getActiveAnnouncementsForUser, hydrateAnnouncements } from '../lib/centralAdminStore';
 import { supabase } from '../lib/supabase';
@@ -13,25 +13,30 @@ export const BroadcastNoticeMarquee: React.FC<BroadcastNoticeMarqueeProps> = ({ 
   const [announcements, setAnnouncements] = useState<SystemAnnouncement[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDismissed, setIsDismissed] = useState(false);
+  const lastSignatureRef = useRef<string>('');
 
   const load = useCallback(async () => {
+    let list: SystemAnnouncement[] = [];
     try {
-      const list = await hydrateAnnouncements(userUpazilaCode);
-      setAnnouncements(list);
+      list = await hydrateAnnouncements(userUpazilaCode);
     } catch {
-      setAnnouncements(getActiveAnnouncementsForUser(userUpazilaCode));
+      list = getActiveAnnouncementsForUser(userUpazilaCode);
     }
+    const signature = list.map((a) => `${a.id}:${a.isActive}`).join('|');
+    if (signature && signature !== lastSignatureRef.current) {
+      lastSignatureRef.current = signature;
+      setIsDismissed(false);
+      setCurrentIndex(0);
+    }
+    setAnnouncements(list);
   }, [userUpazilaCode]);
 
   useEffect(() => {
     void load();
-    // Poll stays as the fallback for browsers whose websocket never connects.
     const interval = window.setInterval(() => void load(), 30000);
     return () => window.clearInterval(interval);
   }, [load]);
 
-  // Realtime delivery (মডিউল ৪): a broadcast must reach an upazila screen the
-  // moment it is published, not when the next poll happens.
   useEffect(() => {
     if (!supabase) return;
     const channel = supabase

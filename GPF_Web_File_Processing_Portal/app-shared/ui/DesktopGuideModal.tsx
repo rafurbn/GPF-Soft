@@ -20,7 +20,7 @@ export const DesktopGuideModal: React.FC<DesktopGuideModalProps> = ({ isOpen, on
             </div>
             <div>
               <h3 className="text-base font-bold text-white">ডেস্কটপ (.exe) অ্যাপ্লিকেশনে রূপান্তর গাইড</h3>
-              <p className="text-xs text-slate-400">অফলাইন ও ডেস্কটপ পিসিতে ব্যবহারের জন্য ১ ক্লিকে এক্সপোর্ট</p>
+              <p className="text-xs text-slate-400">অনলাইন পোর্টালটি ডেস্কটপ উইন্ডো হিসেবে ব্যবহারের নির্দেশিকা</p>
             </div>
           </div>
           <button
@@ -37,10 +37,10 @@ export const DesktopGuideModal: React.FC<DesktopGuideModalProps> = ({ isOpen, on
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
             <div className="space-y-1 text-xs sm:text-sm">
               <p className="font-semibold text-emerald-200">
-                এই অ্যাপ্লিকেশনটি ১০০% ক্লায়েন্ট-সাইড ও অফলাইন প্রস্তুত!
+                আপনার ফাইলের তথ্য পিসিতেই নিরাপদ — তবে পোর্টালটি অনলাইনে চলে
               </p>
               <p className="text-emerald-300/80">
-                এটির সমস্ত ডাটা আপনার লোকাল স্টোরেজে স্বয়ংক্রিয়ভাবে সংরক্ষিত থাকে এবং প্রিন্ট/পিডিএফ ব্রাউজার ইঞ্জিন থেকেই জেনারেট হয়। কোনো ইন্টারনেটের প্রয়োজন নেই।
+                ক্লেইম ও ফাইল সংক্রান্ত সমস্ত তথ্য আপনার নিজস্ব ব্রাউজারের লোকাল স্টোরেজে সংরক্ষিত থাকে এবং প্রিন্ট/পিডিএফ ব্রাউজার ইঞ্জিন থেকেই জেনারেট হয়। তবে পোর্টাল চালু রাখা ও লগইন যাচাইয়ের জন্য সক্রিয় ইন্টারনেট সংযোগ প্রয়োজন।
               </p>
             </div>
           </div>
@@ -72,10 +72,10 @@ export const DesktopGuideModal: React.FC<DesktopGuideModalProps> = ({ isOpen, on
           <div className="bg-slate-850 p-4 rounded-xl border border-slate-800 text-xs space-y-2">
             <h5 className="font-bold text-white flex items-center space-x-2">
               <ShieldCheck className="w-4 h-4 text-sky-400" />
-              <span>অফলাইন ব্যাকআপ ও রিস্টোর সুবিধা:</span>
+              <span>লোকাল ব্যাকআপ ও এক্সপোর্ট সুবিধা:</span>
             </h5>
             <p className="text-slate-400">
-              প্রতিটি অ্যাপের নিচের টেবিলে <strong className="text-slate-200">"CSV এক্সপোর্ট"</strong> বাটন আছে — এর মাধ্যমে সকল আবেদন এক্সেল ফাইলে সেভ রেখে যেকোনো কম্পিউটারে স্থানান্তর করা যায়। সব অ্যাপের কেন্দ্রীয় ব্যাকআপ ও রিস্টোর সুবিধা মূল ড্যাশবোর্ডের অ্যাডমিন প্যানেলে আছে।
+              প্রতিটি অ্যাপের নিচের টেবিলে <strong className="text-slate-200">"CSV এক্সপোর্ট"</strong> বাটন আছে — এর মাধ্যমে আপনার নিজস্ব পিসির সকল আবেদন এক্সেল ফাইলে সেভ রেখে যেকোনো কম্পিউটারে সংরক্ষণ করা যায়।
             </p>
           </div>
         </div>

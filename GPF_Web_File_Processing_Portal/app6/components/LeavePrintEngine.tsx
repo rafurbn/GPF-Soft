@@ -665,12 +665,13 @@ export const LeavePrintEngine: React.FC<LeavePrintEngineProps> = ({ application 
 
         <div className="flex justify-between items-end text-xs pt-8 px-4">
           <div className="text-left">
-            <div>যাচাইকারী কর্মকর্তার স্বাক্ষর</div>
-            <div className="mt-1">সীলমোহর</div>
+            <div></div>
+            <div className="mt-1"></div>
           </div>
           <div className="text-center">
             <div className="h-16"></div>
-            <div>উপজেলা শিক্ষা অফিসার</div>
+            <div>(<Value>{application.ddoName}</Value>)</div>
+            <div><Value>{application.ddoDesignation}</Value></div>
             <div><Value>{application.upazilaName}</Value>, <Value>{application.districtName}</Value>।</div>
           </div>
         </div>

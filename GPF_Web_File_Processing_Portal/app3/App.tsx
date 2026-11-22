@@ -17,6 +17,13 @@ import { getCurrentBengaliDate } from '../src/utils/dateUtils';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { readScoped, writeScoped, scopedKey } from '../src/lib/scopedStorage';
+import {
+  deleteCloudRecord,
+  hydrateAndSyncCloudRecords,
+  loadCloudLocks,
+  saveCloudLocks,
+  upsertCloudRecord,
+} from '../src/lib/cloudRecordSync';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 import { Toast, useToast } from '../app-shared/ui/Toast';
@@ -137,13 +144,48 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   // full uncapped record set replaces the localStorage first-paint copy.
   useEffect(() => {
     let active = true;
-    void loadUnlimitedRecords<FinalSavedApplicationRecord>(recordsScope).then((stored) => {
-      if (active && stored && stored.length > 0) setSavedRecords(stored);
-    });
+    void (async () => {
+      const stored = await loadUnlimitedRecords<FinalSavedApplicationRecord>(recordsScope);
+      const baseLocal = stored && stored.length > 0 ? stored : savedRecords;
+      if (active && stored && stored.length > 0) {
+        setSavedRecords(stored);
+      }
+      const merged = await hydrateAndSyncCloudRecords<FinalSavedApplicationRecord>(
+        'app3',
+        currentUser.upazila_code,
+        baseLocal,
+      );
+      if (active && merged) {
+        setSavedRecords(merged);
+      }
+      const cloudLocks = await loadCloudLocks('app3', currentUser.upazila_code);
+      if (active && cloudLocks && Object.keys(cloudLocks.locksData || {}).length > 0) {
+        const mergedLocks: FinalFieldLocks = {
+          ...locks,
+          ...(cloudLocks.locksData as Partial<FinalFieldLocks>),
+          upazila: true,
+          district: true,
+        };
+        setLocks(mergedLocks);
+        const vals = (cloudLocks.valuesData || {}) as Partial<GpfFinalFormData>;
+        if (Object.keys(vals).length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            yearSession: prev.yearSession && prev.yearSession !== defaultInitialData.yearSession ? prev.yearSession : (vals.yearSession || prev.yearSession),
+            recipient: prev.recipient || vals.recipient || '',
+            ddoName: prev.ddoName || vals.ddoName || '',
+            ddoDesignation: prev.ddoDesignation || vals.ddoDesignation || '',
+            upazila: currentUser.upazila_name_bn || prev.upazila,
+            district: currentUser.district_name_bn || prev.district,
+          }));
+        }
+      }
+    })();
     return () => {
       active = false;
     };
-  }, [recordsScope]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordsScope, currentUser.upazila_code]);
 
   // Auto-persist saved records to the unlimited (IndexedDB) store.
   useEffect(() => {
@@ -185,6 +227,14 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
         [field]: lockState,
       };
       writeScoped(currentUser.upazila_code, STORAGE_LOCKS_KEY, JSON.stringify(updatedLocks));
+      void saveCloudLocks('app3', currentUser.upazila_code, updatedLocks, {
+        yearSession: formData.yearSession,
+        recipient: formData.recipient,
+        ddoName: formData.ddoName,
+        ddoDesignation: formData.ddoDesignation,
+        upazila: formData.upazila,
+        district: formData.district,
+      });
       return updatedLocks;
     });
   };
@@ -259,6 +309,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
     });
 
     setFormData((prev) => ({ ...prev, id: recordId, requestedAmountWords: words }));
+    void upsertCloudRecord('app3', currentUser.upazila_code, newRecord);
     showToast('আবেদনটি সফলভাবে তালিকায় সংরক্ষণ করা হয়েছে!', 'success');
 
     // Sync to parent portal application tracking
@@ -348,6 +399,7 @@ export const GpfFinalWithdrawalApp: React.FC<GpfFinalWithdrawalAppProps> = ({
   // Delete record
   const handleDeleteRecord = (id: string) => {
     setSavedRecords((prev) => prev.filter((r) => r.id !== id));
+    void deleteCloudRecord('app3', currentUser.upazila_code, id);
     showToast('আবেদনটি তালিকা থেকে মুছে ফেলা হয়েছে', 'info');
   };
 

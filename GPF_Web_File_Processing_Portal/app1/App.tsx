@@ -20,6 +20,13 @@ import { cleanNumberString } from '../src/utils/bengaliConverter';
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { scopedKey } from '../src/lib/scopedStorage';
+import {
+  deleteCloudRecord,
+  hydrateAndSyncCloudRecords,
+  loadCloudLocks,
+  saveCloudLocks,
+  upsertCloudRecord,
+} from '../src/lib/cloudRecordSync';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 import { Toast, useToast } from '../app-shared/ui/Toast';
@@ -63,13 +70,60 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
   // replaces it with the full, uncapped record set.
   useEffect(() => {
     let active = true;
-    void loadUnlimitedRecords<GpfFormData>(recordsStorageKey).then((stored) => {
-      if (active && stored && stored.length > 0) setRecords(stored);
-    });
+    void (async () => {
+      const stored = await loadUnlimitedRecords<GpfFormData>(recordsStorageKey);
+      const baseLocal = stored && stored.length > 0 ? stored : getSavedRecords();
+      if (active && stored && stored.length > 0) {
+        setRecords(stored);
+      }
+      const merged = await hydrateAndSyncCloudRecords<GpfFormData>(
+        'app1',
+        currentUser.upazila_code,
+        baseLocal,
+      );
+      if (active && merged) {
+        setRecords(merged);
+        void saveUnlimitedRecords(merged, recordsStorageKey);
+      }
+      const cloudLocks = await loadCloudLocks('app1', currentUser.upazila_code);
+      if (active && cloudLocks && Object.keys(cloudLocks.locksData || {}).length > 0) {
+        const nextCfg: LockedFieldsConfig = {
+          ...(cloudLocks.locksData as Partial<LockedFieldsConfig>),
+          ...lockedConfig,
+          upazilaName: true,
+          districtName: true,
+        };
+        const mergedCfg: LockedFieldsConfig = {
+          ...nextCfg,
+          ...(cloudLocks.locksData as Partial<LockedFieldsConfig>),
+          upazilaName: true,
+          districtName: true,
+        };
+        setLockedConfig(mergedCfg);
+        saveLockedConfig(mergedCfg);
+        const vals = (cloudLocks.valuesData || {}) as Partial<GpfFormData>;
+        if (Object.keys(vals).length > 0) {
+          const currentVals = getLockedValues();
+          const mergedVals: Partial<GpfFormData> = {
+            ...vals,
+            ...currentVals,
+            year: currentVals.year && currentVals.year !== DEFAULT_INITIAL_FORM.year ? currentVals.year : (vals.year || currentVals.year),
+            receiverInfo: currentVals.receiverInfo || vals.receiverInfo || '',
+            ddoName: currentVals.ddoName || vals.ddoName || '',
+            ddoDesignation: currentVals.ddoDesignation || vals.ddoDesignation || '',
+            upazilaName: currentUser.upazila_name_bn || vals.upazilaName || '',
+            districtName: currentUser.district_name_bn || vals.districtName || '',
+          };
+          saveLockedValues(mergedVals);
+          setFormData((prev) => ({ ...prev, ...mergedVals }));
+        }
+      }
+    })();
     return () => {
       active = false;
     };
-  }, [recordsStorageKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordsStorageKey, currentUser.upazila_code]);
 
   // Persists records to IndexedDB (uncapped) and mirrors to localStorage.
   const persistRecords = (next: GpfFormData[]) => {
@@ -115,11 +169,14 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
     setLockedConfig(updated);
     saveLockedConfig(updated);
 
+    const currentLocked = getLockedValues();
+    const newLocked = nextState
+      ? { ...currentLocked, [field]: formData[field as keyof GpfFormData] }
+      : currentLocked;
     if (nextState) {
-      const currentLocked = getLockedValues();
-      const newLocked = { ...currentLocked, [field]: formData[field as keyof GpfFormData] };
       saveLockedValues(newLocked);
     }
+    void saveCloudLocks('app1', currentUser.upazila_code, updated, newLocked);
 
     showToast(
       nextState ? `ফিল্ডটি সফলভাবে লক করা হয়েছে (সংরক্ষিত থাকবে)` : `ফিল্ডটি আনলক করা হয়েছে (এখন পরিবর্তনযোগ্য)`,
@@ -180,6 +237,7 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
     setRecords(updatedRecords);
     persistRecords(updatedRecords);
     setFormData(recordToSave);
+    void upsertCloudRecord('app1', currentUser.upazila_code, recordToSave);
 
     // Sync to portal session applications
     const cleanAmount = cleanNumberString(recordToSave.requestedAmount);
@@ -271,6 +329,7 @@ export const GpfRefundableApp: React.FC<GpfRefundableAppProps> = ({
     const updated = records.filter((r) => r.id !== id);
     setRecords(updated);
     persistRecords(updated);
+    void deleteCloudRecord('app1', currentUser.upazila_code, id);
     showToast('আবেদনটি তালিকা থেকে মুছে ফেলা হয়েছে', 'info');
   };
 

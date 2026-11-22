@@ -33,6 +33,7 @@ export default defineConfig(() => {
           app2: path.resolve(__dirname, 'app2/index.html'),
           app3: path.resolve(__dirname, 'app3/index.html'),
           app4: path.resolve(__dirname, 'app4/index.html'),
+          app6: path.resolve(__dirname, 'app6/index.html'),
         },
       },
     },

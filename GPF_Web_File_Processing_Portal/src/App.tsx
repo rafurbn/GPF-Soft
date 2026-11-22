@@ -35,13 +35,14 @@ import {
 } from './lib/localUpazilaAuth';
 import { resolveLoginRoutePlan, type LoginFlowMode } from './lib/loginRouting';
 
-type SubAppRoute = 'gpf_refundable' | 'gpf_non_refundable' | 'gpf_final' | 'gpf_DeathClaim';
+type SubAppRoute = 'gpf_refundable' | 'gpf_non_refundable' | 'gpf_final' | 'gpf_DeathClaim' | 'gpf_ex_bangladesh';
 
 const SUB_APP_URLS: Record<SubAppRoute, string> = {
   gpf_refundable: '/app1/index.html',
   gpf_non_refundable: '/app2/index.html',
   gpf_final: '/app3/index.html',
   gpf_DeathClaim: '/app4/index.html',
+  gpf_ex_bangladesh: '/app6/index.html',
 };
 
 const isSubAppRoute = (tab: string): tab is SubAppRoute => tab in SUB_APP_URLS;

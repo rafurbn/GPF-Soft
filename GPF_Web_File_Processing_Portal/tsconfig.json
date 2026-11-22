@@ -30,7 +30,8 @@
     "app2",
     "app3",
     "app-shared",
-    "app4"
+    "app4",
+    "app6"
   ],
   "exclude": [
     "node_modules",

@@ -7,7 +7,16 @@ import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 import { Toast, useToast } from '../app-shared/ui/Toast';
 import { DeathClaimForm } from './components/DeathClaimForm';
 import { ClaimsDataTable } from './components/ClaimsDataTable';
-import { readScoped, writeScoped } from '../src/lib/scopedStorage';
+import { readScoped, writeScoped, scopedKey } from '../src/lib/scopedStorage';
+import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
+import {
+  deleteCloudRecord,
+  hydrateAndSyncCloudRecords,
+  loadCloudLocks,
+  saveCloudLocks,
+  upsertCloudRecord,
+  upsertCloudRecordsBulk,
+} from '../src/lib/cloudRecordSync';
 import type { SubAppProps } from '../app-shared/bootstrap';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { toBn } from '../src/lib/format';
@@ -111,10 +120,45 @@ export default function App({ currentUser, onBack }: SubAppProps) {
   const { toast, showToast } = useToast();
 
 
-  // Sync claims to localStorage (upazila-scoped)
+  const claimsScope = scopedKey(upazilaCode, BASE_KEY_CLAIMS);
+
+  // Hydrate from IndexedDB + Supabase cloud on mount (zero-data-loss migration)
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const stored = await loadUnlimitedRecords<GpfDeathClaim>(claimsScope);
+      const baseLocal = stored && stored.length > 0 ? stored : claims;
+      if (active && stored && stored.length > 0) {
+        setClaims(stored);
+      }
+      const merged = await hydrateAndSyncCloudRecords<GpfDeathClaim>(
+        'app4',
+        upazilaCode,
+        baseLocal,
+      );
+      if (active && merged) {
+        setClaims(merged);
+      }
+      const cloudLocks = await loadCloudLocks('app4', upazilaCode);
+      if (active && cloudLocks && Object.keys(cloudLocks.locksData || {}).length > 0) {
+        setLockSettings((prev) => ({
+          ...prev,
+          ...(cloudLocks.locksData as Partial<LockSettings>),
+          ...ALWAYS_LOCKED,
+        }));
+      }
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claimsScope, upazilaCode]);
+
+  // Sync claims to IndexedDB + localStorage (upazila-scoped)
   useEffect(() => {
     writeScoped(upazilaCode, BASE_KEY_CLAIMS, JSON.stringify(claims));
-  }, [claims, upazilaCode]);
+    void saveUnlimitedRecords(claims, claimsScope);
+  }, [claims, upazilaCode, claimsScope]);
 
   // Sync lock settings to localStorage (upazila-scoped)
   useEffect(() => {
@@ -126,10 +170,14 @@ export default function App({ currentUser, onBack }: SubAppProps) {
       showToast(LABELS.fixedFieldToast, 'info');
       return;
     }
-    setLockSettings((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
+    setLockSettings((prev) => {
+      const next = {
+        ...prev,
+        [field]: !prev[field],
+      };
+      void saveCloudLocks('app4', upazilaCode, next);
+      return next;
+    });
   };
 
   // Save Claim Handler
@@ -176,6 +224,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
         updatedAt: new Date().toISOString(),
       };
       setCurrentClaim(updatedClaim);
+      void upsertCloudRecord('app4', upazilaCode, updatedClaim);
       showToast(`"${claimData.deceasedEmployeeName}" এর ডেথ ক্লেইম তথ্য সফলভাবে আপডেট করা হয়েছে।`);
       void syncClaimToCentral('app4', {
         id: updatedClaim.id,
@@ -206,6 +255,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
       updatedAt: new Date().toISOString(),
     };
     setClaims([newClaim, ...claims]);
+    void upsertCloudRecord('app4', upazilaCode, newClaim);
     showToast(`"${claimData.deceasedEmployeeName}" এর নতুন ডেথ ক্লেইম সফলভাবে সংরক্ষণ করা হয়েছে (ক্রমিক: ${nextSerial})।`);
     void syncClaimToCentral('app4', {
       id: newClaim.id,
@@ -272,6 +322,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
 
   const handleDeleteClaim = (id: string) => {
     setClaims(claims.filter((c) => c.id !== id));
+    void deleteCloudRecord('app4', upazilaCode, id);
     showToast('ক্লেইম রেকর্ডটি মুছে ফেলা হয়েছে।');
   };
 
@@ -286,6 +337,7 @@ export default function App({ currentUser, onBack }: SubAppProps) {
     });
     const merged = [...renumbered, ...claims];
     setClaims(merged);
+    void upsertCloudRecordsBulk('app4', upazilaCode, renumbered);
     showToast(`${toBn(renumbered.length)}টি ক্লেইম ফাইল সফলভাবে ইমপোর্ট করা হয়েছে।`);
   };
 

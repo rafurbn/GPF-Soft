@@ -11,6 +11,13 @@ import { numberToBengaliWords, cleanNumberString } from '../src/utils/bengaliCon
 import { createPdfFileName } from '../src/utils/pdfDownload';
 import { loadUnlimitedRecords, saveUnlimitedRecords } from '../src/lib/unlimitedStore';
 import { readScoped, writeScoped, scopedKey } from '../src/lib/scopedStorage';
+import {
+  deleteCloudRecord,
+  hydrateAndSyncCloudRecords,
+  loadCloudLocks,
+  saveCloudLocks,
+  upsertCloudRecord,
+} from '../src/lib/cloudRecordSync';
 import { syncClaimToCentral } from '../app-shared/centralClaimSync';
 import { SubAppFooter, SubAppHeader } from '../app-shared/ui/SubAppChrome';
 import { Toast, useToast } from '../app-shared/ui/Toast';
@@ -187,14 +194,59 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   // then replaces it with the full, uncapped record set.
   useEffect(() => {
     let active = true;
-    void loadUnlimitedRecords<GpfNonRefundableFormData>(
-      scopedKey(currentUser.upazila_code, BASE_KEY_RECORDS),
-    ).then((stored) => {
-      if (active && stored && stored.length > 0) setRecords(stored);
-    });
+    const scope = scopedKey(currentUser.upazila_code, BASE_KEY_RECORDS);
+    void (async () => {
+      const stored = await loadUnlimitedRecords<GpfNonRefundableFormData>(scope);
+      const baseLocal = stored && stored.length > 0 ? stored : records;
+      if (active && stored && stored.length > 0) {
+        setRecords(stored);
+      }
+      const merged = await hydrateAndSyncCloudRecords<GpfNonRefundableFormData>(
+        'app2',
+        currentUser.upazila_code,
+        baseLocal,
+      );
+      if (active && merged) {
+        setRecords(merged);
+      }
+      const cloudLocks = await loadCloudLocks('app2', currentUser.upazila_code);
+      if (active && cloudLocks && Object.keys(cloudLocks.locksData || {}).length > 0) {
+        const mergedState: NonRefundableLockedState = {
+          ...(cloudLocks.locksData as Partial<NonRefundableLockedState>),
+          ...lockedState,
+          ...(cloudLocks.locksData as Partial<NonRefundableLockedState>),
+          upazila_name: true,
+          district_name: true,
+        };
+        setLockedState(mergedState);
+        const vals = (cloudLocks.valuesData || {}) as NonRefundableLockedValues;
+        if (Object.keys(vals).length > 0) {
+          setLockedValues((prev) => {
+            const mergedVals: NonRefundableLockedValues = {
+              ...vals,
+              ...prev,
+              receiver_info: prev.receiver_info || vals.receiver_info || '',
+              ddo_name: prev.ddo_name || vals.ddo_name || '',
+              ddo_designation: prev.ddo_designation || vals.ddo_designation || '',
+              upazila_name: currentUser.upazila_name_bn || vals.upazila_name || '',
+              district_name: currentUser.district_name_bn || vals.district_name || '',
+            };
+            setFormData((f) => ({
+              ...f,
+              ...(mergedState.year && mergedVals.year !== undefined ? { year: mergedVals.year } : {}),
+              ...(mergedState.receiver_info && mergedVals.receiver_info !== undefined ? { receiver_info: mergedVals.receiver_info } : {}),
+              ...(mergedState.ddo_name && mergedVals.ddo_name !== undefined ? { ddo_name: mergedVals.ddo_name } : {}),
+              ...(mergedState.ddo_designation && mergedVals.ddo_designation !== undefined ? { ddo_designation: mergedVals.ddo_designation } : {}),
+            }));
+            return mergedVals;
+          });
+        }
+      }
+    })();
     return () => {
       active = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser.upazila_code]);
 
   // Sync records to the unlimited (IndexedDB) store + localStorage mirror.
@@ -239,16 +291,17 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
       return next;
     });
 
+    const nextLocks = { ...lockedState, [field]: willBeLocked };
     if (willBeLocked) {
       // Freeze the current formData value as the locked value permanently
       const currentValue = formData[field] || '';
-      setLockedValues((prev) => {
-        const next = { ...prev, [field]: currentValue };
-        writeScoped(currentUser.upazila_code, BASE_KEY_LOCKED_VALUES, JSON.stringify(next));
-        return next;
-      });
+      const nextVals = { ...lockedValues, [field]: currentValue };
+      setLockedValues(nextVals);
+      writeScoped(currentUser.upazila_code, BASE_KEY_LOCKED_VALUES, JSON.stringify(nextVals));
+      void saveCloudLocks('app2', currentUser.upazila_code, nextLocks, nextVals);
       showToast(`'${fieldName}' স্থায়ীভাবে লক করা হয়েছে। আনলক না করা পর্যন্ত এটি আর কখনও পরিবর্তিত হবে না।`);
     } else {
+      void saveCloudLocks('app2', currentUser.upazila_code, nextLocks, lockedValues);
       showToast(`'${fieldName}' আনলক করা হয়েছে। এখন তথ্য পরিবর্তন করতে পারবেন।`);
     }
   };
@@ -315,6 +368,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
     });
 
     setIsEditingExisting(true);
+    void upsertCloudRecord('app2', currentUser.upazila_code, updatedData);
     showToast('আবেদনটি সফলভাবে সংরক্ষিত হয়েছে!');
 
     // Sync to parent portal application tracking
@@ -372,6 +426,7 @@ export const GpfNonRefundableApp: React.FC<GpfNonRefundableAppProps> = ({
   // Delete record
   const handleDeleteRecord = (id: string) => {
     setRecords((prev) => prev.filter((r) => r.id !== id));
+    void deleteCloudRecord('app2', currentUser.upazila_code, id);
     showToast('আবেদনটি তালিকা থেকে মুছে ফেলা হয়েছে', 'info');
   };
 

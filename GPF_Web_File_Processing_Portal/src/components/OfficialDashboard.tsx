@@ -122,6 +122,22 @@ const APPS: LauncherApp[] = [
       hoverIcon: 'group-hover:text-purple-400',
     },
   },
+  {
+    id: 'app6',
+    no: '৬',
+    isActive: true,
+    title: 'বহি:বাংলাদেশ ছুটি ও বিদেশ ভ্রমণ',
+    badge: '৬ পৃষ্ঠার পূর্ণাঙ্গ ফাইল',
+    desc: 'বহি:বাংলাদেশ ছুটি আবেদন, ছুটির হিসাব বিবরণী (PLR-1959) ও প্রিন্ট সিস্টেম',
+    tab: 'gpf_ex_bangladesh',
+    accent: {
+      badge: 'bg-cyan-950/70 border-cyan-700/60 text-cyan-400 group-hover:border-cyan-400',
+      tag: 'bg-cyan-950/80 text-cyan-300 border-cyan-800/60',
+      hoverBorder: 'hover:border-cyan-600/70',
+      hoverTitle: 'group-hover:text-cyan-300',
+      hoverIcon: 'group-hover:text-cyan-400',
+    },
+  },
 ];
 
 interface OfficialDashboardProps {
@@ -202,6 +218,10 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
       window.location.href = '/app4/index.html';
       return;
     }
+    if (tab === 'gpf_ex_bangladesh') {
+      window.location.href = '/app6/index.html';
+      return;
+    }
     if (tab && onNavigateToApp) onNavigateToApp(tab);
   };
 
@@ -277,7 +297,7 @@ export const OfficialDashboard: React.FC<OfficialDashboardProps> = ({
           </h3>
         </div>
         <span className="text-[11px] font-semibold text-slate-400 font-mono">
-          মোট ৫টি স্লট • ৫টি চালু
+          মোট ৬টি স্লট • ৬টি চালু
         </span>
       </div>
 
